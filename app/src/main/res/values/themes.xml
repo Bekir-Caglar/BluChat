@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.ChatAppBordo" parent="android:Theme.Material.Light.NoActionBar" />
+
+    <style name="Theme.ChatAppBordo.Starting" parent="Theme.SplashScreen" >
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="windowSplashScreenBackground">@color/splash</item>
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_app_logo</item>
+        <item name="postSplashScreenTheme">@style/Theme.ChatAppBordo</item>
+        
+    </style>
+</resources>

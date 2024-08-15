@@ -1,0 +1,23 @@
+<resources>
+    <string name="app_name">ChatAppBordo</string>
+
+    <string name="title_login">Login</string>
+    <string name="title_signup">Sign Up</string>
+    <string name="title_login_or_signup">Login or Sign Up</string>
+    <string name="google_login">Login with Google</string>
+    <string name="facebook_login">Login with Facebook</string>
+    <string name="or">Or</string>
+    <string name="e_mail">Email</string>
+    <string name="password">Password</string>
+    <string name="enter_your_email">Enter your email</string>
+    <string name="enter_your_password">Enter your password</string>
+    <string name="forgot_password">Forgot password</string>
+    <string name="dont_have_account">Do not have an account?</string>
+    <string name="policy">By continuing, you agree to the Terms of Service and Privacy Policy.</string>
+    <string name="opening_words">Join contests and do more by logging in or creating an account.</string>
+    <string name="login_guest">Guest Login</string>
+    <string name="profile">Profile</string>
+    <string name="name_surmane">Name Surname</string>
+
+
+</resources>

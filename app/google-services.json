@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "90048456072",
+    "project_id": "chatappbordo",
+    "storage_bucket": "chatappbordo.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:90048456072:android:bfa0d260e51235b903c63d",
+        "android_client_info": {
+          "package_name": "com.bekircaglar.chatappbordo"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDsIRiZQ4alf977ZfLWjNg8AxOA38ORYHw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
