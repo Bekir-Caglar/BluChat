@@ -99,29 +99,7 @@ fun SignInScreen(navController: NavController) {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Spacer(modifier = Modifier.padding(vertical = 16.dp))
-            AuthButton(
-                onClick = { },
-                buttonIcon = painterResource(id = R.drawable.ic_google),
-                buttonText = stringResource(R.string.google_login),
-            )
 
-            Spacer(modifier = Modifier.padding(vertical = 8.dp))
-
-            AuthButton(
-                onClick = { },
-                buttonIcon = painterResource(id = R.drawable.ic_facebook),
-                buttonText = stringResource(R.string.facebook_login),
-                containerColor = colorResource(id = R.color.facebook),
-                contentColor = MaterialTheme.colorScheme.surface
-            )
-
-
-            Spacer(modifier = Modifier.padding(vertical = 12.dp))
-
-            HorizontalDivider(modifier = Modifier)
-
-            Spacer(modifier = Modifier.padding(vertical = 12.dp))
 
             Box(
                 contentAlignment = Alignment.TopStart,
@@ -203,6 +181,28 @@ fun SignInScreen(navController: NavController) {
                         modifier = Modifier.padding(top = 24.dp),
                         textAlign = TextAlign.Center
                     )
+                    Spacer(modifier = Modifier.padding(vertical = 16.dp))
+                    HorizontalDivider(modifier = Modifier)
+                    Spacer(modifier = Modifier.padding(vertical = 16.dp))
+
+                    AuthButton(
+                        onClick = { },
+                        buttonIcon = painterResource(id = R.drawable.ic_google),
+                        buttonText = stringResource(R.string.google_login),
+                    )
+
+                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
+
+                    AuthButton(
+                        onClick = { },
+                        buttonIcon = painterResource(id = R.drawable.ic_facebook),
+                        buttonText = stringResource(R.string.facebook_login),
+                        containerColor = colorResource(id = R.color.facebook),
+                        contentColor = MaterialTheme.colorScheme.surface
+                    )
+
+
+
                 }
 
             }
