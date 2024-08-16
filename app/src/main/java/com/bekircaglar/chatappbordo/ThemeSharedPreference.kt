@@ -1,4 +1,4 @@
-package com.bekircaglar
+package com.bekircaglar.chatappbordo
 
 import android.content.Context
 import android.content.SharedPreferences

@@ -7,8 +7,8 @@ import javax.inject.Inject
 
 interface AuthRepository  {
 
-    fun isUserAuthenticatedInFirebase(): Flow<Response<Boolean>>
-    suspend fun signIn(email: String, password: String): Flow<Response<Boolean>>
-    suspend fun signUp(email: String, password: String): Flow<Response<Boolean>>
-    suspend fun signOut() :Flow<Response<Boolean>>
+    fun isUserAuthenticatedInFirebase():Response<String>
+    suspend fun signIn(email: String, password: String):Response<String>
+    suspend fun signUp(email: String, password: String):Response<String>
+    suspend fun signOut():Response<String>
 }

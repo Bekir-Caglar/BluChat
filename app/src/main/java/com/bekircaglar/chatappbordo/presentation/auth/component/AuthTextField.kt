@@ -44,7 +44,7 @@ fun AuthTextField(hint:@Composable ()->Unit,value: String, onValueChange: (Strin
     }
         Spacer(modifier = Modifier.padding(top = 8.dp))
         TextField(value = value,
-            onValueChange = { onValueChange(value)},
+            onValueChange = { onValueChange(it)},
             leadingIcon = {
                 if (leadingIcon != null) {
                     Icon(

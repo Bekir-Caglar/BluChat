@@ -52,6 +52,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.navigation.Screens
@@ -63,10 +64,9 @@ import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
 import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 
 
-
 @Composable
 fun SignInScreen(navController: NavController) {
-//    val viewModel: AuthViewModel = hiltViewModel()
+    val viewModel: AuthViewModel = hiltViewModel()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
 
@@ -92,7 +92,7 @@ fun SignInScreen(navController: NavController) {
                 }
             )
         },
-    ){
+    ) {
         Column(
             modifier = Modifier
                 .padding(paddingValues = it)
@@ -108,14 +108,14 @@ fun SignInScreen(navController: NavController) {
                     .padding(horizontal = 32.dp)
                     .background(color = MaterialTheme.colorScheme.surface)
             ) {
-                    AuthTextField(
-                        hint ={ Text(text = stringResource(R.string.enter_your_email))} ,
-                        value = email,
-                        onValueChange = { email = it },
-                        leadingIcon = Icons.Default.Email,
-                        keyboardType = KeyboardType.Email,
-                        title = stringResource(R.string.e_mail)
-                        )
+                AuthTextField(
+                    hint = { Text(text = stringResource(R.string.enter_your_email)) },
+                    value = email,
+                    onValueChange = { email = it },
+                    leadingIcon = Icons.Default.Email,
+                    keyboardType = KeyboardType.Email,
+                    title = stringResource(R.string.e_mail)
+                )
             }
 
 
@@ -151,7 +151,11 @@ fun SignInScreen(navController: NavController) {
                         )
                     }
                     AuthButton(
-                        onClick = { },
+                        onClick = {
+                            viewModel.signIn(email, password){
+                                navController.navigate(Screens.HomeNav.route)
+                            }
+                        },
                         buttonText = stringResource(R.string.title_login),
                         contentColor = MaterialTheme.colorScheme.primary,
                     )
@@ -159,8 +163,9 @@ fun SignInScreen(navController: NavController) {
                     Spacer(modifier = Modifier.padding(top = 16.dp))
 
 
-                    Row(modifier = Modifier
-                        .fillMaxWidth(),
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
 
                     ) {
@@ -202,15 +207,12 @@ fun SignInScreen(navController: NavController) {
                     )
 
 
-
                 }
 
             }
         }
 
     }
-
-
 
 
 }
