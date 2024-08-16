@@ -6,5 +6,4 @@ data class AuthUseCase @Inject constructor(
     val isUserAuthenticatedInFirebase: IsUserAuthenticatedInFirebase,
     val signInUseCase: SignInUseCase,
     val signUpUseCase: SignUpUseCase,
-    val signOutUseCase: SignOutUseCase
 )

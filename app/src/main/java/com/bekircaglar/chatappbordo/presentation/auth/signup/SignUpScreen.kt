@@ -48,9 +48,11 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.navigation.Screens
+import com.bekircaglar.chatappbordo.presentation.auth.AuthViewModel
 import com.bekircaglar.chatappbordo.presentation.auth.component.AuthButton
 import com.bekircaglar.chatappbordo.presentation.auth.component.AuthTextField
 import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
@@ -58,6 +60,7 @@ import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 
 @Composable
 fun SignUpScreen(navController: NavController) {
+    val viewModel: AuthViewModel = hiltViewModel()
     var nameAndSurname by remember { mutableStateOf("") }
     var emailRegister by remember { mutableStateOf("") }
     var passwordRegister by remember { mutableStateOf("") }
@@ -156,7 +159,9 @@ fun SignUpScreen(navController: NavController) {
 
                     AuthButton(
                         onClick = {
-                            navController.navigate(Screens.ChatScreen.route)
+                            viewModel.signUp(emailRegister, passwordRegister){
+                                navController.navigate(Screens.HomeNav.route)
+                            }
                         },
                         buttonText = stringResource(R.string.title_signup),
                     )
