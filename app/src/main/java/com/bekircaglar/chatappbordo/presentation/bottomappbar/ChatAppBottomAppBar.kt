@@ -83,9 +83,13 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
                     colors = NavigationBarItemColors(
                         selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        unselectedTextColor = MaterialTheme.colorScheme.primary,
-                        unselectedIconColor = MaterialTheme.colorScheme.primary,
-                        selectedIndicatorColor = Color.Transparent,
+                        unselectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                            alpha = 0.6f
+                        ),
+                        unselectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
+                            alpha = 0.6f
+                        ),
+                        selectedIndicatorColor = Color.White,
                         disabledIconColor = MaterialTheme.colorScheme.onSurface,
                         disabledTextColor = MaterialTheme.colorScheme.primary
                     )
