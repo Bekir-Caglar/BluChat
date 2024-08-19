@@ -22,11 +22,16 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth):AuthR
     }
     override suspend fun signIn(email: String, password: String):Response<String>{
         auth.signInWithEmailAndPassword(email, password).await()
-        if(auth.currentUser!=null){
-            return Response.Success(auth.currentUser.toString())
-        }
-        else{
-            return Response.Error("Error")
+
+        try {
+            if(auth.currentUser!=null){
+                return Response.Success(auth.currentUser.toString())
+            }
+            else{
+                return Response.Error("Unknown Error")
+            }
+        } catch (e: Exception) {
+            return Response.Error(e.message.toString())
         }
 
     }
@@ -34,11 +39,15 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth):AuthR
     override suspend fun signUp(email: String, password: String):Response<String>{
         auth.createUserWithEmailAndPassword(email, password).await()
 
-        if(auth.currentUser!=null){
-            return Response.Success(auth.currentUser.toString())
-        }
-        else{
-            return Response.Error("Error")
+        try {
+            if(auth.currentUser!=null){
+                return Response.Success(auth.currentUser.toString())
+            }
+            else{
+                return Response.Error("Unknown Error")
+            }
+        } catch (e: Exception) {
+            return Response.Error(e.message.toString())
         }
     }
 
