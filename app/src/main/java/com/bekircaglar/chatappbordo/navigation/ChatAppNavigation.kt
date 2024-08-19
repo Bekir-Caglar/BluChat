@@ -11,14 +11,15 @@ import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.presentation.auth.signin.SignInScreen
 import com.bekircaglar.chatappbordo.presentation.auth.signup.SignUpScreen
 import com.bekircaglar.chatappbordo.presentation.chat.ChatScreen
+import com.google.firebase.auth.FirebaseAuth
 
 // Nested Navigation araştır
 @Composable
-fun ChatAppNavigation(navController: NavHostController,onThemeChange: (Boolean) -> Unit) {
+fun ChatAppNavigation(navController: NavHostController,onThemeChange: (Boolean) -> Unit,auth: FirebaseAuth) {
 
     NavHost(
         navController = navController,
-        startDestination = Screens.AuthNav.route
+        startDestination = if (auth.currentUser == null) Screens.AuthNav.route else Screens.HomeNav.route
         ){
         AuthNavGraph(navController)
         MainNavGraph(navController,onThemeChange)
