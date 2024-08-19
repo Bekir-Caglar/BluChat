@@ -24,14 +24,15 @@ class AuthViewModel @Inject constructor(private val authUseCase: AuthUseCase,pri
                     onSuccess()
                 }
                 is Response.Error -> {
-                    exceptionHandlerUseCase.invoke(Exception(result.message))
+                    onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
+
                 }
                 else -> {
 
                 }
             }
         } catch (e: Exception) {
-                exceptionHandlerUseCase.invoke(e)
+                onError(exceptionHandlerUseCase.invoke(e))
         }
     }
 
@@ -44,13 +45,14 @@ class AuthViewModel @Inject constructor(private val authUseCase: AuthUseCase,pri
                     onSuccess()
                 }
                 is Response.Error -> {
-                    onError(result.message)
+                    onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
                 }
                 else -> {
                 }
             }
-        } catch (e:Exception){
-            onError(e.message.toString())
+        } catch (e:Exception) {
+
+            onError(exceptionHandlerUseCase.invoke(e))
         }
     }
 
