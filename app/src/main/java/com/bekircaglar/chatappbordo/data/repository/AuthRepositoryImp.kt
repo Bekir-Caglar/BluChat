@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth):AuthRepository {
+class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,):AuthRepository {
     override fun isUserAuthenticatedInFirebase():Response<String>{
 
 
