@@ -56,6 +56,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.R
+import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.navigation.Screens
 import com.bekircaglar.chatappbordo.presentation.ShowToastMessage
 import com.bekircaglar.chatappbordo.presentation.auth.AuthViewModel
@@ -159,7 +160,7 @@ fun SignInScreen(navController: NavController) {
                                 onSuccess = {
                                 navController.navigate(Screens.HomeNav.route) },
                                 onError = {
-                                    ShowToastMessage(context = context, it)
+                                    ShowToastMessage(context, it)
                                 }
                             )
                         },
