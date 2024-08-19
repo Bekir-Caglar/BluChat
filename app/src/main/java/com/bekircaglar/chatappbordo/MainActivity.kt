@@ -12,11 +12,16 @@ import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
 import com.bekircaglar.chatappbordo.navigation.ChatAppNavigation
 import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
+import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -29,9 +34,10 @@ class MainActivity : ComponentActivity() {
 
             ChatAppBordoTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
-                ChatAppNavigation(navController = navController){
+                ChatAppNavigation(navController = navController, auth =auth,onThemeChange = {
                     isDarkTheme = it
-                }
+                    saveThemePreference(this, it)
+                })
 
             }
         }
