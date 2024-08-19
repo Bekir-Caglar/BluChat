@@ -14,47 +14,41 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(private val authUseCase: AuthUseCase) : ViewModel() {
 
 
-    fun signIn(email: String, password: String,onSucces:()->Unit) = viewModelScope.launch {
+    fun signIn(email: String, password: String,onSuccess:()->Unit,onError:(String) ->Unit) = viewModelScope.launch {
         try {
             val result = authUseCase.signInUseCase.invoke(email, password)
             when (result) {
                 is Response.Success -> {
-                    println("Success")
-                    onSucces()
+                    onSuccess()
                 }
                 is Response.Error -> {
-                    println("Error")
+                    onError(result.message)
                 }
                 else -> {
-                    println("Else")
+
                 }
             }
         } catch (e: Exception) {
-//            ShowErrorDialog().showErrorDialog(context =, e.message.toString())
-            println(e.message)
-
+                onError(e.message.toString())
         }
     }
 
 
-    fun signUp(email: String, password: String,onSucces:()->Unit)= viewModelScope.launch{
+    fun signUp(email: String, password: String,onSuccess:()->Unit,onError:(String) ->Unit)= viewModelScope.launch{
         try {
             val result = authUseCase.signUpUseCase.invoke(email, password)
             when (result) {
                 is Response.Success -> {
-                    println("Success")
-                    onSucces()
+                    onSuccess()
                 }
                 is Response.Error -> {
-                    println("Error")
+                    onError(result.message)
                 }
                 else -> {
-                    println("Else")
                 }
             }
         } catch (e:Exception){
-            println(e.message)
-
+            onError(e.message.toString())
         }
     }
 

@@ -42,6 +42,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -56,6 +57,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.navigation.Screens
+import com.bekircaglar.chatappbordo.presentation.ShowToastMessage
 import com.bekircaglar.chatappbordo.presentation.auth.AuthViewModel
 import com.bekircaglar.chatappbordo.presentation.auth.component.AuthButton
 import com.bekircaglar.chatappbordo.presentation.auth.component.AuthTextField
@@ -69,6 +71,7 @@ fun SignInScreen(navController: NavController) {
     val viewModel: AuthViewModel = hiltViewModel()
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
+    val context = LocalContext.current
 
 
     Scaffold(
@@ -152,9 +155,13 @@ fun SignInScreen(navController: NavController) {
                     }
                     AuthButton(
                         onClick = {
-                            viewModel.signIn(email, password){
-                                navController.navigate(Screens.HomeNav.route)
-                            }
+                            viewModel.signIn(email, password,
+                                onSuccess = {
+                                navController.navigate(Screens.HomeNav.route) },
+                                onError = {
+                                    ShowToastMessage(context = context, it)
+                                }
+                            )
                         },
                         buttonText = stringResource(R.string.title_login),
                         contentColor = MaterialTheme.colorScheme.primary,
