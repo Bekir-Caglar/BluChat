@@ -72,6 +72,7 @@ dependencies {
     implementation(libs.hilt.navigation.compose)
 
     implementation(libs.hilt)
+    implementation(libs.firebase.database)
     ksp(libs.hilt.kapt)
 
     implementation(platform(libs.firebase.bom))

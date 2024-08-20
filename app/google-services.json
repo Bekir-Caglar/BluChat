@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "90048456072",
+    "firebase_url": "https://chatappbordo-default-rtdb.europe-west1.firebasedatabase.app",
     "project_id": "chatappbordo",
     "storage_bucket": "chatappbordo.appspot.com"
   },

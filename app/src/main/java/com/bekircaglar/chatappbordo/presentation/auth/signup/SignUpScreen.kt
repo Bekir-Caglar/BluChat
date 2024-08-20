@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Phone
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -66,6 +67,7 @@ fun SignUpScreen(navController: NavController) {
     var nameAndSurname by remember { mutableStateOf("") }
     var emailRegister by remember { mutableStateOf("") }
     var passwordRegister by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
     val context = LocalContext.current
 
     Scaffold(
@@ -118,7 +120,24 @@ fun SignUpScreen(navController: NavController) {
                     onValueChange = { nameAndSurname = it },
                     leadingIcon = Icons.Default.Person,
                     keyboardType = KeyboardType.Text,
-                    title = "${stringResource(R.string.name_surmane)}"
+                    title = stringResource(R.string.name_surmane)
+                )
+
+            }
+            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Box(
+                contentAlignment = Alignment.TopStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                AuthTextField(
+                    hint = { Text(text = stringResource(R.string.enter_your_phone_number)) },
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    leadingIcon = Icons.Default.Phone,
+                    keyboardType = KeyboardType.Phone,
+                    title = stringResource(R.string.phone_number)
                 )
 
             }
@@ -157,7 +176,7 @@ fun SignUpScreen(navController: NavController) {
                         title = stringResource(R.string.password)
                     )
 
-                    Spacer(modifier = Modifier.padding(top = 48.dp))
+                    Spacer(modifier = Modifier.padding(top = 16.dp))
 
                     AuthButton(
                         onClick = {
@@ -165,9 +184,20 @@ fun SignUpScreen(navController: NavController) {
                                 onSuccess = {
                                     navController.navigate(Screens.HomeNav.route)
                                 },
-                                onError = {
-                                    ShowToastMessage(context = context, message = it)
+                                onError = {errorMessage ->
+                                    ShowToastMessage(context = context, message = errorMessage)
                                 }
+                            )
+                            viewModel.createUser(
+                                onError = { errorMessage ->
+                                    ShowToastMessage(context = context, message = errorMessage)
+                                },
+                                onSuccess = {
+                                    ShowToastMessage(context = context, message = it)
+                                },
+                                name = nameAndSurname,
+                                phoneNumber = phoneNumber,
+                                email = emailRegister,
                             )
                         },
                         buttonText = stringResource(R.string.title_signup),

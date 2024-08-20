@@ -10,5 +10,5 @@ interface AuthRepository  {
     fun isUserAuthenticatedInFirebase():Response<String>
     suspend fun signIn(email: String, password: String):Response<String>
     suspend fun signUp(email: String, password: String):Response<String>
-    suspend fun signOut():Response<String>
+    suspend fun createUser(name:String,phoneNumber:String,email: String,): Response<String>
 }

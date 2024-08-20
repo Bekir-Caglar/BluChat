@@ -45,11 +45,13 @@ fun AccountDialog(
     onSave: (String, String, String) -> Unit,
     initialName: String = "",
     initialSurname: String = "",
-    initialEmail: String = ""
+    initialEmail: String = "",
+    initialPhoneNumber: String = ""
 ) {
     var name by remember { mutableStateOf(initialName) }
     var surname by remember { mutableStateOf(initialSurname) }
     var email by remember { mutableStateOf(initialEmail) }
+    var phoneNumber by remember { mutableStateOf(initialPhoneNumber) }
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Surface(
@@ -109,6 +111,15 @@ fun AccountDialog(
                     modifier = Modifier.fillMaxWidth()
                 )
 
+                Spacer(modifier = Modifier.height(8.dp))
+
+                // Surname Field
+                OutlinedTextField(
+                    value = phoneNumber,
+                    onValueChange = { phoneNumber = it },
+                    label = { Text("Phone Number") },
+                    modifier = Modifier.fillMaxWidth()
+                )
 
                 Spacer(modifier = Modifier.height(16.dp))
 
