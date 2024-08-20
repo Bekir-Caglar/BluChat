@@ -14,9 +14,6 @@ import javax.inject.Inject
 
 class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,):AuthRepository {
     override fun isUserAuthenticatedInFirebase():Response<String>{
-
-
-
         return Response.Success(auth.currentUser?.uid?:"")
 
     }
@@ -52,9 +49,16 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,):Auth
     }
 
     override suspend fun signOut():Response<String>{
-
-
-
-        return Response.Success("")
+        auth.signOut()
+        try {
+            if(auth.currentUser==null){
+                return Response.Success("SignOut")
+            }
+            else{
+                return Response.Error("Unknown Error")
+            }
+        } catch (e: Exception) {
+            return Response.Error(e.message.toString())
+        }
     }
 }

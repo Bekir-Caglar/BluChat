@@ -34,10 +34,13 @@ class MainActivity : ComponentActivity() {
 
             ChatAppBordoTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
-                ChatAppNavigation(navController = navController, auth =auth,onThemeChange = {
-                    isDarkTheme = it
-                    saveThemePreference(this, it)
-                })
+                ChatAppNavigation(
+                    navController = navController,
+                    auth = auth,
+                    onThemeChange = {
+                        isDarkTheme = it
+                        saveThemePreference(this, it)
+                    })
 
             }
         }
