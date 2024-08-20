@@ -29,9 +29,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.domain.model.MenuItem
+import com.bekircaglar.chatappbordo.navigation.Screens
+import com.bekircaglar.chatappbordo.presentation.ShowToastMessage
 import com.bekircaglar.chatappbordo.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
 import com.bekircaglar.chatappbordo.presentation.profile.account.AccountDialog
@@ -42,19 +45,35 @@ import com.bekircaglar.chatappbordo.saveThemePreference
 fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit) {
 
     val context = LocalContext.current
-
-    val menuItemList = listOf(
-        MenuItem(painterResource(id = R.drawable.ic_account), "Account", {}),
-        MenuItem(painterResource(id = R.drawable.ic_sun), "Appearance", {}),
-        MenuItem(painterResource(id = R.drawable.ic_privacy), "Privacy", {}),
-        MenuItem(painterResource(id = R.drawable.ic_notification), "Notification", {}),
-        MenuItem(painterResource(id = R.drawable.ic_help), "Help", {}),
-    )
-
+    val viewModel: ProfileViewModel = hiltViewModel()
     var showAccountDialog by remember { mutableStateOf(false) }
     var showAppearanceDialog by remember { mutableStateOf(false) }
     val isDarkTheme by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(isDarkTheme) }
+
+    val menuItemList = listOf(
+        MenuItem(painterResource(id = R.drawable.ic_account), "Account"){
+            showAccountDialog = true
+        },
+        MenuItem(painterResource(id = R.drawable.ic_sun), "Appearance"){
+            showAppearanceDialog = true
+        },
+        MenuItem(painterResource(id = R.drawable.ic_privacy), "Privacy", {}),
+        MenuItem(painterResource(id = R.drawable.ic_notification), "Notification", {}),
+        MenuItem(painterResource(id = R.drawable.ic_help), "Help", {}),
+        MenuItem(painterResource(id = R.drawable.ic_logout), "Logout"){
+
+            viewModel.signOut(
+                onSuccess = {
+                    navController.navigate(Screens.AuthNav.route)
+                },
+                onError = {
+                    ShowToastMessage(context = context, message = it)
+                }
+            )
+
+        }
+    )
     if (showAppearanceDialog) {
         AppearanceDialog(
             isDarkTheme = isDarkTheme,
@@ -137,12 +156,7 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
 
                 items(menuItemList) {
                     ProfileMenu(menuIcon = it.icon, menuTitle = it.title, onClick = {
-                        if (it.title == "Account") {
-                            showAccountDialog = true
-                        }else if (it.title == "Appearance") {
-                            showAppearanceDialog = true
-                        }
-
+                        it.onClick?.invoke()
                     })
 
 

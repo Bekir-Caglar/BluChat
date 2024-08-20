@@ -12,47 +12,57 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(private val authUseCase: AuthUseCase,private val exceptionHandlerUseCase: ExceptionHandlerUseCase) : ViewModel() {
+class AuthViewModel @Inject constructor(
+    private val authUseCase: AuthUseCase,
+    private val exceptionHandlerUseCase: ExceptionHandlerUseCase
+) : ViewModel() {
 
 
-    fun signIn(email: String, password: String,onSuccess:()->Unit,onError: (String) -> Unit) = viewModelScope.launch {
-        try {
+    fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
+        viewModelScope.launch {
+            try {
 
-            val result = authUseCase.signInUseCase.invoke(email, password)
-            when (result) {
-                is Response.Success -> {
-                    onSuccess()
+                val result = authUseCase.signInUseCase.invoke(email, password)
+                when (result) {
+                    is Response.Success -> {
+                        onSuccess()
+                    }
+                    is Response.Error -> {
+                        onError(
+                            exceptionHandlerUseCase.invoke(Exception(result.message))
+                        )
+                    }
+
+                    else -> {
+
+                    }
                 }
-                is Response.Error -> {
-                    exceptionHandlerUseCase.invoke(Exception(result.message))
-                }
-                else -> {
-
-                }
+            } catch (e: Exception) {
+                onError(exceptionHandlerUseCase.invoke(e))
             }
-        } catch (e: Exception) {
-                exceptionHandlerUseCase.invoke(e)
         }
-    }
 
 
-    fun signUp(email: String, password: String,onSuccess:()->Unit,onError:(String) ->Unit)= viewModelScope.launch{
-        try {
-            val result = authUseCase.signUpUseCase.invoke(email, password)
-            when (result) {
-                is Response.Success -> {
-                    onSuccess()
+    fun signUp(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
+        viewModelScope.launch {
+            try {
+                val result = authUseCase.signUpUseCase.invoke(email, password)
+                when (result) {
+                    is Response.Success -> {
+                        onSuccess()
+                    }
+
+                    is Response.Error -> {
+                        onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
+                    }
+
+                    else -> {
+                    }
                 }
-                is Response.Error -> {
-                    onError(result.message)
-                }
-                else -> {
-                }
+            } catch (e: Exception) {
+                onError(exceptionHandlerUseCase.invoke(e))
             }
-        } catch (e:Exception){
-            onError(e.message.toString())
         }
-    }
 
 
 }
