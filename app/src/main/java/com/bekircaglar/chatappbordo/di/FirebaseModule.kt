@@ -1,8 +1,13 @@
 package com.bekircaglar.chatappbordo.di
 
+import androidx.compose.ui.input.key.Key.Companion.D
 import com.bekircaglar.chatappbordo.data.repository.AuthRepositoryImp
 import com.bekircaglar.chatappbordo.domain.repository.AuthRepository
+import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.database
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -17,8 +22,14 @@ object FirebaseModule {
     @Singleton
     fun provideFirebaseAuth() = FirebaseAuth.getInstance()
 
+
     @Provides
-    fun provideAuthRepository(auth: FirebaseAuth,): AuthRepository{
-        return  AuthRepositoryImp(auth)
+    @Singleton
+    fun provideFirebaseDatabaseInstance() = Firebase.database.reference
+
+    @Provides
+    @Singleton
+    fun provideAuthRepository(auth: FirebaseAuth,databaseReference: DatabaseReference): AuthRepository {
+        return AuthRepositoryImp(auth,databaseReference)
     }
 }

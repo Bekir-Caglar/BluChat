@@ -18,6 +18,8 @@
     <string name="login_guest">Guest Login</string>
     <string name="profile">Profile</string>
     <string name="name_surmane">Name Surname</string>
+    <string name="phone_number">Phone Number</string>
+    <string name="enter_your_phone_number">Enter your phone number</string>
 
 
 </resources>
