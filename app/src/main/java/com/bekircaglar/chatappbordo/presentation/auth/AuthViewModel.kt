@@ -48,25 +48,54 @@ class AuthViewModel @Inject constructor(
         }
 
 
-    fun signUp(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
+    fun signUp(
+        name: String,
+        phoneNumber: String,
+        email: String,
+        password: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) =
         viewModelScope.launch {
-            try {
-                val result = authUseCase.signUpUseCase.invoke(email, password)
-                when (result) {
-                    is Response.Success -> {
-                        onSuccess()
-                    }
+            val result1 = createUserUseCase.checkPassword(
+                name = name,
+                phoneNumber = phoneNumber,
+                email = email,
+            )
+            if (result1 is Response.Success) {
+                try {
+                    val result = authUseCase.signUpUseCase.invoke(email, password)
+                    when (result) {
+                        is Response.Success -> {
+                            onSuccess()
+                            createUser(
+                                onError = {
+                                    onError(it)
+                                },
+                                onSuccess = {
+                                },
+                                name = name,
+                                phoneNumber = phoneNumber,
+                                email = email,
+                            )
+                        }
 
-                    is Response.Error -> {
-                        onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
-                    }
+                        is Response.Error -> {
+                            onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
+                        }
 
-                    else -> {
+                        else -> {
+                        }
                     }
+                } catch (e: Exception) {
+                    onError(exceptionHandlerUseCase.invoke(e))
                 }
-            } catch (e: Exception) {
-                onError(exceptionHandlerUseCase.invoke(e))
+
+            } else {
+                onError("Password is not correct")
             }
+
+
         }
 
     fun createUser(
@@ -77,10 +106,8 @@ class AuthViewModel @Inject constructor(
         email: String,
     ) = viewModelScope.launch {
 
-        delay(3000L)
-
         try {
-            val result = createUserUseCase.invoke(
+            val result = createUserUseCase.createUser(
                 name = name,
                 phoneNumber = phoneNumber,
                 email = email,
@@ -102,6 +129,8 @@ class AuthViewModel @Inject constructor(
         } catch (e: Exception) {
             onError(exceptionHandlerUseCase.invoke(e))
         }
+
+
     }
 
 

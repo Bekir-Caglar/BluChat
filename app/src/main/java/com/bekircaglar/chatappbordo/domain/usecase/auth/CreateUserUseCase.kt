@@ -8,7 +8,7 @@ import javax.inject.Inject
 class CreateUserUseCase @Inject constructor(
     private val authRepository: AuthRepository
 ) {
-    suspend operator fun invoke(
+    suspend fun createUser(
         name: String,
         phoneNumber: String,
         email: String,
@@ -16,5 +16,12 @@ class CreateUserUseCase @Inject constructor(
         name = name,
         phoneNumber = phoneNumber,
         email = email,
+    )
+    suspend fun checkPassword(
+        name: String,
+        phoneNumber: String,
+        email: String,
+    ) = authRepository.checkPassword(
+        phoneNumber = phoneNumber,
     )
 }

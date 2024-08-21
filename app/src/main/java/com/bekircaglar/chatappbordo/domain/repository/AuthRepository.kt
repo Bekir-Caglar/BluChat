@@ -11,4 +11,6 @@ interface AuthRepository  {
     suspend fun signIn(email: String, password: String):Response<String>
     suspend fun signUp(email: String, password: String):Response<String>
     suspend fun createUser(name:String,phoneNumber:String,email: String,): Response<String>
+
+    suspend fun checkPassword(phoneNumber:String): Response<String>
 }
