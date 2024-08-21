@@ -48,6 +48,49 @@ class AuthViewModel @Inject constructor(
         }
 
 
+    fun checkPassword(
+        password: String,
+        email: String,
+        name: String,
+        phoneNumber: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) =
+        viewModelScope.launch {
+            try {
+
+                when (val result = createUserUseCase.checkPassword(phoneNumber)) {
+                    is Response.Success -> {
+                        onSuccess()
+                        signUp(
+                            name = name,
+                            phoneNumber = phoneNumber,
+                            email = email,
+                            password = password,
+                            onSuccess = {
+                                onSuccess()
+                            },
+                            onError = {
+                                onError(it)
+                            }
+                        )
+                    }
+
+                    is Response.Error -> {
+                        onError(
+                            exceptionHandlerUseCase.invoke(Exception(result.message))
+                        )
+                    }
+
+                    else -> {
+
+                    }
+                }
+            } catch (e: Exception) {
+                onError(exceptionHandlerUseCase.invoke(e))
+            }
+        }
+
     fun signUp(
         name: String,
         phoneNumber: String,
@@ -57,42 +100,32 @@ class AuthViewModel @Inject constructor(
         onError: (String) -> Unit
     ) =
         viewModelScope.launch {
-            val result1 = createUserUseCase.checkPassword(
-                name = name,
-                phoneNumber = phoneNumber,
-                email = email,
-            )
-            if (result1 is Response.Success) {
-                try {
-                    val result = authUseCase.signUpUseCase.invoke(email, password)
-                    when (result) {
-                        is Response.Success -> {
-                            onSuccess()
-                            createUser(
-                                onError = {
-                                    onError(it)
-                                },
-                                onSuccess = {
-                                },
-                                name = name,
-                                phoneNumber = phoneNumber,
-                                email = email,
-                            )
-                        }
 
-                        is Response.Error -> {
-                            onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
-                        }
-
-                        else -> {
-                        }
+            try {
+                when (val result = authUseCase.signUpUseCase.invoke(email, password)) {
+                    is Response.Success -> {
+                        onSuccess()
+                        createUser(
+                            name = name,
+                            phoneNumber = phoneNumber,
+                            email = email,
+                            onSuccess = {
+                                onSuccess()
+                            },
+                            onError = {
+                                onError(it)
+                            })
                     }
-                } catch (e: Exception) {
-                    onError(exceptionHandlerUseCase.invoke(e))
-                }
 
-            } else {
-                onError("Password is not correct")
+                    is Response.Error -> {
+                        onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
+                    }
+
+                    else -> {
+                    }
+                }
+            } catch (e: Exception) {
+                onError(exceptionHandlerUseCase.invoke(e))
             }
 
 

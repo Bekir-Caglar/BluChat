@@ -17,23 +17,27 @@ import kotlinx.coroutines.channels.trySendBlocking
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
-class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,private var databaseReference: DatabaseReference):AuthRepository {
+class AuthRepositoryImp @Inject constructor(
+    private val auth: FirebaseAuth,
+    private var databaseReference: DatabaseReference
+) : AuthRepository {
 
-    override fun isUserAuthenticatedInFirebase():Response<String>{
-        return Response.Success(auth.currentUser?.uid?:"")
+    override fun isUserAuthenticatedInFirebase(): Response<String> {
+        return Response.Success(auth.currentUser?.uid ?: "")
 
     }
-    override suspend fun signIn(email: String, password: String):Response<String>{
+
+    override suspend fun signIn(email: String, password: String): Response<String> {
         auth.signInWithEmailAndPassword(email, password).await()
 
         try {
-            if(auth.currentUser!=null){
+            if (auth.currentUser != null) {
                 return Response.Success(auth.currentUser.toString())
-            }
-            else{
+            } else {
                 return Response.Error("Unknown Error")
             }
         } catch (e: Exception) {
@@ -42,14 +46,13 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,privat
 
     }
 
-    override suspend fun signUp(email: String, password: String):Response<String>{
+    override suspend fun signUp(email: String, password: String): Response<String> {
         auth.createUserWithEmailAndPassword(email, password).await()
 
         try {
-            if(auth.currentUser!=null){
+            if (auth.currentUser != null) {
                 return Response.Success(auth.currentUser.toString())
-            }
-            else{
+            } else {
                 return Response.Error("Unknown Error")
             }
         } catch (e: Exception) {
@@ -72,7 +75,8 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,privat
                 status = true,
                 lastSeen = "12:19"
             )
-            databaseReference.child("Users").child(auth.currentUser?.uid.toString()).setValue(user).await()
+            databaseReference.child("Users").child(auth.currentUser?.uid.toString()).setValue(user)
+                .await()
             return Response.Success("User Created")
         } catch (e: Exception) {
             return Response.Error(e.message.toString())
@@ -80,30 +84,34 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,privat
     }
 
     override suspend fun checkPassword(phoneNumber: String): Response<String> {
-        val database = databaseReference.database.getReference("Users")
-        database.addListenerForSingleValueEvent(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                var phoneExists = false
-                for (userSnapshot in snapshot.children) {
-                    val user = userSnapshot.getValue(Users::class.java)
-                    if (user?.phoneNumber.toString().equals(phoneNumber)) {
-                        phoneExists = true
-                        break
+        // `suspendCancellableCoroutine` kullanarak asenkron işlemi beklemek için coroutine başlatıyoruz
+        return suspendCancellableCoroutine { continuation ->
+            val database = databaseReference.database.getReference("Users")
+            database.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    var phoneExists = false
+                    for (userSnapshot in snapshot.children) {
+                        val user = userSnapshot.getValue(Users::class.java)
+                        if (user?.phoneNumber.toString().equals(phoneNumber)) {
+                            phoneExists = true
+                            break
+                        }
+                    }
+                    // Telefon numarası bulunduysa Error döndürüyoruz
+                    if (phoneExists) {
+                        continuation.resume(Response.Error("Phone Number Exists")) { }
+                    } else {
+                        // Telefon numarası bulunmadıysa Success döndürüyoruz
+                        continuation.resume(Response.Success("Phone Number Does Not Exist")) { }
                     }
                 }
-                if (phoneExists){
-                    Response.Error("Phone Number Exists")
-                }
-                else{
-                    Response.Success("Phone Number Does Not Exist")
-                }
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                Response.Error(error.message)
-            }
-        })
-        return Response.Success("Phone Number Exists")
+                override fun onCancelled(error: DatabaseError) {
+                    // İşlem iptal edilirse Error döndürüyoruz
+                    continuation.resume(Response.Error(error.message)) { }
+                }
+            })
+        }
     }
 
 }
