@@ -1,11 +1,15 @@
 package com.bekircaglar.chatappbordo.data.repository
 
 import com.bekircaglar.chatappbordo.Response
+import com.bekircaglar.chatappbordo.domain.model.Users
 import com.bekircaglar.chatappbordo.domain.repository.AuthRepository
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.FirebaseDatabase
+import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.database
 import kotlinx.coroutines.cancel
 import kotlinx.coroutines.channels.awaitClose
@@ -59,14 +63,14 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,privat
         email: String
     ): Response<String> {
         try {
-            val user = hashMapOf(
-                "name" to name,
-                "phoneNumber" to phoneNumber,
-                "email" to email,
-                "uid" to auth.currentUser?.uid.toString(),
-                "profileImageUrl" to "",
-                "status" to true,
-                "lastSeen" to "12:19"
+            val user = Users(
+                name = name,
+                phoneNumber = phoneNumber,
+                email = email,
+                uid = auth.currentUser?.uid.toString(),
+                profileImageUrl = "",
+                status = true,
+                lastSeen = "12:19"
             )
             databaseReference.child("Users").child(auth.currentUser?.uid.toString()).setValue(user).await()
             return Response.Success("User Created")
@@ -75,5 +79,31 @@ class AuthRepositoryImp @Inject constructor(private val auth:FirebaseAuth,privat
         }
     }
 
+    override suspend fun checkPassword(phoneNumber: String): Response<String> {
+        val database = databaseReference.database.getReference("Users")
+        database.addListenerForSingleValueEvent(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var phoneExists = false
+                for (userSnapshot in snapshot.children) {
+                    val user = userSnapshot.getValue(Users::class.java)
+                    if (user?.phoneNumber.toString().equals(phoneNumber)) {
+                        phoneExists = true
+                        break
+                    }
+                }
+                if (phoneExists){
+                    Response.Error("Phone Number Exists")
+                }
+                else{
+                    Response.Success("Phone Number Does Not Exist")
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Response.Error(error.message)
+            }
+        })
+        return Response.Success("Phone Number Exists")
+    }
 
 }
