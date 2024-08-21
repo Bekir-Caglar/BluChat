@@ -180,7 +180,7 @@ fun SignUpScreen(navController: NavController) {
 
                     AuthButton(
                         onClick = {
-                            viewModel.signUp(
+                            viewModel.checkPassword(
                                 email = emailRegister,
                                 password = passwordRegister,
                                 name = nameAndSurname,

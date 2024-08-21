@@ -18,9 +18,7 @@ class CreateUserUseCase @Inject constructor(
         email = email,
     )
     suspend fun checkPassword(
-        name: String,
         phoneNumber: String,
-        email: String,
     ) = authRepository.checkPassword(
         phoneNumber = phoneNumber,
     )
