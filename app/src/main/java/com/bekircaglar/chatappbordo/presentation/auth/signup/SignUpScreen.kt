@@ -180,25 +180,20 @@ fun SignUpScreen(navController: NavController) {
 
                     AuthButton(
                         onClick = {
-                            viewModel.signUp(emailRegister, passwordRegister,
+                            viewModel.signUp(
+                                email = emailRegister,
+                                password = passwordRegister,
+                                name = nameAndSurname,
+                                phoneNumber = phoneNumber,
                                 onSuccess = {
                                     navController.navigate(Screens.HomeNav.route)
                                 },
                                 onError = {errorMessage ->
                                     ShowToastMessage(context = context, message = errorMessage)
                                 }
+
                             )
-                            viewModel.createUser(
-                                onError = { errorMessage ->
-                                    ShowToastMessage(context = context, message = errorMessage)
-                                },
-                                onSuccess = {
-                                    ShowToastMessage(context = context, message = it)
-                                },
-                                name = nameAndSurname,
-                                phoneNumber = phoneNumber,
-                                email = emailRegister,
-                            )
+
                         },
                         buttonText = stringResource(R.string.title_signup),
                     )

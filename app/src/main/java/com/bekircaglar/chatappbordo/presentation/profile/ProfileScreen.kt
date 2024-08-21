@@ -17,6 +17,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,6 +32,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.domain.model.MenuItem
 import com.bekircaglar.chatappbordo.navigation.Screens
@@ -50,6 +52,23 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
     var showAppearanceDialog by remember { mutableStateOf(false) }
     val isDarkTheme by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(isDarkTheme) }
+    var userName: String = ""
+    var userNumber : String = ""
+    var userImageUrl : String? = null
+
+    val user by viewModel.users.collectAsState()
+    val error by viewModel.error.collectAsState()
+
+    if (error != null) {
+        ShowToastMessage(context = context, message = error.toString())
+    }else{
+        user?.let {
+            userName = it.name
+            userNumber = it.phoneNumber
+            userImageUrl = it.profileImageUrl
+        }
+
+    }
 
     val menuItemList = listOf(
         MenuItem(painterResource(id = R.drawable.ic_account), "Account"){
@@ -82,13 +101,10 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
                 onThemeChange(it)
                 saveThemePreference(context = context, it)
 
-//                (context as? Activity)?.recreate()
-
             },
             isChecked2 = isChecked
         )
     }
-    //TODO: AccountDialog ile açmak performans oalrak problemli olabilir mi
     if (showAccountDialog) {
         AccountDialog(
             onDismissRequest = { showAccountDialog = false },
@@ -130,18 +146,19 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Image(
-                    painter = painterResource(id = R.drawable.ic_user_def),
+                    painter = if (!(userImageUrl.isNullOrEmpty())) rememberImagePainter(userImageUrl) else painterResource(id = R.drawable.ic_outlined_profile),
                     contentDescription = null,
                     Modifier
                         .size(100.dp)
                         .shadow(elevation = 5.dp, shape = CircleShape)
                         .clip(CircleShape)
+                        .background(color = Color.White)
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                Text(text = "Bekir Çağlar", style = MaterialTheme.typography.titleLarge)
+                Text(text = userName, style = MaterialTheme.typography.titleLarge)
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
-                    text = "example@example.com",
+                    text = "+90 $userNumber",
                     style = MaterialTheme.typography.bodyMedium,
                     color = Color.Gray
                 )

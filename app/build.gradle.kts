@@ -79,6 +79,9 @@ dependencies {
     implementation(libs.firebase.auth)
 
     implementation(libs.androidx.core.splashscreen)
+    implementation(libs.kotlinx.coroutines.android)
+    implementation(libs.coil.compose)
+
 
 
 
