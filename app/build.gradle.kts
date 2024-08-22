@@ -73,6 +73,7 @@ dependencies {
 
     implementation(libs.hilt)
     implementation(libs.firebase.database)
+    implementation(libs.firebase.storage)
     ksp(libs.hilt.kapt)
 
     implementation(platform(libs.firebase.bom))

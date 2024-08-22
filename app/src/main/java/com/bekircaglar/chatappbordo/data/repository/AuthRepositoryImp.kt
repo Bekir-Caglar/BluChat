@@ -62,12 +62,14 @@ class AuthRepositoryImp @Inject constructor(
 
     override suspend fun createUser(
         name: String,
+        surname:String,
         phoneNumber: String,
         email: String
     ): Response<String> {
         try {
             val user = Users(
                 name = name,
+                surname = surname,
                 phoneNumber = phoneNumber,
                 email = email,
                 uid = auth.currentUser?.uid.toString(),
@@ -83,8 +85,7 @@ class AuthRepositoryImp @Inject constructor(
         }
     }
 
-    override suspend fun checkPassword(phoneNumber: String): Response<String> {
-        // `suspendCancellableCoroutine` kullanarak asenkron işlemi beklemek için coroutine başlatıyoruz
+    override suspend fun checkPhoneNumber(phoneNumber: String): Response<String> {
         return suspendCancellableCoroutine { continuation ->
             val database = databaseReference.database.getReference("Users")
             database.addListenerForSingleValueEvent(object : ValueEventListener {
@@ -97,17 +98,14 @@ class AuthRepositoryImp @Inject constructor(
                             break
                         }
                     }
-                    // Telefon numarası bulunduysa Error döndürüyoruz
                     if (phoneExists) {
                         continuation.resume(Response.Error("Phone Number Exists")) { }
                     } else {
-                        // Telefon numarası bulunmadıysa Success döndürüyoruz
                         continuation.resume(Response.Success("Phone Number Does Not Exist")) { }
                     }
                 }
 
                 override fun onCancelled(error: DatabaseError) {
-                    // İşlem iptal edilirse Error döndürüyoruz
                     continuation.resume(Response.Error(error.message)) { }
                 }
             })

@@ -2,10 +2,11 @@ package com.bekircaglar.chatappbordo.domain.model
 
 data class Users(
     val uid: String= "",
-    val name: String=  "",
+    var name: String=  "",
+    var surname : String= "",
     val email: String= "",
-    val phoneNumber: String= "",
-    val profileImageUrl: String= "",
-    val status: Boolean = false,
-    val lastSeen: String = "",
+    var phoneNumber: String= "",
+    var profileImageUrl: String= "",
+    var status: Boolean = false,
+    var lastSeen: String = "",
 )
