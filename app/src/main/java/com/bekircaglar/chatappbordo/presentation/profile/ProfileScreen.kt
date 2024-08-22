@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
@@ -44,7 +45,7 @@ import com.bekircaglar.chatappbordo.presentation.profile.appearance.AppearanceDi
 import com.bekircaglar.chatappbordo.saveThemePreference
 
 @Composable
-fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit) {
+fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit) {
 
     val context = LocalContext.current
     val viewModel: ProfileViewModel = hiltViewModel()
@@ -53,17 +54,17 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
     val isDarkTheme by remember { mutableStateOf(false) }
     var isChecked by remember { mutableStateOf(isDarkTheme) }
     var userName: String = ""
-    var userNumber : String = ""
-    var userImageUrl : String? = null
+    var userNumber: String = ""
+    var userImageUrl: String? = null
 
-    val user by viewModel.users.collectAsState()
-    val error by viewModel.error.collectAsState()
+    val user by viewModel.users.collectAsStateWithLifecycle()
+    val error by viewModel.error.collectAsStateWithLifecycle()
 
     if (error != null) {
         ShowToastMessage(context = context, message = error.toString())
-    }else{
+    } else {
         user?.let {
-            userName = it.name
+            userName = "${it.name} ${it.surname}"
             userNumber = it.phoneNumber
             userImageUrl = it.profileImageUrl
         }
@@ -71,16 +72,16 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
     }
 
     val menuItemList = listOf(
-        MenuItem(painterResource(id = R.drawable.ic_account), "Account"){
+        MenuItem(painterResource(id = R.drawable.ic_account), "Account") {
             showAccountDialog = true
         },
-        MenuItem(painterResource(id = R.drawable.ic_sun), "Appearance"){
+        MenuItem(painterResource(id = R.drawable.ic_sun), "Appearance") {
             showAppearanceDialog = true
         },
         MenuItem(painterResource(id = R.drawable.ic_privacy), "Privacy", {}),
         MenuItem(painterResource(id = R.drawable.ic_notification), "Notification", {}),
         MenuItem(painterResource(id = R.drawable.ic_help), "Help", {}),
-        MenuItem(painterResource(id = R.drawable.ic_logout), "Logout"){
+        MenuItem(painterResource(id = R.drawable.ic_logout), "Logout") {
 
             viewModel.signOut(
                 onSuccess = {
@@ -107,17 +108,12 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
     }
     if (showAccountDialog) {
         AccountDialog(
-            onDismissRequest = { showAccountDialog = false },
-            onSave = { name, surname, email ->
-                // Save the data here
+            onDismissRequest = {
                 showAccountDialog = false
-            }
-        )
+            },
+
+            )
     }
-
-
-
-
     Scaffold(
         topBar = {
             ChatAppTopBar(
@@ -146,7 +142,9 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
                 Image(
-                    painter = if (!(userImageUrl.isNullOrEmpty())) rememberImagePainter(userImageUrl) else painterResource(id = R.drawable.ic_outlined_profile),
+                    painter = if (!(userImageUrl.isNullOrEmpty())) rememberImagePainter(userImageUrl) else painterResource(
+                        id = R.drawable.ic_outlined_profile
+                    ),
                     contentDescription = null,
                     Modifier
                         .size(100.dp)
@@ -169,7 +167,7 @@ fun ProfileScreen(navController: NavController,onThemeChange: (Boolean) -> Unit)
                     .height(500.dp),
                 contentPadding = PaddingValues(top = 8.dp),
 
-            ) {
+                ) {
 
                 items(menuItemList) {
                     ProfileMenu(menuIcon = it.icon, menuTitle = it.title, onClick = {

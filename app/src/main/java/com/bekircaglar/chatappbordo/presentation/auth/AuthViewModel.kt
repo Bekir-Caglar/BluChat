@@ -1,16 +1,13 @@
 package com.bekircaglar.chatappbordo.presentation.auth
 
-import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.chatappbordo.Response
-import com.bekircaglar.chatappbordo.ShowErrorDialog
+import com.bekircaglar.chatappbordo.domain.usecase.CheckPhoneNumberUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.ExceptionHandlerUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.auth.CreateUserUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Delay
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -18,7 +15,8 @@ import javax.inject.Inject
 class AuthViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
     private val createUserUseCase: CreateUserUseCase,
-    private val exceptionHandlerUseCase: ExceptionHandlerUseCase
+    private val exceptionHandlerUseCase: ExceptionHandlerUseCase,
+    private val checkPhoneNumberUseCase: CheckPhoneNumberUseCase
 ) : ViewModel() {
 
 
@@ -52,6 +50,7 @@ class AuthViewModel @Inject constructor(
         password: String,
         email: String,
         name: String,
+        surname: String,
         phoneNumber: String,
         onSuccess: () -> Unit,
         onError: (String) -> Unit
@@ -59,11 +58,12 @@ class AuthViewModel @Inject constructor(
         viewModelScope.launch {
             try {
 
-                when (val result = createUserUseCase.checkPassword(phoneNumber)) {
+                when (val result = checkPhoneNumberUseCase.checkPhoneNumber(phoneNumber)) {
                     is Response.Success -> {
                         onSuccess()
                         signUp(
                             name = name,
+                            surname = surname,
                             phoneNumber = phoneNumber,
                             email = email,
                             password = password,
@@ -93,6 +93,7 @@ class AuthViewModel @Inject constructor(
 
     fun signUp(
         name: String,
+        surname: String,
         phoneNumber: String,
         email: String,
         password: String,
@@ -107,6 +108,7 @@ class AuthViewModel @Inject constructor(
                         onSuccess()
                         createUser(
                             name = name,
+                            surname = surname,
                             phoneNumber = phoneNumber,
                             email = email,
                             onSuccess = {
@@ -135,6 +137,7 @@ class AuthViewModel @Inject constructor(
         onError: (String) -> Unit,
         onSuccess: (String) -> Unit,
         name: String,
+        surname: String,
         phoneNumber: String,
         email: String,
     ) = viewModelScope.launch {
@@ -142,6 +145,7 @@ class AuthViewModel @Inject constructor(
         try {
             val result = createUserUseCase.createUser(
                 name = name,
+                surname = surname,
                 phoneNumber = phoneNumber,
                 email = email,
             )

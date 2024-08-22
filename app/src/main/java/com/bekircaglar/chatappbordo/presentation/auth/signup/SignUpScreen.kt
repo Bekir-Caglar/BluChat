@@ -64,7 +64,8 @@ import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 @Composable
 fun SignUpScreen(navController: NavController) {
     val viewModel: AuthViewModel = hiltViewModel()
-    var nameAndSurname by remember { mutableStateOf("") }
+    var name by remember { mutableStateOf("") }
+    var surname by remember { mutableStateOf("") }
     var emailRegister by remember { mutableStateOf("") }
     var passwordRegister by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
@@ -115,12 +116,29 @@ fun SignUpScreen(navController: NavController) {
                     .padding(horizontal = 32.dp)
             ) {
                 AuthTextField(
-                    hint = { Text(text = stringResource(R.string.name_surmane)) },
-                    value = nameAndSurname,
-                    onValueChange = { nameAndSurname = it },
+                    hint = { Text(text = "Name")},
+                    value = name,
+                    onValueChange = { name = it },
                     leadingIcon = Icons.Default.Person,
                     keyboardType = KeyboardType.Text,
-                    title = stringResource(R.string.name_surmane)
+                    title = "Name"
+                )
+
+            }
+            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Box(
+                contentAlignment = Alignment.TopStart,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 32.dp)
+            ) {
+                AuthTextField(
+                    hint = { Text(text = "Surname") },
+                    value = surname,
+                    onValueChange = { surname = it },
+                    leadingIcon = Icons.Default.Person,
+                    keyboardType = KeyboardType.Text,
+                    title = "Surname"
                 )
 
             }
@@ -183,7 +201,8 @@ fun SignUpScreen(navController: NavController) {
                             viewModel.checkPassword(
                                 email = emailRegister,
                                 password = passwordRegister,
-                                name = nameAndSurname,
+                                name = name,
+                                surname = surname,
                                 phoneNumber = phoneNumber,
                                 onSuccess = {
                                     navController.navigate(Screens.HomeNav.route)

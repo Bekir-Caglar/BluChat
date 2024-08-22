@@ -1,6 +1,9 @@
 package com.bekircaglar.chatappbordo.data.repository
 
+import android.net.Uri
 import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.domain.model.Users
 import com.bekircaglar.chatappbordo.domain.repository.ProfileRepository
@@ -10,14 +13,19 @@ import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.database.getValue
+import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.catch
+import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.tasks.await
 import java.util.concurrent.Flow
 import javax.inject.Inject
 
 class ProfileRepositoryImp @Inject constructor(
     private val auth: FirebaseAuth,
-    private val databaseReference: DatabaseReference
+    private val databaseReference: DatabaseReference,
+    private val storageReference: FirebaseStorage
 ) : ProfileRepository {
     override suspend fun getUserProfile(): kotlinx.coroutines.flow.Flow<Users?> =
         callbackFlow {
@@ -40,9 +48,33 @@ class ProfileRepositoryImp @Inject constructor(
 
         }
 
-    override suspend fun updateUserProfile() {
+    override suspend fun updateUserProfile(user: Users): Response<String> {
 
+        val userId = auth.currentUser?.uid
+        val userRef = databaseReference.database.getReference("Users").child(userId.toString())
 
+        try {
+            userRef.setValue(user).await()
+            return Response.Success("User Updated")
+        } catch (e: Exception) {
+            return Response.Error(e.message.toString())
+        }
+
+    }
+    override suspend fun uploadImage(uri: Uri): kotlinx.coroutines.flow.Flow<Response<String>>  = flow{
+        val storageReference = storageReference.reference.child("profileImages/${uri.lastPathSegment}")
+        val uploadTask = storageReference.putFile(uri)
+
+        val downloadUrl = uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful){
+                task.exception?.let {
+                    throw it
+                }
+            }
+            storageReference.downloadUrl
+
+        }.await()
+        emit(Response.Success(downloadUrl.toString()))
     }
 
     override suspend fun signOut(): Response<String> {

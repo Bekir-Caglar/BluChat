@@ -30,6 +30,7 @@ fun AuthButton(
     onClick: () -> Unit,
     buttonIcon: Painter? = null,
     buttonText: String,
+    enabled : Boolean = true,
     buttonTextSize: TextUnit = 16.sp,
     containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer
@@ -45,7 +46,8 @@ fun AuthButton(
             containerColor = containerColor,
             disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
             disabledContentColor = MaterialTheme.colorScheme.secondary
-        )
+        ),
+        enabled = enabled
     ) {
         if (buttonIcon != null) {
             Icon(
