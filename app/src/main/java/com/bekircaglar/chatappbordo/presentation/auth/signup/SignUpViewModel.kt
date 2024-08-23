@@ -1,4 +1,4 @@
-package com.bekircaglar.chatappbordo.presentation.auth
+package com.bekircaglar.chatappbordo.presentation.auth.signup
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
@@ -12,38 +12,14 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class AuthViewModel @Inject constructor(
+class SignUpViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
     private val createUserUseCase: CreateUserUseCase,
     private val exceptionHandlerUseCase: ExceptionHandlerUseCase,
     private val checkPhoneNumberUseCase: CheckPhoneNumberUseCase
-) : ViewModel() {
+):ViewModel() {
 
 
-    fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
-        viewModelScope.launch {
-            try {
-
-                val result = authUseCase.signInUseCase.invoke(email, password)
-                when (result) {
-                    is Response.Success -> {
-                        onSuccess()
-                    }
-
-                    is Response.Error -> {
-                        onError(
-                            exceptionHandlerUseCase.invoke(Exception(result.message))
-                        )
-                    }
-
-                    else -> {
-
-                    }
-                }
-            } catch (e: Exception) {
-                onError(exceptionHandlerUseCase.invoke(e))
-            }
-        }
 
 
     fun checkPassword(
@@ -169,6 +145,8 @@ class AuthViewModel @Inject constructor(
 
 
     }
+
+
 
 
 }

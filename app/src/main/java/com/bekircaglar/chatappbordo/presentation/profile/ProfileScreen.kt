@@ -136,7 +136,9 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
     }
     if (showAccountDialog) {
         AccountDialog(
-            onDismissRequest = {},
+            onDismissRequest = {
+                showAccountDialog = false
+            },
             onSave = {showAccountDialog = false},
             profileImage = if (selectedImageUri != null) selectedImageUri else currentUser?.profileImageUrl,
             isImageLoading = isImageLoading,
