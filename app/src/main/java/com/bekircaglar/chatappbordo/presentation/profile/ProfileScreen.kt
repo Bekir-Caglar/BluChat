@@ -1,5 +1,9 @@
 package com.bekircaglar.chatappbordo.presentation.profile
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -49,6 +53,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
 
     val context = LocalContext.current
     val viewModel: ProfileViewModel = hiltViewModel()
+
     var showAccountDialog by remember { mutableStateOf(false) }
     var showAppearanceDialog by remember { mutableStateOf(false) }
     val isDarkTheme by remember { mutableStateOf(false) }
@@ -59,6 +64,29 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
 
     val user by viewModel.users.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
+
+    val currentUser = viewModel.users.collectAsState().value
+    val selectedImageUri by viewModel.selectedImageUri.collectAsState()
+    val uploadedImageUri by viewModel.uploadedImageUri.collectAsState()
+    val isImageLoading by viewModel.isLoading.collectAsState()
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onImageSelected(it)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     if (error != null) {
         ShowToastMessage(context = context, message = error.toString())
@@ -71,6 +99,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
 
     }
 
+
     val menuItemList = listOf(
         MenuItem(painterResource(id = R.drawable.ic_account), "Account") {
             showAccountDialog = true
@@ -82,7 +111,6 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
         MenuItem(painterResource(id = R.drawable.ic_notification), "Notification", {}),
         MenuItem(painterResource(id = R.drawable.ic_help), "Help", {}),
         MenuItem(painterResource(id = R.drawable.ic_logout), "Logout") {
-
             viewModel.signOut(
                 onSuccess = {
                     navController.navigate(Screens.AuthNav.route)
@@ -108,11 +136,29 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
     }
     if (showAccountDialog) {
         AccountDialog(
-            onDismissRequest = {
-                showAccountDialog = false
+            onDismissRequest = {},
+            onSave = {showAccountDialog = false},
+            profileImage = if (selectedImageUri != null) selectedImageUri else currentUser?.profileImageUrl,
+            isImageLoading = isImageLoading,
+            onImageSelected = { uri ->
+                viewModel.onImageSelected(uri)
             },
+            onPermissionRequest = {
+                permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+            },
+            onCheckPhoneNumber = { name, surname, phoneNumber, profileImage, onSuccess, onError ->
+                viewModel.checkPhoneNumber(
+                    name = name,
+                    surname = surname,
+                    phoneNumber = phoneNumber,
+                    profileImage = profileImage,
+                    onSuccess = onSuccess,
+                    onError = onError
+                )
+            },
+            currentUsers = currentUser!!
+        )
 
-            )
     }
     Scaffold(
         topBar = {
@@ -184,12 +230,3 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
 
     }
 }
-
-
-//    @Preview
-//    @Composable
-//    fun ProfileScreenPreview() {
-//        ChatAppBordoTheme {
-//            ProfileScreen()
-//        }
-//    }

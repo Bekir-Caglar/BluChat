@@ -1,5 +1,6 @@
 package com.bekircaglar.chatappbordo.presentation.profile.account
 
+import android.content.Context
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.widget.Toast
@@ -47,6 +48,7 @@ import androidx.core.content.ContextCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
+import com.bekircaglar.chatappbordo.domain.model.Users
 import com.bekircaglar.chatappbordo.presentation.ShowToastMessage
 import com.bekircaglar.chatappbordo.presentation.auth.component.AuthButton
 import com.bekircaglar.chatappbordo.presentation.profile.ProfileViewModel
@@ -57,49 +59,27 @@ import okhttp3.internal.wait
 @Composable
 fun AccountDialog(
     onDismissRequest: () -> Unit,
-    onSave : () -> Unit = {},
-    initialName: String = "",
-    initialSurname: String = "",
-    initialEmail: String = "",
-    initialPhoneNumber: String = ""
+    onSave: () -> Unit,
+    profileImage: Any?,
+    isImageLoading: Boolean,
+    currentUsers: Users,
+    onImageSelected: (Uri) -> Unit,
+    onPermissionRequest: () -> Unit,
+    onCheckPhoneNumber: (
+        name: String,
+        surname: String,
+        phoneNumber: String,
+        profileImage: String,
+        onSuccess: () -> Unit,
+        onError: (String) -> Unit
+    ) -> Unit
 ) {
-    val viewModel: ProfileViewModel = hiltViewModel()
-    var name by remember { mutableStateOf(initialName) }
-    var surname by remember { mutableStateOf(initialSurname) }
-    var email by remember { mutableStateOf(initialEmail) }
-    var phoneNumber by remember { mutableStateOf(initialPhoneNumber) }
 
-    val profileImage = viewModel.users.collectAsState().value?.profileImageUrl
-    val currentUser = viewModel.users.collectAsState().value
+    var name by remember { mutableStateOf("") }
+    var surname by remember { mutableStateOf("") }
+    var phoneNumber by remember { mutableStateOf("") }
 
     val context = LocalContext.current
-
-    val selectedImageUri by viewModel.selectedImageUri.collectAsState()
-
-    val uploadedImageUri by viewModel.uploadedImageUri.collectAsState()
-
-    val isImageLoading by viewModel.isLoading.collectAsState()
-
-
-
-    val galleryLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.GetContent()
-    ) { uri: Uri? ->
-        uri?.let {
-            viewModel.onImageSelected(it)
-        }
-    }
-    val permissionLauncher = rememberLauncherForActivityResult(
-        contract = ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (isGranted) {
-            galleryLauncher.launch("image/*")
-        } else {
-            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-
 
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Surface(
@@ -112,35 +92,18 @@ fun AccountDialog(
                     .fillMaxWidth(),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                // Profile Image
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = if(isImageLoading){
-                    Modifier
-                }
-                    else{
-                    Modifier.clickable{
-                        when {
-                            ContextCompat.checkSelfPermission(
-                                context,
-                                android.Manifest.permission.READ_MEDIA_IMAGES
-                            ) == PackageManager.PERMISSION_GRANTED -> {
-                                galleryLauncher.launch("image/*")
-
-                            }
-
-                            else -> {
-                                permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
-                            }
+                    modifier = if (isImageLoading) {
+                        Modifier
+                    } else {
+                        Modifier.clickable {
+                            onPermissionRequest()
                         }
                     }
-                }
                 ) {
-
-
-
                     Image(
-                        painter = rememberImagePainter(data = if (selectedImageUri != null) selectedImageUri else profileImage),
+                        painter = rememberImagePainter(data = profileImage),
                         contentDescription = "Profile Image",
                         modifier = Modifier
                             .size(100.dp)
@@ -158,21 +121,18 @@ fun AccountDialog(
                             .align(Alignment.BottomEnd)
                             .border(2.dp, Color.White, CircleShape)
                             .padding(4.dp)
-
-
                     )
-                    if (isImageLoading){
+                    if (isImageLoading) {
                         CircularProgressIndicator()
                     }
                 }
-
 
                 Spacer(modifier = Modifier.height(16.dp))
 
                 OutlinedTextField(
                     value = name,
                     onValueChange = { name = it },
-                    label = { Text(text = "Name : ${currentUser?.name}") },
+                    label = { Text(text = "Name: ${currentUsers.name}") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -181,7 +141,7 @@ fun AccountDialog(
                 OutlinedTextField(
                     value = surname,
                     onValueChange = { surname = it },
-                    label = { Text("Surname : ${currentUser?.surname}") },
+                    label = { Text("Surname: ${currentUsers.surname}") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -190,7 +150,7 @@ fun AccountDialog(
                 OutlinedTextField(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
-                    label = { Text("Phone Number : ${currentUser?.phoneNumber}") },
+                    label = { Text("Phone Number: ${currentUsers.phoneNumber}") },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -198,18 +158,18 @@ fun AccountDialog(
 
                 Column(modifier = Modifier.padding(horizontal = 32.dp)) {
                     AuthButton(
-                        enabled = isImageLoading.not(),
+                        enabled = !isImageLoading,
                         onClick = {
-                            viewModel.checkPhoneNumber(
-                                name = name,
-                                surname = surname,
-                                phoneNumber = phoneNumber,
-                                profileImage = uploadedImageUri.toString(),
-                                onSuccess = {
+                            onCheckPhoneNumber(
+                                name,
+                                surname,
+                                phoneNumber,
+                                profileImage.toString(),
+                                {
                                     onDismissRequest()
                                     onSave()
                                 },
-                                onError = {
+                                {
                                     ShowToastMessage(context = context, message = it)
                                 }
                             )
@@ -219,15 +179,5 @@ fun AccountDialog(
                 }
             }
         }
-    }
-}
-
-@Preview
-@Composable
-fun AccountDialogPreview() {
-    ChatAppBordoTheme {
-        AccountDialog(
-            onDismissRequest = {},
-        )
     }
 }
