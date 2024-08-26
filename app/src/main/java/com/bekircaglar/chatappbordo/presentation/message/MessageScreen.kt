@@ -1,4 +1,4 @@
-package com.bekircaglar.chatappbordo.presentation.chat.message
+package com.bekircaglar.chatappbordo.presentation.message
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -31,9 +32,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
+import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.presentation.chat.component.SearchTextField
 import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
@@ -41,8 +47,13 @@ import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 
 
 @Composable
-fun MessageScreen() {
-    val userName = "Bekir Çağlar"
+fun MessageScreen(navController: NavController,userId:String,chatId:String) {
+
+
+    val viewModel: MessageViewModel = hiltViewModel()
+    viewModel.createChatRoom(userId,chatId)
+
+    val userInfo by viewModel.userData.collectAsStateWithLifecycle()
 
     var message by remember { mutableStateOf("") }
     Scaffold(
@@ -51,14 +62,15 @@ fun MessageScreen() {
                 title = {
                     Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp)) {
                         Image(
-                            painter = painterResource(id = R.drawable.ic_user4),
+                            painter = rememberImagePainter(data = userInfo?.profileImageUrl),
                             contentDescription = null,
+                            contentScale = ContentScale.Crop,
                             modifier = Modifier
                                 .clip(CircleShape)
-                                .size(44.dp)
+                                .size(44.dp),
                         )
                         Text(
-                            text = userName,
+                            text = userInfo?.name ?: "",
                             modifier = Modifier
                                 .padding(start = 10.dp),
                             fontSize = MaterialTheme.typography.titleLarge.fontSize,
@@ -112,12 +124,3 @@ fun MessageScreen() {
 
 
 }
-
-@Preview
-@Composable
-fun PreviewMessageScreen() {
-    ChatAppBordoTheme {
-        MessageScreen()
-    }
-}
-

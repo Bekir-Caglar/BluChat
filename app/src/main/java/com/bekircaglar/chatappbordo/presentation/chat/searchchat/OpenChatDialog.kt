@@ -20,13 +20,16 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.domain.model.Users
+import com.bekircaglar.chatappbordo.navigation.Screens
 import com.bekircaglar.chatappbordo.presentation.auth.signup.SignUpViewModel
 import com.bekircaglar.chatappbordo.presentation.chat.ChatViewModel
 import com.bekircaglar.chatappbordo.presentation.chat.Chats
+import java.util.UUID
 
 @Composable
-fun OpenChatDialog(textFieldValue :String,onSearchQueryChange:(String)-> Unit,searchResults:List<Users>,onDismiss: () -> Unit){
+fun OpenChatDialog(navController: NavController,textFieldValue :String,onSearchQueryChange:(String)-> Unit,searchResults:List<Users>,onDismiss: () -> Unit){
 
 
 
@@ -55,7 +58,9 @@ fun OpenChatDialog(textFieldValue :String,onSearchQueryChange:(String)-> Unit,se
 
                 LazyColumn {
                     items(searchResults) { contact ->
-                        Chats(profileImage = contact.profileImageUrl, name = contact.name, surname = contact.surname, lastMessage = null , messageTime = null, isOnline = contact.status)
+                        Chats(profileImage = contact.profileImageUrl, name = contact.name, surname = contact.surname, lastMessage = null , messageTime = null, isOnline = contact.status,){
+                           navController.navigate(Screens.MessageScreen.createRoute(contact.uid,UUID.randomUUID().toString()))
+                        }
                     }
                 }
             }
