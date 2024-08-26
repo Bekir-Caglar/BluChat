@@ -74,7 +74,7 @@ class AuthRepositoryImp @Inject constructor(
                 email = email,
                 uid = auth.currentUser?.uid.toString(),
                 profileImageUrl = "",
-                status = true,
+                status = false,
                 lastSeen = "12:19"
             )
             databaseReference.child("Users").child(auth.currentUser?.uid.toString()).setValue(user)

@@ -44,6 +44,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.domain.model.ChatData
@@ -51,6 +53,7 @@ import com.bekircaglar.chatappbordo.presentation.auth.component.AuthTextField
 import com.bekircaglar.chatappbordo.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.chatappbordo.presentation.chat.component.ChatAppFAB
 import com.bekircaglar.chatappbordo.presentation.chat.component.SearchTextField
+import com.bekircaglar.chatappbordo.presentation.chat.searchchat.OpenChatDialog
 import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
 import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 
@@ -58,8 +61,14 @@ import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 @Composable
 fun ChatScreen(navController: NavController) {
 
-    var searchActive by remember { mutableStateOf(false) }
+    val viewModel : ChatViewModel = hiltViewModel()
+    var isSearchActive by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
+    var addChatActive by remember { mutableStateOf(false) }
+
+    val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
+    val textFieldValue by viewModel.searchQuery.collectAsStateWithLifecycle()
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -68,14 +77,14 @@ fun ChatScreen(navController: NavController) {
                 },
                 actions = {
                     AnimatedVisibility(
-                        visible = searchActive,
+                        visible = isSearchActive,
                         enter = expandHorizontally(),
                     ) {
-                        // component yap
+
                         SearchTextField(searchText = searchText, onSearchTextChange = { searchText = it })
 
                     }
-                    IconButton(onClick = { searchActive = !searchActive }) {
+                    IconButton(onClick = { isSearchActive = !isSearchActive }) {
                         Icon(Icons.Default.Search, contentDescription = "Search")
                     }
                 }
@@ -83,16 +92,32 @@ fun ChatScreen(navController: NavController) {
             )
         },
         floatingActionButton = {
-            ChatAppFAB(contentColor = MaterialTheme.colorScheme.onSecondaryContainer)
+            ChatAppFAB(contentColor = MaterialTheme.colorScheme.onSecondaryContainer, onClick = {
+                addChatActive = true
+            })
         },
         bottomBar = {
             ChatAppBottomAppBar(navController = navController)
         }
     ) {
+
+        if (addChatActive){
+            OpenChatDialog(
+                searchResults = searchResults,
+                textFieldValue = textFieldValue,
+                onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                onDismiss = { addChatActive = false }
+
+            )
+        }
+
+
+
         val chatList = listOf(
             ChatData(
                 profileImage = painterResource(id = R.drawable.ic_user1),
-                userName = "John Doe",
+                name = "John",
+                surname = "Doe",
                 lastMessage = "Let's catch up tomorrow!",
                 messageTime = "12:45 PM",
                 unreadCount = 1,
@@ -100,7 +125,8 @@ fun ChatScreen(navController: NavController) {
             ),
             ChatData(
                 profileImage = painterResource(id = R.drawable.ic_user2),
-                userName = "Jane Smith",
+                name = "Jane",
+                surname = "Smith",
                 lastMessage = "Thank you for the help!",
                 messageTime = "11:30 AM",
                 unreadCount = 0,
@@ -108,7 +134,8 @@ fun ChatScreen(navController: NavController) {
             ),
             ChatData(
                 profileImage = painterResource(id = R.drawable.ic_user3),
-                userName = "Sam Wilson",
+                name = "Sam",
+                surname = "Wilson",
                 lastMessage = "Call me when you're free.",
                 messageTime = "10:15 AM",
                 unreadCount = 3,
@@ -116,7 +143,8 @@ fun ChatScreen(navController: NavController) {
             ),
             ChatData(
                 profileImage = painterResource(id = R.drawable.ic_user4),
-                userName = "Emily Davis",
+                name = "Emily",
+                surname = "Brown",
                 lastMessage = "See you soon!",
                 messageTime = "09:50 AM",
                 unreadCount = 0,
@@ -124,7 +152,8 @@ fun ChatScreen(navController: NavController) {
             ),
             ChatData(
                 profileImage = painterResource(id = R.drawable.ic_user5),
-                userName = "Michael Brown",
+                name = "Michael",
+                surname = "Davis",
                 lastMessage = "Meeting rescheduled to 3 PM.",
                 messageTime = "08:30 AM",
                 unreadCount = 2,
@@ -138,8 +167,9 @@ fun ChatScreen(navController: NavController) {
             .padding(it)) {
             items(chatList) { chat ->
                 Chats(
-                    profileImage = chat.profileImage,
-                    userName = chat.userName,
+                    profileImage = chat.profileImage.toString(),
+                    name = chat.name,
+                    surname = chat.surname,
                     lastMessage = chat.lastMessage,
                     messageTime = chat.messageTime,
                     unreadCount = chat.unreadCount,
@@ -153,12 +183,3 @@ fun ChatScreen(navController: NavController) {
 
         }
     }
-
-
-//@Preview
-//@Composable
-//fun ChatScreenPreview() {
-//    ChatAppBordoTheme {
-//        ChatScreen()
-//    }
-//}

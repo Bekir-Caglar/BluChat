@@ -60,7 +60,7 @@ import okhttp3.internal.wait
 fun AccountDialog(
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
-    profileImage: Any?,
+    profileImage1: Any?,
     isImageLoading: Boolean,
     currentUsers: Users,
     onImageSelected: (Uri) -> Unit,
@@ -103,7 +103,7 @@ fun AccountDialog(
                     }
                 ) {
                     Image(
-                        painter = rememberImagePainter(data = profileImage),
+                        painter = rememberImagePainter(data = profileImage1),
                         contentDescription = "Profile Image",
                         modifier = Modifier
                             .size(100.dp)
@@ -164,7 +164,7 @@ fun AccountDialog(
                                 name,
                                 surname,
                                 phoneNumber,
-                                profileImage.toString(),
+                                profileImage1.toString(),
                                 {
                                     onDismissRequest()
                                     onSave()

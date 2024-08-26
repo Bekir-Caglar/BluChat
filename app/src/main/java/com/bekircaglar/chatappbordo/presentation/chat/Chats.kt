@@ -27,16 +27,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
 
 @Composable
 fun Chats(
-    profileImage: Painter,
-    userName: String,
-    lastMessage: String,
-    messageTime: String,
-    unreadCount: Int = 0, // Varsayılan olarak 0
-    isOnline: Boolean = false // Kullanıcının online olup olmadığını göstermek için
+    profileImage: String? = null,
+    name: String,
+    surname: String,
+    lastMessage: String? = null,
+    messageTime: String? = null,
+    unreadCount: Int = 0,
+    isOnline: Boolean = false
 ) {
     Row(
         modifier = Modifier
@@ -46,12 +48,14 @@ fun Chats(
     ) {
         Box {
             Image(
-                painter = profileImage,
+                painter = rememberImagePainter(data = profileImage),
                 contentDescription = null,
                 modifier = Modifier
                     .size(48.dp)
                     .clip(CircleShape)
             )
+
+
             if (isOnline) {
                 Box(
                     modifier = Modifier
@@ -67,8 +71,9 @@ fun Chats(
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = userName, fontWeight = FontWeight.Bold)
+            Text(text = "$name $surname", fontWeight = FontWeight.Bold)
             Spacer(modifier = Modifier.height(4.dp))
+            if (lastMessage != null)
             Text(
                 text = lastMessage,
                 style = MaterialTheme.typography.bodyMedium,
@@ -80,6 +85,7 @@ fun Chats(
         Spacer(modifier = Modifier.width(8.dp))
 
         Column(horizontalAlignment = Alignment.End) {
+            if (messageTime != null)
             Text(
                 text = messageTime,
                 style = MaterialTheme.typography.bodySmall,
@@ -105,15 +111,3 @@ fun Chats(
     }
 }
 
-@Preview
-@Composable
-fun ChatTemplatePreview() {
-    Chats(
-        profileImage = painterResource(id = R.drawable.ic_outlined_profile),
-        userName = "Jane Doe",
-        lastMessage = "See you tomorrow!",
-        messageTime = "10:30 AM",
-        unreadCount = 3,
-        isOnline = true
-    )
-}
