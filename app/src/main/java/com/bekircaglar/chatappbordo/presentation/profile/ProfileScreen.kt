@@ -31,6 +31,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -185,7 +186,8 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                         id = R.drawable.ic_outlined_profile
                     ),
                     contentDescription = null,
-                    Modifier
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
                         .size(100.dp)
                         .shadow(elevation = 5.dp, shape = CircleShape)
                         .clip(CircleShape)

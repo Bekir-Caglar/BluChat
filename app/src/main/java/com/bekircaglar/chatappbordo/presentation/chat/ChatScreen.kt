@@ -106,7 +106,8 @@ fun ChatScreen(navController: NavController) {
                 searchResults = searchResults,
                 textFieldValue = textFieldValue,
                 onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-                onDismiss = { addChatActive = false }
+                onDismiss = { addChatActive = false },
+                navController = navController
 
             )
         }
@@ -173,8 +174,10 @@ fun ChatScreen(navController: NavController) {
                     lastMessage = chat.lastMessage,
                     messageTime = chat.messageTime,
                     unreadCount = chat.unreadCount,
-                    isOnline = chat.isOnline
-                )
+                    isOnline = chat.isOnline,
+                ){
+
+                }
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
         }
