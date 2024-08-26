@@ -15,22 +15,23 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun ChatAppFAB(
-    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer, // FAB butonunun arka plan rengi
+    backgroundColor: Color = MaterialTheme.colorScheme.secondaryContainer,
     contentColor: Color =MaterialTheme.colorScheme.onSecondaryContainer,
+    onClick:() -> Unit,
     size: Dp = 56.dp,
     cornerRadius: Dp = 12.dp
 ) {
     FloatingActionButton(
-        onClick = { /* Butona tıklanınca yapılacak işlemler */ },
-        shape = RoundedCornerShape(cornerRadius), // Karemsi şekil için köşe yuvarlama
+        onClick = {onClick() },
+        shape = RoundedCornerShape(cornerRadius),
         containerColor = backgroundColor,
         contentColor = contentColor,
         modifier = Modifier.size(size)
     ) {
         Icon(
-            imageVector = Icons.Default.Add, // + simgesi
+            imageVector = Icons.Default.Add,
             contentDescription = "Add",
-            modifier = Modifier.size(size / 2), // İkon boyutu (buton boyutunun yarısı)
+            modifier = Modifier.size(size / 2),
             tint = contentColor
         )
     }

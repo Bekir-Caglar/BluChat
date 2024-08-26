@@ -140,7 +140,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 showAccountDialog = false
             },
             onSave = {showAccountDialog = false},
-            profileImage = if (selectedImageUri != null) selectedImageUri else currentUser?.profileImageUrl,
+            profileImage1 = if (uploadedImageUri != null) uploadedImageUri else currentUser?.profileImageUrl,
             isImageLoading = isImageLoading,
             onImageSelected = { uri ->
                 viewModel.onImageSelected(uri)
@@ -148,16 +148,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
             onPermissionRequest = {
                 permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
             },
-            onCheckPhoneNumber = { name, surname, phoneNumber, profileImage, onSuccess, onError ->
-                viewModel.checkPhoneNumber(
-                    name = name,
-                    surname = surname,
-                    phoneNumber = phoneNumber,
-                    profileImage = profileImage,
-                    onSuccess = onSuccess,
-                    onError = onError
-                )
-            },
+            onCheckPhoneNumber = viewModel::checkPhoneNumber,
             currentUsers = currentUser!!
         )
 
