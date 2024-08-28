@@ -38,29 +38,34 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
+import com.bekircaglar.chatappbordo.navigation.Screens
 import com.bekircaglar.chatappbordo.presentation.chat.component.SearchTextField
 import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
 import com.bekircaglar.chatappbordo.ui.theme.ChatAppBordoTheme
 
 
 @Composable
-fun MessageScreen(navController: NavController,userId:String,chatId:String) {
-
+fun MessageScreen(navController: NavController, chatId: String) {
 
     val viewModel: MessageViewModel = hiltViewModel()
-    viewModel.createChatRoom(userId,chatId)
 
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
 
     var message by remember { mutableStateOf("") }
+
+    viewModel.getUserFromChatId(chatId)
     Scaffold(
         topBar = {
             ChatAppTopBar(
                 title = {
-                    Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.padding(start = 8.dp)) {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        modifier = Modifier.padding(start = 8.dp)
+                    ) {
                         Image(
                             painter = rememberImagePainter(data = userInfo?.profileImageUrl),
                             contentDescription = null,
@@ -78,7 +83,9 @@ fun MessageScreen(navController: NavController,userId:String,chatId:String) {
                     }
                 },
                 navigationIcon = Icons.Default.KeyboardArrowLeft,
-                onNavigateIconClicked = {},
+                onNavigateIconClicked = {
+                    navController.navigate(Screens.ChatScreen.route)
+                },
 
                 actionIcon = Icons.Default.Search,
                 onActionIconClicked = {}
@@ -88,20 +95,29 @@ fun MessageScreen(navController: NavController,userId:String,chatId:String) {
             BottomAppBar(
                 containerColor = Color.White,
 
-            ) {
+                ) {
                 Row(verticalAlignment = Alignment.CenterVertically) {
                     IconButton(
-                        onClick = { /*TODO*/ }, modifier = Modifier.padding(end = 8.dp)) {
-                       Icon(imageVector = Icons.Outlined.Add, contentDescription = null , tint = Color.Gray)
+                        onClick = { /*TODO*/ }, modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = null,
+                            tint = Color.Gray
+                        )
                     }
-                    SearchTextField(searchText = message, onSearchTextChange ={message = it} )
+                    SearchTextField(searchText = message, onSearchTextChange = { message = it })
                     Spacer(modifier = Modifier.weight(1f))
 
                     IconButton(
                         onClick = { /*TODO*/ },
                         modifier = Modifier.padding(end = 16.dp)
-                        ) {
-                        Icon(painter = painterResource(id = R.drawable.ic_send), contentDescription = null , tint = MaterialTheme.colorScheme.primary)
+                    ) {
+                        Icon(
+                            painter = painterResource(id = R.drawable.ic_send),
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
                     }
                 }
 
@@ -111,10 +127,11 @@ fun MessageScreen(navController: NavController,userId:String,chatId:String) {
 
 
     ) {
-        LazyColumn(modifier = Modifier
-            .padding(it)
-            .fillMaxSize()
-            .background(MaterialTheme.colorScheme.secondaryContainer)
+        LazyColumn(
+            modifier = Modifier
+                .padding(it)
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.secondaryContainer)
 
         ) {
 

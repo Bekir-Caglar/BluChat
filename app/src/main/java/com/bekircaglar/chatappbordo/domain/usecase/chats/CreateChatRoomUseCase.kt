@@ -7,7 +7,7 @@ import javax.inject.Inject
 
 class CreateChatRoomUseCase @Inject constructor(private val chatsRepository: ChatsRepository) {
 
-    suspend operator fun invoke(user1:String,user2: String,chatRoomId:String,) {
+    suspend operator fun invoke(user1:String,user2: String,chatRoomId:String,):Response<String> {
         return chatsRepository.createChatRoom(user1,user2,chatRoomId)
     }
 }

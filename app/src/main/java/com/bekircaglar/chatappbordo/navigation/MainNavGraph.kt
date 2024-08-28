@@ -24,13 +24,11 @@ fun NavGraphBuilder.MainNavGraph(navController: NavController,onThemeChange: (Bo
         composable(
             Screens.MessageScreen.route,
             arguments = listOf(
-                navArgument("userId") {type = NavType.StringType},
                 navArgument("chatId") {type = NavType.StringType}
             )
         ) {
-            val userId = it.arguments?.getString("userId")
             val chatId = it.arguments?.getString("chatId")
-            MessageScreen(navController,userId!!,chatId!!)
+            MessageScreen(navController,chatId!!)
 
         }
     }

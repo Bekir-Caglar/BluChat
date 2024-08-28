@@ -31,18 +31,23 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
+import com.bekircaglar.chatappbordo.domain.model.Chats
 
 @Composable
 fun Chats(
-    profileImage: String? = null,
-    name: String,
-    surname: String,
-    lastMessage: String? = null,
-    messageTime: String? = null,
-    unreadCount: Int = 0,
-    isOnline: Boolean = false,
+    chat: Chats,
     onClick: () -> Unit
 ) {
+    val profileImage = chat.imageUrl
+    val name = chat.name
+    val surname = chat.surname
+    val lastMessage = chat.lastMessage
+    val messageTime = chat.messageTime
+    val isOnline = chat.isOnline
+
+
+
+
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -98,22 +103,6 @@ fun Chats(
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
-            if (unreadCount > 0) {
-                Spacer(modifier = Modifier.height(4.dp))
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .size(20.dp)
-                        .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.primary)
-                ) {
-                    Text(
-                        text = unreadCount.toString(),
-                        color = Color.White,
-                        style = MaterialTheme.typography.bodySmall
-                    )
-                }
-            }
         }
     }
 }

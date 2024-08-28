@@ -1,13 +1,11 @@
 package com.bekircaglar.chatappbordo.presentation.message
 
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.domain.model.Users
-import com.bekircaglar.chatappbordo.domain.usecase.chats.CreateChatRoomUseCase
+import com.bekircaglar.chatappbordo.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.profile.GetUserUseCase
-import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -15,31 +13,49 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class MessageViewModel @Inject constructor(private val createChatRoomUseCase: CreateChatRoomUseCase,private val auth: FirebaseAuth,private val getUserUseCase: GetUserUseCase) :
+class MessageViewModel @Inject constructor(
+    private val getUserFromChatIdUseCase: GetUserFromChatIdUseCase,
+    private val getUserUseCase: GetUserUseCase
+) :
     ViewModel() {
 
     private val _userData = MutableStateFlow<Users?>(null)
     var userData = _userData.asStateFlow()
 
-    val currentUserId = auth.currentUser?.uid.toString()
+    fun getUserFromChatId(chatId: String) = viewModelScope.launch {
 
-    fun createChatRoom(user: String, chatRoomId: String) = viewModelScope.launch {
-        createChatRoomUseCase.invoke(currentUserId, user, chatRoomId)
-        getUserData(user)
-    }
-    private fun getUserData(user: String) = viewModelScope.launch {
+        getUserFromChatIdUseCase(chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
+                is Response.Success -> {
+                    val userId = response.data
 
-        when(val response = getUserUseCase.getUserData(user)){
-            is Response.Success -> {
-                _userData.value = response.data
-            }
-            is Response.Error -> {
-                //Handle Error
-            }
-            else -> {
+                    getUserFromUserId(userId)
 
+                }
+                is Response.Error -> {
+                }
             }
         }
+
+    }
+
+    private fun getUserFromUserId(userId:String){
+        viewModelScope.launch {
+            val response = getUserUseCase.getUserData(userId)
+            when(response){
+                is Response.Loading -> {
+                }
+                is Response.Success -> {
+                    _userData.value = response.data
+                }
+                is Response.Error -> {
+                }
+            }
+
+        }
+
     }
 
 
