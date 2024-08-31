@@ -1,13 +1,10 @@
 package com.bekircaglar.chatappbordo.data.repository
 
 import com.bekircaglar.chatappbordo.Response
-import com.bekircaglar.chatappbordo.domain.model.Users
+import com.bekircaglar.chatappbordo.domain.model.Messages
 import com.bekircaglar.chatappbordo.domain.repository.MessageRepository
 import com.google.firebase.auth.FirebaseAuth
-import com.google.firebase.database.DataSnapshot
-import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -17,7 +14,7 @@ import javax.inject.Inject
 class MessageRepositoryImp @Inject constructor(
     private val databaseReference: DatabaseReference,
     private val auth: FirebaseAuth
-):MessageRepository {
+) : MessageRepository {
 
     private val currentUserId = auth.currentUser?.uid
     override suspend fun getUserFromChatId(chatId: String): Flow<Response<String>> = callbackFlow {
@@ -33,6 +30,16 @@ class MessageRepositoryImp @Inject constructor(
 
         }
         awaitClose()
+    }
+
+    override suspend fun createMessageRoom(chatId: String): Flow<Response<String>> = flow {
+        try {
+            val message = Messages(chatId, emptyList())
+            databaseReference.child("Messages").child(chatId).setValue(message)
+            emit(Response.Success(chatId))
+        } catch (e: Exception) {
+            emit(Response.Error(e.message.toString()))
+        }
     }
 
 

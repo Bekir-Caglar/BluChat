@@ -20,6 +20,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -51,6 +52,10 @@ fun MessageScreen(navController: NavController, chatId: String) {
     var message by remember { mutableStateOf("") }
 
     viewModel.getUserFromChatId(chatId)
+    LaunchedEffect(key1 = chatId) {
+        viewModel.createMessageRoom(chatId)
+    }
+
     Scaffold(
         topBar = {
             ChatAppTopBar(
@@ -103,13 +108,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     Spacer(modifier = Modifier.weight(1f))
 
                     IconButton(
-                        onClick = { /*TODO*/ },
+                        onClick = {
+
+                        },
                         modifier = Modifier.padding(end = 16.dp)
                     ) {
                         Icon(
                             painter = painterResource(id = R.drawable.ic_send),
                             contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
+                            tint = MaterialTheme.colorScheme.primary,
                         )
                     }
                 }
