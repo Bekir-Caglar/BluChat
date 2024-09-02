@@ -1,8 +1,8 @@
 package com.bekircaglar.chatappbordo.domain.model
 
 data class Message(
-    var senderId:String,
-    var message:String,
-    var timestamp:String,
-    var isRead:Boolean
+    val senderId:String? = "",
+    val message:String? = "",
+    val timestamp: Long? = 0,
+    val isRead:Boolean? = false
 )

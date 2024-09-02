@@ -15,6 +15,5 @@ object MessageModule {
     @Provides
     fun provideMessageRepository(messageRepositoryImp: MessageRepositoryImp): MessageRepository {
         return messageRepositoryImp
-
     }
 }

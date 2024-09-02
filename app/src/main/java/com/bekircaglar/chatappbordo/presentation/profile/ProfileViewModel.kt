@@ -15,9 +15,6 @@ import com.bekircaglar.chatappbordo.domain.usecase.profile.UploadImageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.catch
-import kotlinx.coroutines.handleCoroutineException
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -51,13 +48,13 @@ class ProfileViewModel @Inject constructor(
     }
 
 
-    fun checkPhoneNumber(surname:String,name: String,phoneNumber: String? = "",profileImage:String, onSuccess: () -> Unit, onError: (String) -> Unit) = viewModelScope.launch {
+    fun checkPhoneNumber(name:String,surname: String,phoneNumber: String? = "",profileImage:String, onSuccess: () -> Unit, onError: (String) -> Unit) = viewModelScope.launch {
         when(val result = checkPhoneNumberUseCase.checkPhoneNumber(phoneNumber?:"")){
             is Response.Success -> {
                 onSuccess()
                 updateUserData(
-                    surname = surname,
                     name = name,
+                    surname = surname,
                     phoneNumber = phoneNumber,
                     profileImage = profileImage
                 )
@@ -71,7 +68,7 @@ class ProfileViewModel @Inject constructor(
             }
         }
     }
-    private fun updateUserData(surname:String,name: String,phoneNumber: String? = "",profileImage:String) = viewModelScope.launch {
+    private fun updateUserData(name:String,surname: String,phoneNumber: String? = "",profileImage:String) = viewModelScope.launch {
         val user = _users.value
         user?.let {
             user.name = if (name.equals("")) user.name else name
