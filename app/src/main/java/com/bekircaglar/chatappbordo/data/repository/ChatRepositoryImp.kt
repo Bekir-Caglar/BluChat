@@ -77,7 +77,7 @@ class ChatRepositoryImp @Inject constructor(
                         val chat = ChatRoom(listOf(user1, user2), chatRoomId)
                         databaseRef.child(chatRoomId).setValue(chat)
                             .addOnSuccessListener {
-                                continuation.resume(Response.Success("Chat room created successfully")) {}
+                                continuation.resume(Response.Success(chatRoomId)) {}
                             }
                             .addOnFailureListener { error ->
                                 continuation.resume(Response.Error("Failed to create chat room: ${error.message}")) {}

@@ -28,6 +28,7 @@ class MainActivity : ComponentActivity() {
         installSplashScreen()
         setContent {
 
+
             var isDarkTheme by remember {
                 mutableStateOf(loadThemePreference(this))
             }
