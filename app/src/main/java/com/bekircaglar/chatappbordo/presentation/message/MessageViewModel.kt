@@ -16,6 +16,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
+import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
@@ -44,8 +45,8 @@ class MessageViewModel @Inject constructor(
 
     fun sendMessage(message: String, chatId: String) = viewModelScope.launch {
 
-        val myMessage =
-            Message(currentUser.uid, message, timestamp = System.currentTimeMillis(), false)
+        val randomMessageId = UUID.randomUUID().toString()
+        val myMessage = Message(randomMessageId,currentUser.uid, message, timestamp = System.currentTimeMillis(), false)
 
         sendMessageUseCase(myMessage, chatId).collect { response ->
             when (response) {

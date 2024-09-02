@@ -1,6 +1,9 @@
 package com.bekircaglar.chatappbordo.data.repository
 
+import com.bekircaglar.chatappbordo.CHAT_COLLECTION
 import com.bekircaglar.chatappbordo.Response
+import com.bekircaglar.chatappbordo.STORED_USERS
+import com.bekircaglar.chatappbordo.USER_COLLECTION
 import com.bekircaglar.chatappbordo.domain.model.ChatRoom
 import com.bekircaglar.chatappbordo.domain.model.Users
 import com.bekircaglar.chatappbordo.domain.repository.ChatsRepository
@@ -23,7 +26,7 @@ class ChatRepositoryImp @Inject constructor(
     override suspend fun searchContacts(query: String): Response<List<Users>> {
         return suspendCancellableCoroutine { continuation ->
 
-            val database = databaseReference.database.getReference("Users")
+            val database = databaseReference.database.getReference(USER_COLLECTION)
 
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -55,7 +58,7 @@ class ChatRepositoryImp @Inject constructor(
         chatRoomId: String
     ): Response<String> {
         return suspendCancellableCoroutine { continuation ->
-            val databaseRef = databaseReference.database.getReference("Chats")
+            val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
 
             databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -97,7 +100,7 @@ class ChatRepositoryImp @Inject constructor(
 
     override suspend fun getUserData(userId: String): Response<Users> {
         return suspendCancellableCoroutine { continuation ->
-            val database = databaseReference.database.getReference("Users").child(userId)
+            val database = databaseReference.database.getReference(USER_COLLECTION).child(userId)
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val user = snapshot.getValue(Users::class.java)
@@ -118,7 +121,8 @@ class ChatRepositoryImp @Inject constructor(
 
     override suspend fun getUsersChatList(): Flow<Response<List<ChatRoom>>> = callbackFlow {
         val currentUser = auth.currentUser?.uid.toString()
-        val databaseReference = databaseReference.database.getReference("Chats").orderByChild("users")
+        val databaseReference = databaseReference.database.getReference(CHAT_COLLECTION).orderByChild(
+            STORED_USERS)
 
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -149,7 +153,7 @@ class ChatRepositoryImp @Inject constructor(
     override suspend fun openChatRoom(user1: String, user2Id: String): Response<String> {
 
         return suspendCancellableCoroutine { continuation ->
-            val databaseRef = databaseReference.database.getReference("Chats")
+            val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
 
             databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
