@@ -132,7 +132,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 .background(MaterialTheme.colorScheme.secondaryContainer)
 
         ) {
-            items(messages) { message ->
+            items(messages,key = {message-> message.messageId!!}) { message ->
                 if (message.message != null) {
                     ChatBubble(
                         message = message.message, isSentByMe = message.senderId != userInfo?.uid

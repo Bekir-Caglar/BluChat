@@ -1,10 +1,8 @@
 package com.bekircaglar.chatappbordo.data.repository
 
 import android.net.Uri
-import android.util.Log
-import androidx.activity.compose.rememberLauncherForActivityResult
-import androidx.activity.result.contract.ActivityResultContracts
 import com.bekircaglar.chatappbordo.Response
+import com.bekircaglar.chatappbordo.USER_COLLECTION
 import com.bekircaglar.chatappbordo.domain.model.Users
 import com.bekircaglar.chatappbordo.domain.repository.ProfileRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -12,14 +10,11 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
-import com.google.firebase.database.getValue
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.catch
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
-import java.util.concurrent.Flow
 import javax.inject.Inject
 
 class ProfileRepositoryImp @Inject constructor(
@@ -31,7 +26,7 @@ class ProfileRepositoryImp @Inject constructor(
         callbackFlow {
 
             val userId = auth.currentUser?.uid
-            val userRef = databaseReference.database.getReference("Users").child(userId.toString())
+            val userRef = databaseReference.database.getReference(USER_COLLECTION).child(userId.toString())
 
             val listener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -51,7 +46,7 @@ class ProfileRepositoryImp @Inject constructor(
     override suspend fun updateUserProfile(user: Users): Response<String> {
 
         val userId = auth.currentUser?.uid
-        val userRef = databaseReference.database.getReference("Users").child(userId.toString())
+        val userRef = databaseReference.database.getReference(USER_COLLECTION).child(userId.toString())
 
         try {
             userRef.setValue(user).await()

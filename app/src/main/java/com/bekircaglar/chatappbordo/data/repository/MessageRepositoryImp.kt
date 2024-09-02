@@ -1,6 +1,10 @@
 package com.bekircaglar.chatappbordo.data.repository
 
+import com.bekircaglar.chatappbordo.CHAT_COLLECTION
+import com.bekircaglar.chatappbordo.MESSAGE_COLLECTION
 import com.bekircaglar.chatappbordo.Response
+import com.bekircaglar.chatappbordo.STORED_MESSAGES
+import com.bekircaglar.chatappbordo.STORED_USERS
 import com.bekircaglar.chatappbordo.domain.model.Message
 import com.bekircaglar.chatappbordo.domain.model.Messages
 import com.bekircaglar.chatappbordo.domain.repository.MessageRepository
@@ -18,15 +22,14 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class MessageRepositoryImp @Inject constructor(
-    private val databaseReference: DatabaseReference,
-    private val auth: FirebaseAuth
+    private val databaseReference: DatabaseReference, private val auth: FirebaseAuth
 ) : MessageRepository {
 
     private val currentUserId = auth.currentUser?.uid
     override suspend fun getUserFromChatId(chatId: String): Flow<Response<String>> = callbackFlow {
-        val chatReference = databaseReference.child("Chats").child(chatId)
+        val chatReference = databaseReference.child(CHAT_COLLECTION).child(chatId)
 
-        chatReference.child("users").get().addOnSuccessListener { snapshot ->
+        chatReference.child(STORED_USERS).get().addOnSuccessListener { snapshot ->
             val usersList = snapshot.children.map { it.getValue(String::class.java) }
             val otherUserId = usersList.filter { it != currentUserId }
 
@@ -40,11 +43,13 @@ class MessageRepositoryImp @Inject constructor(
 
     override suspend fun createMessageRoom(chatId: String): Flow<Response<String>> = flow {
         try {
-            val existingRoomSnapshot = databaseReference.child("Messages").child(chatId).get().await()
+            val existingRoomSnapshot =
+                databaseReference.child(MESSAGE_COLLECTION).child(chatId).get().await()
 
             if (!existingRoomSnapshot.exists()) {
                 val messageRoom = Messages(chatId, emptyList())
-                databaseReference.child("Messages").child(chatId).setValue(messageRoom).await()
+                databaseReference.child(MESSAGE_COLLECTION).child(chatId).setValue(messageRoom)
+                    .await()
                 emit(Response.Success(chatId))
             } else {
                 emit(Response.Success(chatId))
@@ -58,7 +63,8 @@ class MessageRepositoryImp @Inject constructor(
     override suspend fun sendMessage(message: Message, chatId: String): Flow<Response<String>> {
         return flow {
             try {
-                databaseReference.child("Messages").child(chatId).child("messages").push().setValue(message)
+                databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+                    .child(message.messageId!!).setValue(message)
                 emit(Response.Success("Message Sent"))
             } catch (e: Exception) {
                 emit(Response.Error(e.message.toString()))
@@ -67,7 +73,8 @@ class MessageRepositoryImp @Inject constructor(
     }
 
     override suspend fun getMessages(chatId: String): Flow<Response<List<Message>>> = callbackFlow {
-        val messagesReference = databaseReference.child("Messages").child(chatId).child("messages")
+        val messagesReference = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
+            STORED_MESSAGES)
 
         val messagesList = mutableListOf<Message>()
 
@@ -106,8 +113,6 @@ class MessageRepositoryImp @Inject constructor(
             messagesReference.removeEventListener(listener)
         }
     }
-
-
 
 
 }
