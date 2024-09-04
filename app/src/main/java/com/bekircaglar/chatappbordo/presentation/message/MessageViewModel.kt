@@ -2,6 +2,8 @@ package com.bekircaglar.chatappbordo.presentation.message
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.paging.PagingData
+import androidx.paging.cachedIn
 import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.domain.model.Message
 import com.bekircaglar.chatappbordo.domain.model.Users
@@ -12,6 +14,7 @@ import com.bekircaglar.chatappbordo.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.profile.GetUserUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -62,23 +65,8 @@ class MessageViewModel @Inject constructor(
             }
         }
     }
-    fun loadMessages(chatId: String) {
-        _messages.value = emptyList()
-        viewModelScope.launch {
-            getMessagesUseCase(chatId).collect { response ->
-                when (response) {
-                    is Response.Loading -> {
-                    }
-
-                    is Response.Success -> {
-                        _messages.value = response.data
-                    }
-
-                    is Response.Error -> {
-                    }
-                }
-            }
-        }
+    fun getPaginatedMessages(chatId: String): Flow<PagingData<Message>> {
+        return getMessagesUseCase(chatId).cachedIn(viewModelScope)
     }
 
 

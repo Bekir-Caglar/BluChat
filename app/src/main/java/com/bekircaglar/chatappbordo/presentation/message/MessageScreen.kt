@@ -8,8 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -37,6 +35,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import androidx.paging.compose.collectAsLazyPagingItems
+import androidx.paging.compose.itemKey
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.navigation.Screens
@@ -52,18 +52,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
 
-    val messages by viewModel.messages.collectAsStateWithLifecycle()
+    val messages = viewModel.getPaginatedMessages(chatId).collectAsLazyPagingItems()
 
-    var message by remember { mutableStateOf("") }
+    var chatMessage by remember { mutableStateOf("") }
 
     LaunchedEffect(key1 = chatId) {
         viewModel.getUserFromChatId(chatId)
         viewModel.createMessageRoom(chatId)
-        viewModel.loadMessages(chatId)
-    }
-    val listState = rememberLazyListState()
-    LaunchedEffect(messages.size) {
-        listState.animateScrollToItem(messages.size)
     }
 
     Scaffold(topBar = {
@@ -102,8 +97,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     PlusIcon()
                 }
                 SearchTextField(
-                    searchText = message,
-                    onSearchTextChange = { message = it
+                    searchText = chatMessage,
+                    onSearchTextChange = { chatMessage = it
                     })
 
 
@@ -111,8 +106,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
                 IconButton(
                     onClick = {
-                        viewModel.sendMessage(message, chatId)
-                        message = ""
+                        viewModel.sendMessage(chatMessage, chatId)
+                        chatMessage = ""
                     }, modifier = Modifier.padding(end = 16.dp)
                 ) {
                     SendIcon()
@@ -125,17 +120,19 @@ fun MessageScreen(navController: NavController, chatId: String) {
     ) {
 
         LazyColumn(
-            state = listState,
+            reverseLayout = true,
             modifier = Modifier
                 .padding(it)
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.secondaryContainer)
 
         ) {
-            items(messages,key = {message-> message.messageId!!}) { message ->
-                if (message.message != null) {
+            items(count = messages.itemCount,key = messages.itemKey {  it.messageId!! }) { i ->
+                val message = messages[i]
+
+                if (message != null) {
                     ChatBubble(
-                        message = message.message, isSentByMe = message.senderId != userInfo?.uid
+                        message = message.message!!, isSentByMe = message.senderId != userInfo?.uid
                     )
                 } else {
                     Text(text = "Hadi sohbete başla")

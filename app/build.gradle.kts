@@ -79,6 +79,12 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
 
+    // Paging 3
+    implementation (libs.androidx.paging.runtime.ktx)
+
+    // Jetpack Compose Paging integration
+    implementation (libs.androidx.paging.compose)
+
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.coil.compose)
