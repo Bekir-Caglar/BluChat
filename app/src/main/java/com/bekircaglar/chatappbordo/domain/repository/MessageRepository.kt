@@ -1,5 +1,6 @@
 package com.bekircaglar.chatappbordo.domain.repository
 
+import androidx.paging.PagingData
 import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.domain.model.Message
 import kotlinx.coroutines.flow.Flow
@@ -12,5 +13,5 @@ interface MessageRepository {
 
     suspend fun sendMessage(message: Message,chatId: String): Flow<Response<String>>
 
-    suspend fun getMessages(chatId: String): Flow<Response<List<Message>>>
+    fun getMessages(chatId: String): Flow<PagingData<Message>>
 }
