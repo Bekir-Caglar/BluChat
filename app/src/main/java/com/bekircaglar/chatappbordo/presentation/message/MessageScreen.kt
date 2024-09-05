@@ -1,5 +1,6 @@
 package com.bekircaglar.chatappbordo.presentation.message
 
+import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
@@ -8,6 +9,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -35,8 +37,6 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
-import androidx.paging.compose.collectAsLazyPagingItems
-import androidx.paging.compose.itemKey
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.navigation.Screens
@@ -52,13 +52,22 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
 
-    val messages = viewModel.getPaginatedMessages(chatId).collectAsLazyPagingItems()
+    val messages = viewModel.messages.collectAsStateWithLifecycle()
 
     var chatMessage by remember { mutableStateOf("") }
+    val listState = rememberLazyListState()
 
     LaunchedEffect(key1 = chatId) {
         viewModel.getUserFromChatId(chatId)
         viewModel.createMessageRoom(chatId)
+        viewModel.loadInitialMessages(chatId)
+    }
+    BackHandler {  }
+
+    LaunchedEffect(listState.canScrollForward) {
+        if (!listState.canScrollForward && messages.value.size >= 15) {
+            viewModel.loadMoreMessages(chatId)
+        }
     }
 
     Scaffold(topBar = {
@@ -120,6 +129,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     ) {
 
         LazyColumn(
+            state = listState,
             reverseLayout = true,
             modifier = Modifier
                 .padding(it)
@@ -127,8 +137,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 .background(MaterialTheme.colorScheme.secondaryContainer)
 
         ) {
-            items(count = messages.itemCount,key = messages.itemKey {  it.messageId!! }) { i ->
-                val message = messages[i]
+            items(count = messages.value.size) { i ->
+                val message = messages.value[i]
 
                 if (message != null) {
                     ChatBubble(

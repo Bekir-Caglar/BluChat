@@ -1,28 +1,28 @@
 package com.bekircaglar.chatappbordo.data.repository
 
-import androidx.paging.Pager
-import androidx.paging.PagingConfig
-import androidx.paging.PagingData
 import com.bekircaglar.chatappbordo.CHAT_COLLECTION
 import com.bekircaglar.chatappbordo.MESSAGE_COLLECTION
 import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.STORED_MESSAGES
 import com.bekircaglar.chatappbordo.STORED_USERS
-import com.bekircaglar.chatappbordo.data.paging.MessagePagingSource
 import com.bekircaglar.chatappbordo.domain.model.Message
 import com.bekircaglar.chatappbordo.domain.model.Messages
 import com.bekircaglar.chatappbordo.domain.repository.MessageRepository
+import com.example.chatapp.data.repository.FirebaseDataSource
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DatabaseReference
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class MessageRepositoryImp @Inject constructor(
-    private val databaseReference: DatabaseReference, private val auth: FirebaseAuth
+    private val databaseReference: DatabaseReference,
+    private val auth: FirebaseAuth,
+    private val firebaseDataSource: FirebaseDataSource
 ) : MessageRepository {
 
     private val currentUserId = auth.currentUser?.uid
@@ -63,25 +63,26 @@ class MessageRepositoryImp @Inject constructor(
     override suspend fun sendMessage(message: Message, chatId: String): Flow<Response<String>> {
         return flow {
             try {
-                databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
-                    .child(message.messageId!!).setValue(message)
+                val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+                val randomId = messageRef.push().key!!
+
+                messageRef.child(randomId).setValue(message.copy(messageId = randomId)).await()
                 emit(Response.Success("Message Sent"))
             } catch (e: Exception) {
                 emit(Response.Error(e.message.toString()))
             }
         }
     }
+    override fun loadInitialMessages(chatId: String): Flow<List<Message>> {
+        return firebaseDataSource.getInitialMessages(chatId).map { it.map { dataMessage ->
+            dataMessage
+        }}
+    }
 
-    override fun getMessages(chatId: String): Flow<PagingData<Message>> {
-        val messagesRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
-        return Pager(
-            config = PagingConfig(
-                pageSize = 15,
-                enablePlaceholders = false,
-                prefetchDistance = 1,
-                ),
-            pagingSourceFactory = { MessagePagingSource(messagesRef) }
-        ).flow
+    override fun loadMoreMessages(chatId: String, lastKey: String): Flow<List<Message>> {
+        return firebaseDataSource.getMoreMessages(chatId, lastKey).map { it.map { dataMessage ->
+            dataMessage
+        }}
     }
 
 
