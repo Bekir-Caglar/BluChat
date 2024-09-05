@@ -1,46 +1,58 @@
-package com.bekircaglar.chatappbordo.data.paging
+// data/repository/FirebaseDataSource.kt
+package com.example.chatapp.data.repository
 
-import androidx.paging.PagingSource
-import androidx.paging.PagingState
+import com.bekircaglar.chatappbordo.MESSAGE_COLLECTION
+import com.bekircaglar.chatappbordo.STORED_MESSAGES
 import com.bekircaglar.chatappbordo.domain.model.Message
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import kotlinx.coroutines.tasks.await
+import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
+import javax.inject.Inject
 
-private const val PAGE_SIZE = 15
+class FirebaseDataSource @Inject constructor(private val database: DatabaseReference) {
 
-class MessagePagingSource(
-    private val messagesRef: DatabaseReference,
-) : PagingSource<Int, Message>() {
-    override fun getRefreshKey(state: PagingState<Int, Message>): Int? {
-        return state.anchorPosition?.let { anchorPosition ->
-            state.closestPageToPosition(anchorPosition)?.prevKey?.plus(1)
-                ?: state.closestPageToPosition(anchorPosition)?.nextKey?.minus(1)
-        }
+
+    fun getInitialMessages(chatId: String): Flow<List<Message>> = callbackFlow {
+        val messagesRef = database.child(MESSAGE_COLLECTION).child(chatId).child(
+            STORED_MESSAGES
+        )
+
+        val listener = messagesRef.orderByKey().limitToLast(15).addValueEventListener(object :
+            ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.reversed()
+                trySend(messages)
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        })
+        awaitClose { messagesRef.removeEventListener(listener) }
     }
 
-    override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Message> {
-        return try {
-            val currentPage = params.key ?: 0 // If key is null, start from the first page
+    fun getMoreMessages(chatId: String, lastKey: String): Flow<List<Message>> = callbackFlow {
+        val messagesRef = database.child(MESSAGE_COLLECTION).child(chatId).child(
+            STORED_MESSAGES
+        )
+        val listener = messagesRef.orderByKey().endBefore(lastKey).limitToLast(15).addValueEventListener(object : ValueEventListener {
 
-            val snapshot = messagesRef.get().await()
-            val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.sortedBy { it.timestamp }.reversed()
-
-            val dataMessages = when(currentPage){
-                0 -> messages.subList(0, PAGE_SIZE)
-                else -> {
-                    val sorgu = messages.size-(currentPage* PAGE_SIZE)
-                if (sorgu < PAGE_SIZE) messages.subList(currentPage * PAGE_SIZE, messages.lastIndex+1)
-                else messages.subList(currentPage * PAGE_SIZE, (currentPage + 1) * PAGE_SIZE)
-                }
-
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.reversed()
+                trySend(messages)
             }
-            LoadResult.Page(
-                data = dataMessages,
-                prevKey = if (currentPage == 0) null else currentPage - 1,
-                nextKey = if (messages.size < PAGE_SIZE) null else currentPage + 1
-            )
-        } catch (e: Exception) {
-            LoadResult.Error(e)
-        }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+
+        })
+
+        awaitClose {messagesRef.removeEventListener(listener)}
+
     }
 }

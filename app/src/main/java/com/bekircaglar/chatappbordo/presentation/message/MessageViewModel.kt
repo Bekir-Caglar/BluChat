@@ -2,22 +2,22 @@ package com.bekircaglar.chatappbordo.presentation.message
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.PagingData
-import androidx.paging.cachedIn
 import com.bekircaglar.chatappbordo.Response
 import com.bekircaglar.chatappbordo.domain.model.Message
 import com.bekircaglar.chatappbordo.domain.model.Users
 import com.bekircaglar.chatappbordo.domain.usecase.message.CreateMessageRoomUseCase
-import com.bekircaglar.chatappbordo.domain.usecase.message.GetMessagesUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.message.GetUserFromChatIdUseCase
+import com.bekircaglar.chatappbordo.domain.usecase.message.LoadInitialMessagesUseCase
+import com.bekircaglar.chatappbordo.domain.usecase.message.LoadMoreMessagesUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.chatappbordo.domain.usecase.profile.GetUserUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -29,7 +29,8 @@ class MessageViewModel @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     private val createMessageRoomUseCase: CreateMessageRoomUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
-    private val getMessagesUseCase: GetMessagesUseCase
+    private val loadInitialMessagesUseCase: LoadInitialMessagesUseCase,
+    private val loadMoreMessagesUseCase: LoadMoreMessagesUseCase
 
 
 ) :
@@ -40,16 +41,38 @@ class MessageViewModel @Inject constructor(
     private val _userData = MutableStateFlow<Users?>(null)
     var userData = _userData.asStateFlow()
 
+
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages
+
+    private var lastKey: String? = null
+
+    fun loadInitialMessages(chatId: String) {
+        loadInitialMessagesUseCase(chatId).onEach { messages ->
+            _messages.value = messages
+            lastKey = messages.lastOrNull()?.messageId
+        }.launchIn(viewModelScope)
+    }
+
+    fun loadMoreMessages(chatId: String) {
+        lastKey?.let {
+            loadMoreMessagesUseCase(chatId, it).onEach { moreMessages ->
+                _messages.value += moreMessages
+                lastKey = moreMessages.lastOrNull()?.messageId
+            }.launchIn(viewModelScope)
+        }
+    }
 
 
 
 
     fun sendMessage(message: String, chatId: String) = viewModelScope.launch {
 
-        val randomMessageId = UUID.randomUUID().toString()
-        val myMessage = Message(randomMessageId,currentUser.uid, message, timestamp = System.currentTimeMillis(), false)
+        val timestamp = System.currentTimeMillis()
+        val randomId = "$timestamp-${UUID.randomUUID()}"
+
+
+        val myMessage = Message(randomId,currentUser.uid, message, timestamp = timestamp, false)
 
         sendMessageUseCase(myMessage, chatId).collect { response ->
             when (response) {
@@ -65,9 +88,7 @@ class MessageViewModel @Inject constructor(
             }
         }
     }
-    fun getPaginatedMessages(chatId: String): Flow<PagingData<Message>> {
-        return getMessagesUseCase(chatId).cachedIn(viewModelScope)
-    }
+
 
 
     fun createMessageRoom(chatId: String) = viewModelScope.launch {
@@ -124,6 +145,5 @@ class MessageViewModel @Inject constructor(
         }
 
     }
-
 
 }
