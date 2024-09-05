@@ -137,9 +137,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 .background(MaterialTheme.colorScheme.secondaryContainer)
 
         ) {
-            items(count = messages.value.size) { i ->
+            items(count = messages.value.size,key = { i -> messages.value[i]?.messageId ?: i }) { i ->
                 val message = messages.value[i]
-
                 if (message != null) {
                     ChatBubble(
                         message = message.message!!, isSentByMe = message.senderId != userInfo?.uid
@@ -147,6 +146,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 } else {
                     Text(text = "Hadi sohbete başla")
                 }
+
             }
         }
     }

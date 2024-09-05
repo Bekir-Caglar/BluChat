@@ -1,9 +1,11 @@
 package com.bekircaglar.chatappbordo.presentation.message.component
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -23,8 +25,6 @@ fun ChatBubble(message: String, isSentByMe: Boolean) {
     val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)
     val alignment = if (isSentByMe) Alignment.End else Alignment.Start
 
-    // modifier extension olarak yap
-    //constant olarak yap
     val shape = if (isSentByMe) {
         RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
     } else {
@@ -40,6 +40,7 @@ fun ChatBubble(message: String, isSentByMe: Boolean) {
         Surface(
             modifier = Modifier
                 .wrapContentSize()
+                .widthIn(max = 200.dp)
                 .background(bubbleColor, shape),
             shape = shape,
             color = bubbleColor
@@ -50,11 +51,12 @@ fun ChatBubble(message: String, isSentByMe: Boolean) {
                     .padding(12.dp),
                 color = if (isSentByMe) Color.White else Color.Black,
                 fontSize = 16.sp,
-                textAlign = if (isSentByMe) TextAlign.End else TextAlign.Start
+                textAlign = TextAlign.Start
             )
         }
     }
 }
+
 @Preview
 @Composable
 fun ChatBubblePreview() {
