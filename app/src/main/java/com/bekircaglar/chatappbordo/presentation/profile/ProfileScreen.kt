@@ -114,7 +114,9 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
         MenuItem(painterResource(id = R.drawable.ic_logout), "Logout") {
             viewModel.signOut(
                 onSuccess = {
-                    navController.navigate(Screens.AuthNav.route)
+                    navController.navigate(Screens.AuthNav.route){
+                        popUpTo(Screens.HomeNav.route) { inclusive = true }
+                    }
                 },
                 onError = {
                     ShowToastMessage(context = context, message = it)

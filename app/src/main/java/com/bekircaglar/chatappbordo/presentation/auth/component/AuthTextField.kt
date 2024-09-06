@@ -1,11 +1,12 @@
 package com.bekircaglar.chatappbordo.presentation.auth.component
 
-import android.graphics.drawable.Icon
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -26,14 +27,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.input.PasswordVisualTransformation
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bekircaglar.chatappbordo.R
 
 @Composable
-fun AuthTextField(hint:@Composable ()->Unit,value: String, onValueChange: (String) -> Unit,leadingIcon: ImageVector? = null,keyboardType: KeyboardType = KeyboardType.Text,title:String? = null) {
+fun AuthTextField(
+    hint: @Composable () -> Unit,
+    value: String,
+    onValueChange: (String) -> Unit,
+    leadingIcon: ImageVector? = null,
+    keyboardType: KeyboardType = KeyboardType.Text,
+    title: String? = null
+) {
+    var passwordVisible by remember { mutableStateOf(false) }
 
     Column {
         if (title != null) {
@@ -41,10 +52,11 @@ fun AuthTextField(hint:@Composable ()->Unit,value: String, onValueChange: (Strin
                 text = title,
                 color = MaterialTheme.colorScheme.primary
             )
-    }
+        }
         Spacer(modifier = Modifier.padding(top = 8.dp))
-        TextField(value = value,
-            onValueChange = { onValueChange(it)},
+        TextField(
+            value = value,
+            onValueChange = { onValueChange(it) },
             leadingIcon = {
                 if (leadingIcon != null) {
                     Icon(
@@ -52,9 +64,22 @@ fun AuthTextField(hint:@Composable ()->Unit,value: String, onValueChange: (Strin
                     )
                 }
             },
+            trailingIcon = {
+                if (keyboardType == KeyboardType.Password) {
+                    val image = if (passwordVisible) painterResource(R.drawable.ic_visible) else painterResource(R.drawable.ic_invisible)
+                    Icon(
+                        painter = image,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .clickable { passwordVisible = !passwordVisible }
+                            .size(24.dp)
+                    )
+                }
+            },
             maxLines = 1,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+            visualTransformation = if (keyboardType == KeyboardType.Password && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color.White,
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -69,13 +94,16 @@ fun AuthTextField(hint:@Composable ()->Unit,value: String, onValueChange: (Strin
                 .clip(shape = ShapeDefaults.Medium)
         )
     }
-
 }
 
 @Preview
 @Composable
 fun AuthTextFieldPreview() {
-
-    AuthTextField(hint = { Text(text = "Email") }, value = "", onValueChange = {}, leadingIcon = Icons.Default.Email, title = "Email")
+    AuthTextField(
+        hint = { Text(text = "Email") },
+        value = "",
+        onValueChange = {},
+        leadingIcon = Icons.Default.Email,
+        title = "Email"
+    )
 }
-

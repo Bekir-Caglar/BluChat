@@ -1,8 +1,8 @@
 package com.bekircaglar.chatappbordo.presentation.message
 
-import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -23,6 +23,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -33,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -40,10 +42,9 @@ import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.chatappbordo.R
 import com.bekircaglar.chatappbordo.navigation.Screens
-import com.bekircaglar.chatappbordo.presentation.chat.component.SearchTextField
 import com.bekircaglar.chatappbordo.presentation.component.ChatAppTopBar
 import com.bekircaglar.chatappbordo.presentation.message.component.ChatBubble
-
+import com.bekircaglar.chatappbordo.presentation.message.component.MessageTextField
 
 @Composable
 fun MessageScreen(navController: NavController, chatId: String) {
@@ -52,7 +53,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
 
-    val messages = viewModel.messages.collectAsStateWithLifecycle()
+    val messages by viewModel.messages.collectAsStateWithLifecycle()
 
     var chatMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
@@ -62,10 +63,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
         viewModel.createMessageRoom(chatId)
         viewModel.loadInitialMessages(chatId)
     }
-    BackHandler {  }
 
-    LaunchedEffect(listState.canScrollForward) {
-        if (!listState.canScrollForward && messages.value.size >= 15) {
+    val startPagination by remember {
+        derivedStateOf {
+            val lastIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -3
+            val totalItemCount = messages.size
+            lastIndex >= totalItemCount - 3
+        }
+    }
+    LaunchedEffect(startPagination) {
+        if (startPagination && messages.size >= 15) {
             viewModel.loadMoreMessages(chatId)
         }
     }
@@ -90,9 +97,10 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     fontSize = MaterialTheme.typography.titleLarge.fontSize,
                 )
             }
-        }, navigationIcon = Icons.Default.KeyboardArrowLeft, onNavigateIconClicked = {
-            navController.navigate(Screens.ChatScreen.route)
-        },
+        }, navigationIcon = Icons.Default.KeyboardArrowLeft,
+            onNavigateIconClicked = {
+                navController.navigate(Screens.ChatScreen.route)
+            },
             actionIcon = Icons.Default.Search, onActionIconClicked = {})
     }, bottomBar = {
         BottomAppBar(
@@ -105,18 +113,27 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 ) {
                     PlusIcon()
                 }
-                SearchTextField(
+                MessageTextField(
                     searchText = chatMessage,
-                    onSearchTextChange = { chatMessage = it
-                    })
+                    onSearchTextChange = { newText ->
+                        chatMessage =
+                            newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                    },
+                    onSend = {
+                        viewModel.sendMessage(chatMessage, chatId)
+                        chatMessage = ""
+                    },
+                )
 
 
                 Spacer(modifier = Modifier.weight(1f))
 
                 IconButton(
                     onClick = {
-                        viewModel.sendMessage(chatMessage, chatId)
-                        chatMessage = ""
+                        if (chatMessage.isNotEmpty()) {
+                            viewModel.sendMessage(chatMessage, chatId)
+                            chatMessage = ""
+                        }
                     }, modifier = Modifier.padding(end = 16.dp)
                 ) {
                     SendIcon()
@@ -128,26 +145,38 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     ) {
 
-        LazyColumn(
-            state = listState,
-            reverseLayout = true,
-            modifier = Modifier
-                .padding(it)
-                .fillMaxSize()
-                .background(MaterialTheme.colorScheme.secondaryContainer)
+        if (messages.isNotEmpty()) {
+            LazyColumn(
+                state = listState,
+                reverseLayout = true,
+                modifier = Modifier
+                    .padding(it)
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.secondaryContainer)
 
-        ) {
-            items(count = messages.value.size,key = { i -> messages.value[i]?.messageId ?: i }) { i ->
-                val message = messages.value[i]
-                if (message != null) {
+            ) {
+                items(count = messages.size, key = { i -> messages[i].messageId ?: i }) { i ->
+                    val message = messages[i]
                     ChatBubble(
                         message = message.message!!, isSentByMe = message.senderId != userInfo?.uid
                     )
-                } else {
-                    Text(text = "Hadi sohbete başla")
                 }
-
             }
+        } else {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                contentAlignment = Alignment.Center
+            ) {
+                Text(
+                    text = "Lets start chatting",
+                    textAlign = TextAlign.Center,
+                    style = MaterialTheme.typography.titleLarge,
+                    modifier = Modifier
+                )
+            }
+
         }
     }
 }
