@@ -91,7 +91,7 @@ fun SignInScreen(navController: NavController) {
                 AuthTextField(
                     hint = { Text(text = stringResource(R.string.enter_your_email)) },
                     value = email,
-                    onValueChange = {email = it},
+                    onValueChange = { email = it },
                     leadingIcon = Icons.Default.Email,
                     keyboardType = KeyboardType.Email,
                     title = stringResource(R.string.e_mail)
@@ -134,7 +134,9 @@ fun SignInScreen(navController: NavController) {
                         onClick = {
                             viewModel.signIn(email, password,
                                 onSuccess = {
-                                navController.navigate(Screens.HomeNav.route) },
+                                    navController.navigate(Screens.HomeNav.route) {
+                                        popUpTo(Screens.AuthNav.route) { inclusive = true }
+                                    }                                },
                                 onError = {
                                     ShowToastMessage(context, it)
                                 }

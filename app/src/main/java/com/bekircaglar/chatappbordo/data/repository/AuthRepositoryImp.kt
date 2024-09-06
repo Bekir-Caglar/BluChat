@@ -25,7 +25,6 @@ class AuthRepositoryImp @Inject constructor(
 
     override suspend fun signIn(email: String, password: String): Response<String> {
         auth.signInWithEmailAndPassword(email, password).await()
-
         try {
             if (auth.currentUser != null) {
                 return Response.Success(auth.currentUser.toString())
@@ -65,7 +64,7 @@ class AuthRepositoryImp @Inject constructor(
                 phoneNumber = phoneNumber,
                 email = email,
                 uid = auth.currentUser?.uid.toString(),
-                profileImageUrl = "",
+                profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=f49659f9-8128-4400-af7f-a2bc4a938eaf",
                 status = false,
                 lastSeen = "12:19"
             )
