@@ -11,11 +11,11 @@ plugins {
 }
 
 android {
-    namespace = "com.bekircaglar.chatappbordo"
+    namespace = "com.bekircaglar.bluchat"
     compileSdk = 34
 
     defaultConfig {
-        applicationId = "com.bekircaglar.chatappbordo"
+        applicationId = "com.bekircaglar.bluchat"
         minSdk = 27
         targetSdk = 34
         versionCode = 1

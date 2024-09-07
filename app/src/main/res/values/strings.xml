@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">ChatAppBordo</string>
+    <string name="app_name">BluChat</string>
 
     <string name="title_login">Login</string>
     <string name="title_signup">Sign Up</string>

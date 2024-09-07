@@ -7,8 +7,8 @@
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="windowSplashScreenBackground">@color/splash</item>
-        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_app_logo</item>
+        <item name="windowSplashScreenAnimatedIcon">@mipmap/ic_bluchat_texted</item>
         <item name="postSplashScreenTheme">@style/Theme.ChatAppBordo</item>
-        
+
     </style>
 </resources>
