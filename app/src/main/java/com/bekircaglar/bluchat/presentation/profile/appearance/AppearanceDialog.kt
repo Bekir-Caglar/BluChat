@@ -30,14 +30,11 @@ import com.bekircaglar.bluchat.R
 
 @Composable
 fun AppearanceDialog(
-    isDarkTheme: Boolean,
     onDismissRequest: () -> Unit,
     onThemeChange: (Boolean) -> Unit,
-    isChecked : Boolean = false
+    darkTheme: Boolean
 ) {
-
-    var isChecked by remember {mutableStateOf(isChecked)}
-
+    var isChecked by remember { mutableStateOf(darkTheme) }
     Dialog(onDismissRequest = { onDismissRequest() }) {
         Surface(
             shape = MaterialTheme.shapes.medium,
@@ -65,7 +62,7 @@ fun AppearanceDialog(
                         },
                     contentAlignment = Alignment.Center
                 ) {
-                    AnimatedContent(targetState = isChecked) { checked ->
+                    AnimatedContent(isChecked) { checked ->
                         if (checked) {
                             Icon(
                                 painter = painterResource(id = R.drawable.ic_moon),
@@ -93,8 +90,8 @@ fun AppearanceDialog(
 @Composable
 fun AppearanceDialogPreview() {
     AppearanceDialog(
-        isDarkTheme = true,
         onDismissRequest = {},
-        onThemeChange = {}
+        onThemeChange = {},
+        darkTheme = true
     )
 }

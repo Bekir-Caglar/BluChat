@@ -48,6 +48,7 @@ import com.bekircaglar.bluchat.presentation.profile.account.AccountDialog
 import com.bekircaglar.bluchat.presentation.profile.appearance.AppearanceDialog
 import com.bekircaglar.bluchat.saveThemePreference
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.loadThemePreference
 
 @Composable
 fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit) {
@@ -57,8 +58,6 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
 
     var showAccountDialog by remember { mutableStateOf(false) }
     var showAppearanceDialog by remember { mutableStateOf(false) }
-    val isDarkTheme by remember { mutableStateOf(false) }
-    var isChecked by remember { mutableStateOf(isDarkTheme) }
     var userName: String = ""
     var userNumber: String = ""
     var userImageUrl: String? = null
@@ -97,7 +96,6 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
             userNumber = it.phoneNumber
             userImageUrl = it.profileImageUrl
         }
-
     }
 
 
@@ -127,14 +125,12 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
     )
     if (showAppearanceDialog) {
         AppearanceDialog(
-            isDarkTheme = isDarkTheme,
             onDismissRequest = { showAppearanceDialog = false },
             onThemeChange = {
                 onThemeChange(it)
                 saveThemePreference(context = context, it)
-
             },
-            isChecked = isChecked
+            darkTheme = loadThemePreference(context)
         )
     }
     if (showAccountDialog) {
