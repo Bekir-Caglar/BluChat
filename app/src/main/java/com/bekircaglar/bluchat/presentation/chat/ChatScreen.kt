@@ -35,8 +35,10 @@ import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
+import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
 import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
+import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
 
 
@@ -50,6 +52,9 @@ fun ChatScreen(navController: NavController) {
     var isSearchActive by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
     var addChatActive by remember { mutableStateOf(false) }
+    var createGroupChatDialog by remember { mutableStateOf(false) }
+    var isBottomSheetVisible by remember { mutableStateOf(false) }
+
 
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val textFieldValue by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -90,7 +95,7 @@ fun ChatScreen(navController: NavController) {
         },
         floatingActionButton = {
             ChatAppFAB(contentColor = MaterialTheme.colorScheme.onSecondaryContainer, onClick = {
-                addChatActive = true
+                isBottomSheetVisible = true
             })
         },
         bottomBar = {
@@ -113,8 +118,22 @@ fun ChatScreen(navController: NavController) {
             )
         }
 
-
-
+        if (isBottomSheetVisible){
+            BottomSheet(
+                onDismiss = {isBottomSheetVisible = false},
+                onClicked = {
+                    when(it){
+                        "New Chat" -> addChatActive = true
+                        "Create Group Chat" -> createGroupChatDialog = true
+                    }
+                }
+            )
+        }
+        if (createGroupChatDialog){
+            GroupChatDialog(
+                onDismissRequest = {createGroupChatDialog = false},
+            )
+        }
 
 
         Spacer(modifier = Modifier.padding(top = 16.dp))
