@@ -7,6 +7,7 @@ import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.chats.CreateChatRoomUseCase
+import com.bekircaglar.bluchat.domain.usecase.chats.CreateGroupChatUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.GetUserChatListUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.OpenChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.SearchPhoneNumberUseCase
@@ -29,6 +30,7 @@ class ChatViewModel @Inject constructor(
     private val getUserUseCase: GetUserUseCase,
     private val createChatRoomUseCase: CreateChatRoomUseCase,
     private val openChatRoomUseCase: OpenChatRoomUseCase,
+    private val createGroupChatUseCase: CreateGroupChatUseCase,
     private val auth: FirebaseAuth,
 ):ViewModel () {
 
@@ -50,11 +52,13 @@ class ChatViewModel @Inject constructor(
 
     private val currentUserId = auth.currentUser?.uid.toString()
 
+    private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
+    val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
+
     init {
         viewModelScope.launch {
             _searchQuery
                 .debounce(300)
-                .filter { it.isNotEmpty() }
                 .collect { query ->
                     when (val result = searchPhoneNumberUseCase(query)) {
                         is Response.Success -> {
@@ -74,24 +78,13 @@ class ChatViewModel @Inject constructor(
         getUsersChatList()
     }
 
-
-    fun openChatRoom(navigation:NavController,user2Id: String) = viewModelScope.launch {
-
-        when(val result = openChatRoomUseCase(currentUserId,user2Id)){
-            is Response.Success -> {
-                navigation.navigate(Screens.MessageScreen.createRoute(result.data))
-            }
-            is Response.Error -> {
-                _error.value = result.message
-            }
-            else -> {
-
-            }
-        }
+    fun onImageSelected(uri: android.net.Uri) {
+        _selectedImageUri.value = uri
     }
+
     fun createChatRoom(user: String,navigation:NavController) = viewModelScope.launch {
         val randomUUID = java.util.UUID.randomUUID().toString()
-        when (val response = createChatRoomUseCase.invoke(currentUserId,user,randomUUID)
+        when (val response = createChatRoomUseCase(currentUserId,user,randomUUID)
         ) {
             is Response.Success -> {
                 navigation.navigate(Screens.MessageScreen.createRoute(response.data))
@@ -106,6 +99,23 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
+//    fun createGroupChatRoom(navigation:NavController) = viewModelScope.launch {
+//        val randomUUID = java.util.UUID.randomUUID().toString()
+//        when (val response = createGroupChatUseCase(currentUserId,randomUUID)
+//        ) {
+//            is Response.Success -> {
+//                navigation.navigate(Screens.MessageScreen.createRoute(response.data))
+//            }
+//
+//            is Response.Error -> {
+//                navigation.navigate(Screens.MessageScreen.createRoute(response.message))
+//            }
+//
+//            else -> {
+//
+//            }
+//        }
+//    }
 
 
     private fun getUsersChatList() = viewModelScope.launch{

@@ -1,10 +1,12 @@
 package com.bekircaglar.bluchat.presentation.chat.groupchat
 
 import android.net.Uri
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -44,9 +46,14 @@ import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun GroupChatDialog(
     onDismissRequest: () -> Unit,
+    onPermissionRequest: () -> Unit,
+    onCreateGroupChat: () -> Unit,
+    selectedUri: Uri? = null
+
 ) {
     val context = LocalContext.current
     var groupChatName by remember { mutableStateOf("") }
@@ -65,10 +72,16 @@ fun GroupChatDialog(
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
+                    modifier = Modifier
+                        .clickable {
+                            onPermissionRequest()
+                        }
 
                 ) {
                     Image(
-                        painter = rememberImagePainter(data = "https://www.w3schools.com/w3images/avatar3.png"),
+                        painter = rememberImagePainter(data = selectedUri
+                            ?: "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6"
+                        ),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
                         modifier = Modifier
@@ -105,9 +118,16 @@ fun GroupChatDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Column(modifier = Modifier.padding(horizontal = 32.dp)) {
+                Column(modifier = Modifier
+
+                    .padding(horizontal = 32.dp)) {
                     AuthButton(
                         onClick = {
+                            if (groupChatName.isEmpty()) {
+                                ShowToastMessage(context, "Group name cannot be empty")
+                            } else {
+                                onCreateGroupChat()
+                            }
                         },
                         buttonText = "Create Group Chat"
                     )
@@ -121,6 +141,8 @@ fun GroupChatDialog(
 @Composable
 fun GroupChatDialogPreview() {
     GroupChatDialog(
-        onDismissRequest = {}
+        onDismissRequest = {},
+        onPermissionRequest = {},
+        onCreateGroupChat = {}
     )
 }

@@ -12,10 +12,13 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ChatRepositoryImp @Inject constructor(
@@ -27,6 +30,22 @@ class ChatRepositoryImp @Inject constructor(
         return suspendCancellableCoroutine { continuation ->
 
             val database = databaseReference.database.getReference(USER_COLLECTION)
+
+            if (query.isEmpty() || query.isBlank()) {
+
+            GlobalScope.launch {
+                val matchedUsers = mutableListOf<Users>()
+                val result = database.get().await()
+                for (snapshot in result.children) {
+                    val user = snapshot.getValue(Users::class.java)
+                    if (user != null) {
+                        matchedUsers.add(user)
+                    }
+                }
+                continuation.resume(Response.Success(matchedUsers)) { }
+            }
+            return@suspendCancellableCoroutine
+        }
 
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
