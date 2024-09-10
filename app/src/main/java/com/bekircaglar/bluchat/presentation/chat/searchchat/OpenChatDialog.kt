@@ -45,14 +45,14 @@ fun OpenChatDialog(
                 TextField(
                     value = textFieldValue,
                     onValueChange = { onSearchQueryChange(it) },
-                    label = { Text("Telefon Numarası Ara") },
+                    label = {Text("Search user by phone number")},
                     modifier = Modifier.fillMaxWidth()
                 )
 
                 Spacer(modifier = Modifier.height(8.dp))
 
                 LazyColumn {
-                    items(searchResults) { contact ->
+                    items(searchResults, key = { it.email}) { contact ->
                         val myChat = com.bekircaglar.bluchat.domain.model.Chats(
                             chatRoomId = "",
                             imageUrl = contact.profileImageUrl,

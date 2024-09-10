@@ -2,6 +2,10 @@
 
 package com.bekircaglar.bluchat.presentation.chat
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.foundation.layout.Spacer
@@ -55,6 +59,7 @@ fun ChatScreen(navController: NavController) {
     var createGroupChatDialog by remember { mutableStateOf(false) }
     var isBottomSheetVisible by remember { mutableStateOf(false) }
 
+    val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle()
 
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val textFieldValue by viewModel.searchQuery.collectAsStateWithLifecycle()
@@ -67,6 +72,25 @@ fun ChatScreen(navController: NavController) {
 
     if (error != null) {
         ShowToastMessage(context = context, message = error!!)
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onImageSelected(it)
+
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
+        }
     }
 
     Scaffold(
@@ -114,24 +138,31 @@ fun ChatScreen(navController: NavController) {
                 navController = navController,
                 onItemClick = {
                     viewModel.createChatRoom(it.uid, navController)
-                    addChatActive = false}
+                    addChatActive = false
+                }
             )
         }
 
-        if (isBottomSheetVisible){
+        if (isBottomSheetVisible) {
             BottomSheet(
-                onDismiss = {isBottomSheetVisible = false},
+                onDismiss = { isBottomSheetVisible = false },
                 onClicked = {
-                    when(it){
+                    when (it) {
                         "New Chat" -> addChatActive = true
                         "Create Group Chat" -> createGroupChatDialog = true
                     }
                 }
             )
         }
-        if (createGroupChatDialog){
+        if (createGroupChatDialog) {
             GroupChatDialog(
-                onDismissRequest = {createGroupChatDialog = false},
+                selectedUri = selectedImageUri,
+                onDismissRequest = { createGroupChatDialog = false },
+                onCreateGroupChat = {
+                    addChatActive = true
+                    createGroupChatDialog = false
+                },
+                onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
             )
         }
 
@@ -144,7 +175,8 @@ fun ChatScreen(navController: NavController) {
         ) {
             items(chatList) { chat ->
 
-                val myChat = Chats(chatRoomId = chat.chatRoomId,
+                val myChat = Chats(
+                    chatRoomId = chat.chatRoomId,
                     imageUrl = chat.imageUrl,
                     name = chat.name,
                     surname = chat.surname,
@@ -152,7 +184,7 @@ fun ChatScreen(navController: NavController) {
                     messageTime = chat.messageTime,
                     isOnline = chat.isOnline
                 )
-                Chats(chat =myChat) {
+                Chats(chat = myChat) {
                     navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
                 }
 
