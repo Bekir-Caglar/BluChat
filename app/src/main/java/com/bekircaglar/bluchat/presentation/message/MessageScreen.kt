@@ -99,7 +99,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
             }
         }, navigationIcon = Icons.Default.KeyboardArrowLeft,
             onNavigateIconClicked = {
-                navController.navigate(Screens.ChatScreen.route)
+                navController.navigate(Screens.ChatListScreen.route)
             },
             actionIcon = Icons.Default.Search, onActionIconClicked = {})
     }, bottomBar = {

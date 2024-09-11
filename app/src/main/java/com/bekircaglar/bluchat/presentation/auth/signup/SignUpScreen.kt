@@ -161,7 +161,7 @@ fun SignUpScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
             ) {
-                Column {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
 
                     AuthTextField(
                         hint = { Text(text = stringResource(R.string.enter_your_password)) },

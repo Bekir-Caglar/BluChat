@@ -103,13 +103,13 @@ fun SignInScreen(navController: NavController) {
 
 
             Box(
-                contentAlignment = Alignment.TopStart,
+                contentAlignment = Alignment.Center,
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
                     .background(color = MaterialTheme.colorScheme.surface)
             ) {
-                Column {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AuthTextField(
                         hint = { Text(text = stringResource(R.string.enter_your_password)) },
                         value = password,

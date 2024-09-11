@@ -1,5 +1,6 @@
-package com.bekircaglar.bluchat.presentation.chat
+package com.bekircaglar.bluchat.presentation.chat.component
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -14,7 +15,11 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -24,14 +29,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.Chats
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Chats(
     chat: Chats,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    isSelected: Boolean = false
 ) {
     val profileImage = chat.imageUrl
     val name = chat.name
@@ -50,23 +58,26 @@ fun Chats(
             .clickable {
                 onClick()
             },
-        verticalAlignment = Alignment.CenterVertically
     ) {
         Box {
             Image(
                 painter = rememberImagePainter(data = profileImage),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = Modifier
-                    .size(48.dp)
-                    .clip(CircleShape)
-            )
+                modifier = if (chat.surname.isNullOrBlank()) Modifier
+                    .size(50.dp)
+                    .clip(shape = MaterialTheme.shapes.medium)
+                else Modifier
+                    .size(50.dp)
+                    .clip(CircleShape),
+
+                )
 
 
             if (isOnline) {
                 Box(
                     modifier = Modifier
-                        .size(12.dp)
+                        .size(14.dp)
                         .clip(CircleShape)
                         .background(Color.Green)
                         .align(Alignment.BottomEnd)
@@ -74,11 +85,15 @@ fun Chats(
                 )
             }
         }
-
         Spacer(modifier = Modifier.width(12.dp))
 
         Column(modifier = Modifier.weight(1f)) {
-            Text(text = "$name $surname", fontWeight = FontWeight.Bold)
+            Text(
+                text = "$name $surname",
+                fontWeight = FontWeight.Bold,
+                style = MaterialTheme.typography.titleMedium,
+                modifier = Modifier.padding(top = 4.dp)
+            )
             Spacer(modifier = Modifier.height(4.dp))
             if (lastMessage != null)
                 Text(
@@ -99,6 +114,31 @@ fun Chats(
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                 )
         }
+
+        if (isSelected)
+            Icon(
+                imageVector = Icons.Default.Check,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp)
+            )
     }
+}
+
+@Preview
+@Composable
+fun ChatsPreview() {
+    Chats(
+        chat = Chats(
+            chatRoomId = "",
+            imageUrl = "",
+            name = "Bekir",
+            surname = "Çağlar",
+            lastMessage = "Hello",
+            messageTime = "12:00",
+            isOnline = true,
+        ),
+        onClick = {},
+        isSelected = true
+    )
 }
 

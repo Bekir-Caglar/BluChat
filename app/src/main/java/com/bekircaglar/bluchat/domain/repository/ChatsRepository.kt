@@ -17,4 +17,6 @@ interface ChatsRepository {
 
     suspend fun openChatRoom(user1: String,user2Id:String):Response<String>
 
+    suspend fun createGroupChatRoom(currentUser:String,groupMembers:List<String>,chatId:String,groupName:String,groupImg: String):Response<String>
+
 }

@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.domain.model.Users
-import com.bekircaglar.bluchat.presentation.chat.Chats
+import com.bekircaglar.bluchat.presentation.chat.component.Chats
 
 @Composable
 fun OpenChatDialog(
@@ -27,7 +27,7 @@ fun OpenChatDialog(
     onSearchQueryChange: (String) -> Unit,
     searchResults: List<Users>,
     onDismiss: () -> Unit,
-    onItemClick: (Users) -> Unit
+    onItemClick: (Users) -> Unit,
 ) {
 
     Dialog(onDismissRequest = { onDismiss() }) {
@@ -62,9 +62,9 @@ fun OpenChatDialog(
                             messageTime = "",
                             isOnline = contact.status
                         )
-                        Chats(myChat) {
+                        Chats(myChat, onClick = {
                             onItemClick(contact)
-                        }
+                        })
                     }
                 }
             }

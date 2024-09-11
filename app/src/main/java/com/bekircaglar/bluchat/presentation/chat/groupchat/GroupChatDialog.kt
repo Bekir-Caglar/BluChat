@@ -51,8 +51,9 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 fun GroupChatDialog(
     onDismissRequest: () -> Unit,
     onPermissionRequest: () -> Unit,
-    onCreateGroupChat: () -> Unit,
-    selectedUri: Uri? = null
+    onCreateGroupChat: (groupName: String) -> Unit,
+    selectedUri: Uri? = null,
+    isImageLoading : Boolean = false
 
 ) {
     val context = LocalContext.current
@@ -72,15 +73,19 @@ fun GroupChatDialog(
             ) {
                 Box(
                     contentAlignment = Alignment.Center,
-                    modifier = Modifier
-                        .clickable {
+                    modifier = if (isImageLoading) {
+                        Modifier
+                    } else {
+                        Modifier.clickable {
                             onPermissionRequest()
                         }
+                    }
 
                 ) {
                     Image(
-                        painter = rememberImagePainter(data = selectedUri
-                            ?: "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6"
+                        painter = rememberImagePainter(
+                            data = selectedUri
+                                ?: "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6"
                         ),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
@@ -102,6 +107,12 @@ fun GroupChatDialog(
                             .border(2.dp, Color.White, CircleShape)
                             .padding(4.dp)
                     )
+                    if (isImageLoading){
+                        CircularProgressIndicator(
+                            modifier = Modifier.size(100.dp),
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                    }
 
                 }
 
@@ -118,15 +129,20 @@ fun GroupChatDialog(
 
                 Spacer(modifier = Modifier.height(16.dp))
 
-                Column(modifier = Modifier
+                Column(
+                    modifier = Modifier
 
-                    .padding(horizontal = 32.dp)) {
+                        .padding(horizontal = 32.dp)
+                ) {
                     AuthButton(
+                        enabled = !isImageLoading,
                         onClick = {
                             if (groupChatName.isEmpty()) {
                                 ShowToastMessage(context, "Group name cannot be empty")
                             } else {
-                                onCreateGroupChat()
+                                onCreateGroupChat(
+                                    groupChatName,
+                                )
                             }
                         },
                         buttonText = "Create Group Chat"
@@ -135,14 +151,4 @@ fun GroupChatDialog(
             }
         }
     }
-}
-
-@Preview
-@Composable
-fun GroupChatDialogPreview() {
-    GroupChatDialog(
-        onDismissRequest = {},
-        onPermissionRequest = {},
-        onCreateGroupChat = {}
-    )
 }
