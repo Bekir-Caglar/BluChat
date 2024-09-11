@@ -2,6 +2,7 @@ package com.bekircaglar.bluchat.presentation.message.component
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -19,10 +20,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import com.bekircaglar.bluchat.domain.model.Message
 @Composable
-fun ChatBubble(message: String, isSentByMe: Boolean) {
-    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color.LightGray.copy(alpha = 0.5f)
+fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderName: String, senderNameColor: Color) {
+    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.5f)
     val alignment = if (isSentByMe) Alignment.End else Alignment.Start
 
     val shape = if (isSentByMe) {
@@ -45,20 +46,31 @@ fun ChatBubble(message: String, isSentByMe: Boolean) {
             shape = shape,
             color = bubbleColor
         ) {
-            Text(
-                text = message,
-                modifier = Modifier
-                    .padding(12.dp),
-                color = if (isSentByMe) Color.White else Color.Black,
-                fontSize = 16.sp,
-                textAlign = TextAlign.Start
-            )
+            Column(
+                modifier = Modifier.padding(12.dp)
+            ) {
+                if (!isSentByMe) {
+                    Text(
+                        text = senderName,
+                        color = senderNameColor,
+                        fontSize = 14.sp,
+                        textAlign = TextAlign.Start
+                    )
+                }
+                Text(
+                    text = message.message!!,
+                    color = if (isSentByMe) Color.White else Color.Black,
+                    fontSize = 16.sp,
+                    textAlign = TextAlign.Start
+                )
+                Text(
+                    text = timestamp,
+                    color = if (isSentByMe) Color.White else Color.Gray,
+                    fontSize = 12.sp,
+                    textAlign = TextAlign.End,
+                    modifier = Modifier.align(Alignment.End)
+                )
+            }
         }
     }
-}
-
-@Preview
-@Composable
-fun ChatBubblePreview() {
-    ChatBubble(message = "Message", isSentByMe = false)
 }

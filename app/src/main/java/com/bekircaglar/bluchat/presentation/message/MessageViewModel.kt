@@ -1,11 +1,13 @@
 package com.bekircaglar.bluchat.presentation.message
 
+import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadMoreMessagesUseCase
@@ -30,20 +32,23 @@ class MessageViewModel @Inject constructor(
     private val createMessageRoomUseCase: CreateMessageRoomUseCase,
     private val sendMessageUseCase: SendMessageUseCase,
     private val loadInitialMessagesUseCase: LoadInitialMessagesUseCase,
-    private val loadMoreMessagesUseCase: LoadMoreMessagesUseCase
+    private val loadMoreMessagesUseCase: LoadMoreMessagesUseCase,
+    private val getChatRoomUseCase: GetChatRoomUseCase
 
 
 ) :
     ViewModel() {
 
-    private val currentUser = auth.currentUser!!
+    val _currentUser = auth.currentUser!!
+
 
     private val _userData = MutableStateFlow<Users?>(null)
     var userData = _userData.asStateFlow()
-
-
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages
+
+    private val _userNameFromUserId = MutableStateFlow<String>("")
+    val userNameFromUserId = _userNameFromUserId.asStateFlow()
 
     private var lastKey: String? = null
 
@@ -64,15 +69,13 @@ class MessageViewModel @Inject constructor(
     }
 
 
-
-
     fun sendMessage(message: String, chatId: String) = viewModelScope.launch {
 
         val timestamp = System.currentTimeMillis()
         val randomId = "$timestamp-${UUID.randomUUID()}"
 
 
-        val myMessage = Message(randomId,currentUser.uid, message, timestamp = timestamp, false)
+        val myMessage = Message(randomId, _currentUser.uid, message, timestamp = timestamp, false)
 
         sendMessageUseCase(myMessage, chatId).collect { response ->
             when (response) {
@@ -90,7 +93,6 @@ class MessageViewModel @Inject constructor(
     }
 
 
-
     fun createMessageRoom(chatId: String) = viewModelScope.launch {
         createMessageRoomUseCase(chatId).collect { response ->
             when (response) {
@@ -106,7 +108,31 @@ class MessageViewModel @Inject constructor(
         }
     }
 
-    fun getUserFromChatId(chatId: String) = viewModelScope.launch {
+    fun getChatRoom(chatId: String) = viewModelScope.launch {
+        getChatRoomUseCase(chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
+                is Response.Success -> {
+                    if (response.data.chatType == "group") {
+                        val myGroupAsUser = Users(
+                            name = response.data.chatName!!,
+                            profileImageUrl = response.data.chatImage!!,
+                        )
+                        _userData.value = myGroupAsUser
+                    }
+                    else if (response.data.chatType == "private") {
+                        getUserFromChatId(chatId)
+                    }
+                }
+
+                is Response.Error -> {
+                }
+            }
+        }
+    }
+
+    private fun getUserFromChatId(chatId: String) = viewModelScope.launch {
 
         getUserFromChatIdUseCase(chatId).collect { response ->
             when (response) {
@@ -127,15 +153,15 @@ class MessageViewModel @Inject constructor(
 
     }
 
-    private fun getUserFromUserId(userId: String) {
+    fun getUserFromUserId(userId: String) {
         viewModelScope.launch {
-            val response = getUserUseCase.getUserData(userId)
-            when (response) {
+            when (val response = getUserUseCase.getUserData(userId)) {
                 is Response.Loading -> {
                 }
 
                 is Response.Success -> {
                     _userData.value = response.data
+
                 }
 
                 is Response.Error -> {
@@ -144,6 +170,39 @@ class MessageViewModel @Inject constructor(
 
         }
 
+    }
+    private val userNameCache = mutableMapOf<String, String>()
+
+    fun getUserNameFromUserId(userId: String, onResult: (String) -> Unit) {
+        viewModelScope.launch {
+            if (userNameCache.containsKey(userId)) {
+                onResult(userNameCache[userId]!!)
+            } else {
+                when (val response = getUserUseCase.getUserData(userId)) {
+                    is Response.Loading -> {
+                    }
+                    is Response.Success -> {
+                        val userName = response.data.name
+                        userNameCache[userId] = userName
+                        onResult(userName)
+                    }
+                    is Response.Error -> {
+                    }
+                }
+            }
+        }
+    }
+
+    private val userColorCache = mutableMapOf<String, Color>()
+
+    fun getUserColor(userId: String): Color {
+        return userColorCache.getOrPut(userId) {
+            Color(
+                red = (0..255).random() / 255f,
+                green = (0..255).random() / 255f,
+                blue = (0..255).random() / 255f
+            )
+        }
     }
 
 }
