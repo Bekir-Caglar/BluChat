@@ -5,6 +5,7 @@ import com.bekircaglar.bluchat.MESSAGE_COLLECTION
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.STORED_MESSAGES
 import com.bekircaglar.bluchat.STORED_USERS
+import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Messages
 import com.bekircaglar.bluchat.domain.repository.MessageRepository
@@ -29,11 +30,11 @@ class MessageRepositoryImp @Inject constructor(
     override suspend fun getUserFromChatId(chatId: String): Flow<Response<String>> = callbackFlow {
         val chatReference = databaseReference.child(CHAT_COLLECTION).child(chatId)
 
+
         chatReference.child(STORED_USERS).get().addOnSuccessListener { snapshot ->
             val usersList = snapshot.children.map { it.getValue(String::class.java) }
 
             val otherUserId = usersList.filter { it != currentUserId }
-
             trySend(Response.Success(otherUserId.first().orEmpty()))
         }.addOnFailureListener { exception ->
             close(exception)
@@ -74,6 +75,22 @@ class MessageRepositoryImp @Inject constructor(
             }
         }
     }
+
+    override suspend fun getChatRoom(chatId: String): Flow<Response<ChatRoom>> = flow{
+
+        try {
+            val chatRoomSnapshot = databaseReference.child(CHAT_COLLECTION).child(chatId).get().await()
+            val chatRoom = chatRoomSnapshot.getValue(ChatRoom::class.java)
+            emit(Response.Success(chatRoom!!))
+        } catch (e: Exception) {
+            emit(Response.Error(e.message.toString()))
+        }
+
+
+
+
+    }
+
     override fun loadInitialMessages(chatId: String): Flow<List<Message>> {
         return firebaseDataSource.getInitialMessages(chatId).map { it.map { dataMessage ->
             dataMessage

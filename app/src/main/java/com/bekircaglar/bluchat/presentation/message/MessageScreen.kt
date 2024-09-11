@@ -25,6 +25,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -41,25 +42,28 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ChatBubble
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
-
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 @Composable
 fun MessageScreen(navController: NavController, chatId: String) {
-
     val viewModel: MessageViewModel = hiltViewModel()
 
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
-
     val messages by viewModel.messages.collectAsStateWithLifecycle()
+    val currentUser = viewModel._currentUser
 
     var chatMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     LaunchedEffect(key1 = chatId) {
-        viewModel.getUserFromChatId(chatId)
+        viewModel.getChatRoom(chatId)
         viewModel.createMessageRoom(chatId)
         viewModel.loadInitialMessages(chatId)
     }
@@ -105,8 +109,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     }, bottomBar = {
         BottomAppBar(
             containerColor = Color.White,
-
-            ) {
+        ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
                     onClick = { /*TODO*/ }, modifier = Modifier.padding(end = 8.dp)
@@ -125,7 +128,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     },
                 )
 
-
                 Spacer(modifier = Modifier.weight(1f))
 
                 IconButton(
@@ -140,11 +142,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 }
             }
         }
-    }
-
-
-    ) {
-
+    }) {
         if (messages.isNotEmpty()) {
             LazyColumn(
                 state = listState,
@@ -153,13 +151,30 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     .padding(it)
                     .fillMaxSize()
                     .background(MaterialTheme.colorScheme.secondaryContainer)
-
             ) {
-                items(count = messages.size, key = {i -> messages[i].messageId ?: i}) { i ->
+                items(count = messages.size, key = { i -> messages[i].messageId ?: i }) { i ->
                     val message = messages[i]
-                    ChatBubble(
-                        message = message.message!!, isSentByMe = message.senderId != userInfo?.uid
-                    )
+                    if (message != null) {
+                        val timestamp = convertTimestampToDate(message.timestamp!!)
+                        val senderId = message.senderId
+
+                        var senderName by remember { mutableStateOf("") }
+                        LaunchedEffect(senderId) {
+                            viewModel.getUserNameFromUserId(senderId!!) { name ->
+                                senderName = name
+                            }
+                        }
+
+                        val senderNameColor = viewModel.getUserColor(senderId!!)
+
+                        ChatBubble(
+                            message = message,
+                            isSentByMe = message.senderId == currentUser.uid,
+                            timestamp = timestamp,
+                            senderName = senderName,
+                            senderNameColor = senderNameColor
+                        )
+                    }
                 }
             }
         } else {
@@ -170,17 +185,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 contentAlignment = Alignment.Center
             ) {
                 Text(
-                    text = "Lets start chatting",
+                    text = "Let's start chatting",
                     textAlign = TextAlign.Center,
                     style = MaterialTheme.typography.titleLarge,
                     modifier = Modifier
                 )
             }
-
         }
     }
 }
-
 @Composable
 private fun PlusIcon() {
     Icon(
@@ -195,4 +208,11 @@ private fun SendIcon() {
         contentDescription = null,
         tint = MaterialTheme.colorScheme.primary,
     )
+}
+
+fun convertTimestampToDate(timestamp: Long): String {
+    val instant = Instant.ofEpochMilli(timestamp)
+    val dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return dateTime.format(formatter)
 }

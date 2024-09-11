@@ -87,10 +87,7 @@ class ChatRepositoryImp @Inject constructor(
 
                     for (chatSnapshot in snapshot.children) {
                         val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
-                        if (chatRoom != null && chatRoom.users!!.containsAll(
-                                listOf(user1, user2)
-                            )
-                        ) {
+                        if (chatRoom != null && chatRoom.users!!.containsAll(listOf(user1, user2)) && chatRoom.chatType == chatType) {
                             existingChatRoomId = chatSnapshot.key.toString()
                             chatRoomExists = true
                             break
