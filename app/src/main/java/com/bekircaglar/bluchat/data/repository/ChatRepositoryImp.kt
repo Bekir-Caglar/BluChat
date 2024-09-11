@@ -33,19 +33,19 @@ class ChatRepositoryImp @Inject constructor(
 
             if (query.isEmpty() || query.isBlank()) {
 
-            GlobalScope.launch {
-                val matchedUsers = mutableListOf<Users>()
-                val result = database.get().await()
-                for (snapshot in result.children) {
-                    val user = snapshot.getValue(Users::class.java)
-                    if (user != null) {
-                        matchedUsers.add(user)
+                GlobalScope.launch {
+                    val matchedUsers = mutableListOf<Users>()
+                    val result = database.get().await()
+                    for (snapshot in result.children) {
+                        val user = snapshot.getValue(Users::class.java)
+                        if (user != null) {
+                            matchedUsers.add(user)
+                        }
                     }
+                    continuation.resume(Response.Success(matchedUsers)) { }
                 }
-                continuation.resume(Response.Success(matchedUsers)) { }
+                return@suspendCancellableCoroutine
             }
-            return@suspendCancellableCoroutine
-        }
 
             database.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
@@ -79,6 +79,7 @@ class ChatRepositoryImp @Inject constructor(
         return suspendCancellableCoroutine { continuation ->
             val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
 
+            val chatType: String = "private"
             databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     var chatRoomExists = false
@@ -87,7 +88,7 @@ class ChatRepositoryImp @Inject constructor(
                     for (chatSnapshot in snapshot.children) {
                         val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
                         if (chatRoom != null && chatRoom.users!!.containsAll(
-                                listOf(user1,user2)
+                                listOf(user1, user2)
                             )
                         ) {
                             existingChatRoomId = chatSnapshot.key.toString()
@@ -96,7 +97,7 @@ class ChatRepositoryImp @Inject constructor(
                         }
                     }
                     if (!chatRoomExists) {
-                        val chat = ChatRoom(listOf(user1, user2), chatRoomId)
+                        val chat = ChatRoom(listOf(user1, user2), chatRoomId, chatType = chatType)
                         databaseRef.child(chatRoomId).setValue(chat)
                             .addOnSuccessListener {
                                 continuation.resume(Response.Success(chatRoomId)) {}
@@ -140,8 +141,10 @@ class ChatRepositoryImp @Inject constructor(
 
     override suspend fun getUsersChatList(): Flow<Response<List<ChatRoom>>> = callbackFlow {
         val currentUser = auth.currentUser?.uid.toString()
-        val databaseReference = databaseReference.database.getReference(CHAT_COLLECTION).orderByChild(
-            STORED_USERS)
+        val databaseReference =
+            databaseReference.database.getReference(CHAT_COLLECTION).orderByChild(
+                STORED_USERS
+            )
 
         databaseReference.addValueEventListener(object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
@@ -163,7 +166,6 @@ class ChatRepositoryImp @Inject constructor(
         })
 
         awaitClose()
-
 
 
     }
@@ -202,6 +204,44 @@ class ChatRepositoryImp @Inject constructor(
 
                 override fun onCancelled(error: DatabaseError) {
                     continuation.resume(Response.Error("Database error: ${error.message}")) { }
+                }
+            })
+        }
+
+
+    }
+
+    override suspend fun createGroupChatRoom(
+        currentUser: String,
+        groupMembers: List<String>,
+        chatId: String,
+        groupName: String,
+        groupImg: String
+    ): Response<String> {
+
+        return suspendCancellableCoroutine { continuation ->
+            val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
+
+            databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val chatType: String = "group"
+                    val newGroupMembers = groupMembers.toMutableList()
+                    newGroupMembers.add(currentUser)
+
+
+                    val chat = ChatRoom(newGroupMembers, chatId, groupName, groupImg, chatType)
+                    databaseRef.child(chatId).setValue(chat)
+                        .addOnSuccessListener {
+                            continuation.resume(Response.Success(chatId)) {}
+                        }
+                        .addOnFailureListener { error ->
+                            continuation.resume(Response.Error("Failed to create chat room: ${error.message}")) {}
+                        }
+
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    continuation.resume(Response.Error("Database error: ${error.message}")) {}
                 }
             })
         }

@@ -31,6 +31,7 @@ class MessageRepositoryImp @Inject constructor(
 
         chatReference.child(STORED_USERS).get().addOnSuccessListener { snapshot ->
             val usersList = snapshot.children.map { it.getValue(String::class.java) }
+
             val otherUserId = usersList.filter { it != currentUserId }
 
             trySend(Response.Success(otherUserId.first().orEmpty()))

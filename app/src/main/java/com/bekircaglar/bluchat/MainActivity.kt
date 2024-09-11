@@ -42,7 +42,6 @@ class MainActivity : ComponentActivity() {
                         isDarkTheme = it
                         saveThemePreference(this, it)
                     })
-
             }
         }
     }

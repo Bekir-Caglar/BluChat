@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.chat.component
 
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -16,15 +17,18 @@ fun SearchTextField(
     searchText: String,
     onSearchTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholderText: String = "Search"
+    placeholderText: String = "Search",
+    width: Int = 250,
+    height: Int = 60
 ) {
     TextField(
         value = searchText,
         onValueChange = onSearchTextChange,
         modifier = modifier
-            .width(250.dp)
+            .width(width.dp)
+            .height(height = height.dp)
             .clip(MaterialTheme.shapes.medium),
-        placeholder = { Text(placeholderText) },
+        placeholder = { Text(placeholderText, style = MaterialTheme.typography.bodySmall) },
         maxLines = 1,
         singleLine = true,
         colors = TextFieldDefaults.colors(

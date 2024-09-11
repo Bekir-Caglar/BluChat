@@ -24,6 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -36,18 +37,21 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.domain.model.Chats
+import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
+import com.bekircaglar.bluchat.presentation.chat.component.Chats
 import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
+import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
 
 
 @Composable
-fun ChatScreen(navController: NavController) {
+fun ChatListScreen(navController: NavController) {
 
     val viewModel: ChatViewModel = hiltViewModel()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -56,6 +60,7 @@ fun ChatScreen(navController: NavController) {
     var isSearchActive by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
     var addChatActive by remember { mutableStateOf(false) }
+    var selectGroupUserDialog by remember { mutableStateOf(false) }
     var createGroupChatDialog by remember { mutableStateOf(false) }
     var isBottomSheetVisible by remember { mutableStateOf(false) }
 
@@ -66,14 +71,19 @@ fun ChatScreen(navController: NavController) {
 
     val chatList by viewModel.chatUserList.collectAsStateWithLifecycle()
 
+    val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
+
+    val isloading by viewModel.isLoading.collectAsStateWithLifecycle()
+
     val error by viewModel.error.collectAsStateWithLifecycle()
     val success by viewModel.succes.collectAsStateWithLifecycle()
+
+    var groupMembers by remember { mutableStateOf(emptyList<String>()) }
 
 
     if (error != null) {
         ShowToastMessage(context = context, message = error!!)
     }
-
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -127,6 +137,22 @@ fun ChatScreen(navController: NavController) {
         }
     ) {
 
+        if (selectGroupUserDialog) {
+            SelectGroupMemberDialog(
+                searchResults = searchResults,
+                textFieldValue = textFieldValue,
+                onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                onDismiss = {
+                    selectGroupUserDialog = false
+                },
+                onNext = {
+                    groupMembers = it
+                    createGroupChatDialog = true
+                    selectGroupUserDialog = false
+                },
+            )
+        }
+
         if (addChatActive) {
             OpenChatDialog(
                 searchResults = searchResults,
@@ -149,7 +175,7 @@ fun ChatScreen(navController: NavController) {
                 onClicked = {
                     when (it) {
                         "New Chat" -> addChatActive = true
-                        "Create Group Chat" -> createGroupChatDialog = true
+                        "Create Group Chat" -> selectGroupUserDialog = true
                     }
                 }
             )
@@ -158,10 +184,11 @@ fun ChatScreen(navController: NavController) {
             GroupChatDialog(
                 selectedUri = selectedImageUri,
                 onDismissRequest = { createGroupChatDialog = false },
-                onCreateGroupChat = {
-                    addChatActive = true
+                onCreateGroupChat = { groupChatName ->
+                    viewModel.createGroupChatRoom(groupMembers,groupChatName, uploadedImageUri.toString())
                     createGroupChatDialog = false
                 },
+                isImageLoading = isloading,
                 onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
             )
         }
@@ -184,9 +211,9 @@ fun ChatScreen(navController: NavController) {
                     messageTime = chat.messageTime,
                     isOnline = chat.isOnline
                 )
-                Chats(chat = myChat) {
+                Chats(chat = myChat, onClick = {
                     navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
-                }
+                })
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
             }
