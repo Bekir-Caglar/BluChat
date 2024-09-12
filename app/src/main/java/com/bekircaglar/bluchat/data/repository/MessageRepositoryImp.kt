@@ -27,7 +27,7 @@ class MessageRepositoryImp @Inject constructor(
 ) : MessageRepository {
 
     private val currentUserId = auth.currentUser?.uid
-    override suspend fun getUserFromChatId(chatId: String): Flow<Response<String>> = callbackFlow {
+    override suspend fun getUserFromChatId(chatId: String): Flow<Response<List<String?>>> = callbackFlow {
         val chatReference = databaseReference.child(CHAT_COLLECTION).child(chatId)
 
 
@@ -35,7 +35,7 @@ class MessageRepositoryImp @Inject constructor(
             val usersList = snapshot.children.map { it.getValue(String::class.java) }
 
             val otherUserId = usersList.filter { it != currentUserId }
-            trySend(Response.Success(otherUserId.first().orEmpty()))
+            trySend(Response.Success(otherUserId))
         }.addOnFailureListener { exception ->
             close(exception)
 

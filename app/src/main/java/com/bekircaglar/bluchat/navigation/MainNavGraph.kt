@@ -7,6 +7,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.bekircaglar.bluchat.presentation.chat.ChatListScreen
+import com.bekircaglar.bluchat.presentation.chatinfo.ChatInfoScreen
 import com.bekircaglar.bluchat.presentation.message.MessageScreen
 import com.bekircaglar.bluchat.presentation.profile.ProfileScreen
 
@@ -29,6 +30,15 @@ fun NavGraphBuilder.MainNavGraph(navController: NavController,onThemeChange: (Bo
             val chatId = it.arguments?.getString("chatId")
             MessageScreen(navController,chatId!!)
 
+        }
+        composable(
+            Screens.ChatInfoScreen.route,
+            arguments = listOf(
+                navArgument("infoChatId") {type = NavType.StringType}
+            )
+        ){
+            val infoChatId = it.arguments?.getString("infoChatId")
+            ChatInfoScreen(navController,infoChatId)
         }
     }
 }
