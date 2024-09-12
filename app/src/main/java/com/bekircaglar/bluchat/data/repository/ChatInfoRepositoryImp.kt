@@ -66,6 +66,12 @@ class ChatInfoRepositoryImp @Inject constructor(
         chatRef.setValue(userIdList)
     }
 
+    override suspend fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String) {
+        val chatRef = databaseRef.database.getReference(CHAT_COLLECTION).child(chatId)
+        chatRef.child("chatName").setValue(chatName)
+        chatRef.child("chatImage").setValue(chatImageUrl)
+    }
+
     private fun deleteMessages(chatId: String) {
         val chatRef = databaseRef.database.getReference(MESSAGE_COLLECTION).child(chatId)
         chatRef.removeValue()
