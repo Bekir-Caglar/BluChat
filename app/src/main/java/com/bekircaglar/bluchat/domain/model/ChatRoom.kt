@@ -6,6 +6,7 @@ data class ChatRoom(
     val chatName:String? = "",
     val chatImage:String? = "",
     val chatType:String? = "",
+    val chatAdminId : String? = "",
 ) {
 }
 

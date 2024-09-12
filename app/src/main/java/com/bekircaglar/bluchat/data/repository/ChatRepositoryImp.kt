@@ -1,6 +1,8 @@
 package com.bekircaglar.bluchat.data.repository
 
 import com.bekircaglar.bluchat.CHAT_COLLECTION
+import com.bekircaglar.bluchat.GROUP
+import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.STORED_USERS
 import com.bekircaglar.bluchat.USER_COLLECTION
@@ -79,7 +81,7 @@ class ChatRepositoryImp @Inject constructor(
         return suspendCancellableCoroutine { continuation ->
             val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
 
-            val chatType: String = "private"
+            val chatType: String = PRIVATE
             databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     var chatRoomExists = false
@@ -221,12 +223,12 @@ class ChatRepositoryImp @Inject constructor(
 
             databaseRef.addListenerForSingleValueEvent(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
-                    val chatType: String = "group"
+                    val chatType: String = GROUP
                     val newGroupMembers = groupMembers.toMutableList()
                     newGroupMembers.add(currentUser)
 
 
-                    val chat = ChatRoom(newGroupMembers, chatId, groupName, groupImg, chatType)
+                    val chat = ChatRoom(newGroupMembers, chatId, groupName, groupImg, chatType, chatAdminId = currentUser)
                     databaseRef.child(chatId).setValue(chat)
                         .addOnSuccessListener {
                             continuation.resume(Response.Success(chatId)) {}

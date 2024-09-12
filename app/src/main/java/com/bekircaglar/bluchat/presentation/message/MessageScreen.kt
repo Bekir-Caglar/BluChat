@@ -2,10 +2,12 @@ package com.bekircaglar.bluchat.presentation.message
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -85,7 +87,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
         ChatAppTopBar(title = {
             Row(
                 verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier.padding(start = 8.dp)
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable {
+                        navController.navigate(Screens.ChatInfoScreen.createRoute(chatId))
+                    }
+                    .padding(start = 8.dp)
+
             ) {
                 Image(
                     painter = rememberImagePainter(data = userInfo?.profileImageUrl),
@@ -105,7 +113,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
             onNavigateIconClicked = {
                 navController.navigate(Screens.ChatListScreen.route)
             },
-            actionIcon = Icons.Default.Search, onActionIconClicked = {})
+            actionIcon = Icons.Default.Search,
+            onActionIconClicked = {})
     }, bottomBar = {
         BottomAppBar(
             containerColor = Color.White,

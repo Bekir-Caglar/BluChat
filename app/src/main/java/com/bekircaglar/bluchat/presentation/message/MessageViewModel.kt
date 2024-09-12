@@ -3,6 +3,8 @@ package com.bekircaglar.bluchat.presentation.message
 import androidx.compose.ui.graphics.Color
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bekircaglar.bluchat.GROUP
+import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Users
@@ -44,6 +46,7 @@ class MessageViewModel @Inject constructor(
 
     private val _userData = MutableStateFlow<Users?>(null)
     var userData = _userData.asStateFlow()
+
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages
 
@@ -114,14 +117,14 @@ class MessageViewModel @Inject constructor(
                 is Response.Loading -> {
                 }
                 is Response.Success -> {
-                    if (response.data.chatType == "group") {
+                    if (response.data.chatType == GROUP) {
                         val myGroupAsUser = Users(
                             name = response.data.chatName!!,
                             profileImageUrl = response.data.chatImage!!,
                         )
                         _userData.value = myGroupAsUser
                     }
-                    else if (response.data.chatType == "private") {
+                    else if (response.data.chatType == PRIVATE) {
                         getUserFromChatId(chatId)
                     }
                 }
@@ -140,7 +143,9 @@ class MessageViewModel @Inject constructor(
                 }
 
                 is Response.Success -> {
-                    val userId = response.data
+                    val userId = response.data[0]
+
+                    println("userId: $userId")
 
                     getUserFromUserId(userId)
 
@@ -153,9 +158,9 @@ class MessageViewModel @Inject constructor(
 
     }
 
-    fun getUserFromUserId(userId: String) {
+    fun getUserFromUserId(userId: String?) {
         viewModelScope.launch {
-            when (val response = getUserUseCase.getUserData(userId)) {
+            when (val response = getUserUseCase.getUserData(userId!!)) {
                 is Response.Loading -> {
                 }
 

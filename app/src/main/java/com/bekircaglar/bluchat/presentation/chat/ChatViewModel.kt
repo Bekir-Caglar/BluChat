@@ -5,6 +5,8 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.bekircaglar.bluchat.GROUP
+import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
@@ -123,8 +125,7 @@ class ChatViewModel @Inject constructor(
 
         val randomUUID = java.util.UUID.randomUUID().toString()
 
-        when (val response =
-            createGroupChatRoomUseCase(currentUserId,groupMembers, randomUUID, groupName, firebaseImageUrl)
+        when (val response = createGroupChatRoomUseCase(currentUserId,groupMembers, randomUUID, groupName, firebaseImageUrl)
         ) {
             is Response.Success -> {
                 _succes.value = response.data
@@ -166,9 +167,10 @@ class ChatViewModel @Inject constructor(
                 is Response.Success -> {
 
                     response.data.forEach { chat ->
-                        if (chat.chatType == "private") {
+                        if (chat.chatType == PRIVATE) {
                             getUserFromChat(chat)
-                        } else if (chat.chatType == "group") {
+                        }
+                        else if (chat.chatType == GROUP) {
                              _chatUserList.value += Chats(
                                 chatRoomId = chat.chatId.toString(),
                                 name = chat.chatName!!,
