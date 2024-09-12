@@ -1,5 +1,7 @@
 package com.bekircaglar.bluchat.presentation.chatinfo
 
+import android.net.Uri
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.Response
@@ -11,10 +13,12 @@ import com.bekircaglar.bluchat.domain.usecase.chatinfo.AddParticipantUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.DeleteGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.KickUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.LeaveChatUseCase
+import com.bekircaglar.bluchat.domain.usecase.chatinfo.UpdateChatInfoUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.SearchPhoneNumberUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
+import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -34,7 +38,9 @@ class ChatInfoViewModel @Inject constructor(
     private val deleteGroupUseCase: DeleteGroupUseCase,
     private val kickUserUseCase: KickUserUseCase,
     private val addParticipantUseCase: AddParticipantUseCase,
-    private val searchPhoneNumberUseCase: SearchPhoneNumberUseCase
+    private val searchPhoneNumberUseCase: SearchPhoneNumberUseCase,
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val updateChatInfoUseCase: UpdateChatInfoUseCase
 
     ) : ViewModel() {
 
@@ -55,6 +61,15 @@ class ChatInfoViewModel @Inject constructor(
     private val _chatRoom = MutableStateFlow<ChatRoom>(ChatRoom())
     val chatRoom = _chatRoom.asStateFlow()
 
+
+    private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
+    val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
+
+    private val _isLoading = MutableStateFlow(false)
+    val isLoading: StateFlow<Boolean> = _isLoading
+
+    private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
+    val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
 
     init {
         viewModelScope.launch {
@@ -79,6 +94,10 @@ class ChatInfoViewModel @Inject constructor(
                 }
         }
     }
+    fun updateChatInfo(chatId: String, chatName: String,chatImageUrl:String) = viewModelScope.launch {
+
+        updateChatInfoUseCase(chatId, chatName, chatImageUrl)
+    }
 
 
 
@@ -97,6 +116,31 @@ class ChatInfoViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun onImageSelected(uri: android.net.Uri) {
+        _selectedImageUri.value = uri
+        uploadImage(uri)
+    }
+
+    private fun uploadImage(uri: Uri){
+        viewModelScope.launch {
+            _isLoading.value = true
+            uploadImageUseCase.invoke(uri).collect{
+                when(it){
+                    is Response.Success -> {
+                        _uploadedImageUri.value = it.data.toUri()
+                        _isLoading.value = false
+
+                    }
+                    is Response.Error -> {
+                    }
+                    else -> {
+                    }
+                }
+            }
+        }
+
     }
 
     private fun getUsersFromChatId(chatId: String) = viewModelScope.launch {

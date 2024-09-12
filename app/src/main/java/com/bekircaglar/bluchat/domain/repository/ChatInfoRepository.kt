@@ -11,4 +11,5 @@ interface ChatInfoRepository {
     suspend fun leaveChat(chatId: String, userId: String)
 
     suspend fun addParticipant(chatId: String, userIdList: List<String?>)
+    suspend fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String)
 }

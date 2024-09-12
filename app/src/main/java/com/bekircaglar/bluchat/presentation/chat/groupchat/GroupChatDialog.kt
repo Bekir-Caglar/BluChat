@@ -53,7 +53,10 @@ fun GroupChatDialog(
     onPermissionRequest: () -> Unit,
     onCreateGroupChat: (groupName: String) -> Unit,
     selectedUri: Uri? = null,
-    isImageLoading : Boolean = false
+    defaultImageUrl : String? = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6",
+    defaultGroupName : String = "Group name",
+    isImageLoading : Boolean = false,
+    buttonText: String = "Create group chat"
 
 ) {
     val context = LocalContext.current
@@ -84,8 +87,7 @@ fun GroupChatDialog(
                 ) {
                     Image(
                         painter = rememberImagePainter(
-                            data = selectedUri
-                                ?: "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6"
+                            data = selectedUri ?: defaultImageUrl
                         ),
                         contentDescription = "Profile Image",
                         contentScale = ContentScale.Crop,
@@ -121,7 +123,7 @@ fun GroupChatDialog(
                 OutlinedTextField(
                     value = groupChatName,
                     onValueChange = { groupChatName = it },
-                    label = { Text(text = "Group name") },
+                    label = { Text(text = defaultGroupName) },
                     modifier = Modifier.fillMaxWidth()
                 )
 
@@ -138,14 +140,22 @@ fun GroupChatDialog(
                         enabled = !isImageLoading,
                         onClick = {
                             if (groupChatName.isEmpty()) {
-                                ShowToastMessage(context, "Group name cannot be empty")
+                                if (defaultGroupName != "Group name") {
+                                    groupChatName = defaultGroupName
+                                    onCreateGroupChat(
+                                        groupChatName,
+                                    )
+                                }
+                                else {
+                                    ShowToastMessage(context, "Please enter a group name")
+                                }
                             } else {
                                 onCreateGroupChat(
                                     groupChatName,
                                 )
                             }
                         },
-                        buttonText = "Create Group Chat"
+                        buttonText = buttonText
                     )
                 }
             }

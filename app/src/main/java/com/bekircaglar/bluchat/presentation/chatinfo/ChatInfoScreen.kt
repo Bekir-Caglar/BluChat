@@ -1,5 +1,9 @@
 package com.bekircaglar.bluchat.presentation.chatinfo
 
+import android.net.Uri
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -47,6 +51,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -61,6 +66,7 @@ import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
+import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 
@@ -74,6 +80,7 @@ fun ChatInfoScreen(
     val viewModel: ChatInfoViewModel = hiltViewModel()
 
     val currentUser = viewModel.currentUser
+    val context = LocalContext.current
 
     val chatRoom by viewModel.chatRoom.collectAsStateWithLifecycle()
     val userList by viewModel.chatUserList.collectAsStateWithLifecycle()
@@ -82,9 +89,13 @@ fun ChatInfoScreen(
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
     val textFieldValue by viewModel.searchQuery.collectAsStateWithLifecycle()
 
+    val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
 
 
     var selectGroupUserDialog by remember { mutableStateOf(false) }
+    var updateGroupInfoDialog by remember { mutableStateOf(false) }
 
 
     val adminId = chatRoom.chatAdminId
@@ -94,6 +105,24 @@ fun ChatInfoScreen(
 
     LaunchedEffect(Unit) {
         viewModel.getChatRoom(chatId!!)
+    }
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onImageSelected(it)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
+        }
     }
 
 
@@ -142,6 +171,22 @@ fun ChatInfoScreen(
                 },
             )
         }
+        if (updateGroupInfoDialog) {
+            GroupChatDialog(
+                defaultImageUrl = chatRoom.chatImage,
+                defaultGroupName = chatRoom.chatName!!,
+                selectedUri = selectedImageUri,
+                onDismissRequest = { updateGroupInfoDialog = false },
+                onCreateGroupChat = { groupChatName ->
+                    viewModel.updateChatInfo(chatId!!, groupChatName,uploadedImageUri.toString())
+                    viewModel.getChatRoom(chatId)
+                    updateGroupInfoDialog = false
+                },
+                buttonText = "Update group info",
+                isImageLoading = isLoading,
+                onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
+            )
+        }
 
         Column(
             modifier = Modifier
@@ -159,7 +204,7 @@ fun ChatInfoScreen(
                     contentAlignment = Alignment.Center,
                     modifier = if (isCurrentUserAdmin) Modifier
                         .clickable {
-                            // Change group image
+                            updateGroupInfoDialog = true
                         } else Modifier
 
                 ) {
