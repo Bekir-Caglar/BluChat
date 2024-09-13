@@ -156,17 +156,20 @@ fun ChatInfoScreen(
     ) { paddingValues ->
 
         if (selectGroupUserDialog) {
+            val filteredSearchResults = searchResults.filter { user ->
+                user.uid !in chatUserIdList
+            }
             SelectGroupMemberDialog(
-                searchResults = searchResults,
+                searchResults = filteredSearchResults,
                 textFieldValue = textFieldValue,
                 onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
                 onDismiss = {
                     selectGroupUserDialog = false
                 },
-                onNext = {
-                    val newlist = chatUserIdList + it + currentUser.uid
-                    viewModel.addParticipant(chatId!!, newlist)
-                    viewModel.getChatRoom(chatId)
+                onNext = { addedUser ->
+                    val newList = chatUserIdList + addedUser + currentUser.uid
+                    viewModel.addParticipant(chatId!!, newList)
+                    viewModel.getChatRoom(chatId!!)
                     selectGroupUserDialog = false
                 },
             )
