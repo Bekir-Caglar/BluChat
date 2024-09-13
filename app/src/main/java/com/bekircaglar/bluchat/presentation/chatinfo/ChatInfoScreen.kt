@@ -175,10 +175,13 @@ fun ChatInfoScreen(
             GroupChatDialog(
                 defaultImageUrl = chatRoom.chatImage,
                 defaultGroupName = chatRoom.chatName!!,
-                selectedUri = selectedImageUri,
+                selectedUri = uploadedImageUri,
                 onDismissRequest = { updateGroupInfoDialog = false },
                 onCreateGroupChat = { groupChatName ->
-                    viewModel.updateChatInfo(chatId!!, groupChatName,uploadedImageUri.toString())
+                    if (uploadedImageUri.toString().isEmpty()) {
+                        viewModel.updateChatInfo(chatId!!, groupChatName,chatRoom.chatImage!!)
+                    }else viewModel.updateChatInfo(chatId!!, groupChatName,uploadedImageUri.toString())
+
                     viewModel.getChatRoom(chatId)
                     updateGroupInfoDialog = false
                 },
@@ -247,7 +250,7 @@ fun ChatInfoScreen(
                 Spacer(modifier = Modifier.height(4.dp))
 
                 Text(
-                    text = "${userList.size} members",
+                    text = "${userList.size+1} members",
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 )
