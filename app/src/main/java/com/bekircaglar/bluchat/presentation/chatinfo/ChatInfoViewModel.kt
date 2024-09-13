@@ -118,7 +118,7 @@ class ChatInfoViewModel @Inject constructor(
         }
     }
 
-    fun onImageSelected(uri: android.net.Uri) {
+    fun onImageSelected(uri: Uri) {
         _selectedImageUri.value = uri
         uploadImage(uri)
     }
