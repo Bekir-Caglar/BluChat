@@ -8,13 +8,13 @@ import androidx.navigation.NavController
 import com.bekircaglar.bluchat.GROUP
 import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.data.repository.ChatRepositoryImp
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.chats.CreateChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.CreateGroupChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.GetUserChatListUseCase
-import com.bekircaglar.bluchat.domain.usecase.chats.OpenChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.chats.SearchPhoneNumberUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
@@ -34,10 +34,10 @@ class ChatViewModel @Inject constructor(
     private val getUserChatListUseCase: GetUserChatListUseCase,
     private val getUserUseCase: GetUserUseCase,
     private val createChatRoomUseCase: CreateChatRoomUseCase,
-    private val openChatRoomUseCase: OpenChatRoomUseCase,
     private val createGroupChatRoomUseCase: CreateGroupChatRoomUseCase,
     private val auth: FirebaseAuth,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val chatRepositoryImp: ChatRepositoryImp
 ) : ViewModel() {
 
 
@@ -53,8 +53,8 @@ class ChatViewModel @Inject constructor(
     private val _error = MutableStateFlow<String?>(null)
     val error: StateFlow<String?> get() = _error
 
-    private val _succes = MutableStateFlow<String?>(null)
-    val succes: StateFlow<String?> get() = _succes
+    private val _success = MutableStateFlow<String?>(null)
+    val success: StateFlow<String?> get() = _success
 
     private val currentUserId = auth.currentUser?.uid.toString()
 
@@ -93,7 +93,7 @@ class ChatViewModel @Inject constructor(
         getUsersChatList()
     }
 
-    fun onImageSelected(uri: android.net.Uri) {
+    fun onImageSelected(uri:Uri) {
         _selectedImageUri.value = uri
         uploadImage(uri)
     }
@@ -128,7 +128,7 @@ class ChatViewModel @Inject constructor(
         when (val response = createGroupChatRoomUseCase(currentUserId,groupMembers, randomUUID, groupName, firebaseImageUrl)
         ) {
             is Response.Success -> {
-                _succes.value = response.data
+                _success.value = response.data
             }
 
             is Response.Error -> {
@@ -160,7 +160,7 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun getUsersChatList() = viewModelScope.launch {
+    fun getUsersChatList() = viewModelScope.launch {
         getUserChatListUseCase.invoke().collect { response ->
             _chatUserList.value = emptyList()
             when (response) {

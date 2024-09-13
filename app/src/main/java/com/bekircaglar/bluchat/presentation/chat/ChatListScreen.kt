@@ -24,7 +24,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -37,7 +37,6 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.domain.model.Chats
-import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
@@ -73,10 +72,10 @@ fun ChatListScreen(navController: NavController) {
 
     val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
 
-    val isloading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
 
     val error by viewModel.error.collectAsStateWithLifecycle()
-    val success by viewModel.succes.collectAsStateWithLifecycle()
+    val success by viewModel.success.collectAsStateWithLifecycle()
 
     var groupMembers by remember { mutableStateOf(emptyList<String>()) }
 
@@ -188,7 +187,7 @@ fun ChatListScreen(navController: NavController) {
                     viewModel.createGroupChatRoom(groupMembers,groupChatName, uploadedImageUri.toString())
                     createGroupChatDialog = false
                 },
-                isImageLoading = isloading,
+                isImageLoading = isLoading,
                 onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
             )
         }

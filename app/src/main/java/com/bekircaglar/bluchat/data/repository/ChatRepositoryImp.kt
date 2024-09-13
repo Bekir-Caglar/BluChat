@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.data.repository
 
+import android.util.Log
 import com.bekircaglar.bluchat.CHAT_COLLECTION
 import com.bekircaglar.bluchat.GROUP
 import com.bekircaglar.bluchat.PRIVATE
@@ -13,6 +14,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose
@@ -24,9 +26,13 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ChatRepositoryImp @Inject constructor(
-    private var auth: FirebaseAuth,
-    private var databaseReference: DatabaseReference
+    private var auth: FirebaseAuth, private var databaseReference: DatabaseReference
 ) : ChatsRepository {
+
+
+    init {
+        setUserOnlineStatus(auth.currentUser?.uid.toString())
+    }
 
     override suspend fun searchContacts(query: String): Response<List<Users>> {
         return suspendCancellableCoroutine { continuation ->
@@ -49,7 +55,7 @@ class ChatRepositoryImp @Inject constructor(
                 return@suspendCancellableCoroutine
             }
 
-            database.addListenerForSingleValueEvent(object : ValueEventListener {
+            database.addValueEventListener(object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val matchedUsers = mutableListOf<Users>()
 
@@ -58,6 +64,7 @@ class ChatRepositoryImp @Inject constructor(
                         if (user?.phoneNumber?.contains(query) == true) {
                             matchedUsers.add(user)
                         }
+                        setUserOnlineStatus(user?.uid.toString())
                     }
                     if (matchedUsers.isNotEmpty()) {
                         continuation.resume(Response.Success(matchedUsers)) { }
@@ -74,9 +81,7 @@ class ChatRepositoryImp @Inject constructor(
     }
 
     override suspend fun createChatRoom(
-        user1: String,
-        user2: String,
-        chatRoomId: String
+        user1: String, user2: String, chatRoomId: String
     ): Response<String> {
         return suspendCancellableCoroutine { continuation ->
             val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
@@ -89,7 +94,12 @@ class ChatRepositoryImp @Inject constructor(
 
                     for (chatSnapshot in snapshot.children) {
                         val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
-                        if (chatRoom != null && chatRoom.users!!.containsAll(listOf(user1, user2)) && chatRoom.chatType == chatType) {
+                        if (chatRoom != null && chatRoom.users!!.containsAll(
+                                listOf(
+                                    user1, user2
+                                )
+                            ) && chatRoom.chatType == chatType
+                        ) {
                             existingChatRoomId = chatSnapshot.key.toString()
                             chatRoomExists = true
                             break
@@ -97,13 +107,11 @@ class ChatRepositoryImp @Inject constructor(
                     }
                     if (!chatRoomExists) {
                         val chat = ChatRoom(listOf(user1, user2), chatRoomId, chatType = chatType)
-                        databaseRef.child(chatRoomId).setValue(chat)
-                            .addOnSuccessListener {
-                                continuation.resume(Response.Success(chatRoomId)) {}
-                            }
-                            .addOnFailureListener { error ->
-                                continuation.resume(Response.Error("Failed to create chat room: ${error.message}")) {}
-                            }
+                        databaseRef.child(chatRoomId).setValue(chat).addOnSuccessListener {
+                            continuation.resume(Response.Success(chatRoomId)) {}
+                        }.addOnFailureListener { error ->
+                            continuation.resume(Response.Error("Failed to create chat room: ${error.message}")) {}
+                        }
                     } else {
                         continuation.resume(Response.Error(existingChatRoomId)) {}
                     }
@@ -115,7 +123,6 @@ class ChatRepositoryImp @Inject constructor(
             })
         }
     }
-
 
     override suspend fun getUserData(userId: String): Response<Users> {
         return suspendCancellableCoroutine { continuation ->
@@ -152,7 +159,6 @@ class ChatRepositoryImp @Inject constructor(
                     val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
                     if (chatRoom != null && chatRoom.users!!.contains(currentUser)) {
                         chatList.add(chatRoom)
-
                     }
                 }
                 trySend(Response.Success(chatList))
@@ -184,8 +190,7 @@ class ChatRepositoryImp @Inject constructor(
                         val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
                         if (chatRoom != null && chatRoom.users!!.containsAll(
                                 listOf(
-                                    user1,
-                                    user2Id
+                                    user1, user2Id
                                 )
                             )
                         ) {
@@ -228,14 +233,19 @@ class ChatRepositoryImp @Inject constructor(
                     newGroupMembers.add(currentUser)
 
 
-                    val chat = ChatRoom(newGroupMembers, chatId, groupName, groupImg, chatType, chatAdminId = currentUser)
-                    databaseRef.child(chatId).setValue(chat)
-                        .addOnSuccessListener {
-                            continuation.resume(Response.Success(chatId)) {}
-                        }
-                        .addOnFailureListener { error ->
-                            continuation.resume(Response.Error("Failed to create chat room: ${error.message}")) {}
-                        }
+                    val chat = ChatRoom(
+                        newGroupMembers,
+                        chatId,
+                        groupName,
+                        groupImg,
+                        chatType,
+                        chatAdminId = currentUser
+                    )
+                    databaseRef.child(chatId).setValue(chat).addOnSuccessListener {
+                        continuation.resume(Response.Success(chatId)) {}
+                    }.addOnFailureListener { error ->
+                        continuation.resume(Response.Error("Failed to create chat room: ${error.message}")) {}
+                    }
 
                 }
 
@@ -249,4 +259,27 @@ class ChatRepositoryImp @Inject constructor(
     }
 
 
+    fun setUserOnlineStatus(userId: String) {
+        val userStatusRef = databaseReference.child(USER_COLLECTION).child(userId).child("status")
+        val connectedRef = databaseReference.database.getReference(".info/connected")
+
+        connectedRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val connected = snapshot.getValue(Boolean::class.java) ?: false
+
+                if (connected) {
+                    userStatusRef.setValue(true)
+                    userStatusRef.onDisconnect().setValue(false)
+                }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                Log.w("Firebase", "Connection listener was cancelled")
+            }
+        })
+    }
+//    fun setLastSeen(userId: String) {
+//        val lastSeenRef = databaseReference.child(USER_COLLECTION).child(userId).child("lastSeen")
+//        lastSeenRef.onDisconnect().setValue(ServerValue.TIMESTAMP)
+//    }
 }
