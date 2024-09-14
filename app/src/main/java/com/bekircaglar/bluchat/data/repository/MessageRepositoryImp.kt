@@ -113,11 +113,11 @@ class MessageRepositoryImp @Inject constructor(
             override fun onDataChange(snapshot: DataSnapshot) {
                 val status =!snapshot.exists()
 
-                trySend(status) // Grup silindiyse true döner
+                trySend(status)
             }
 
             override fun onCancelled(error: DatabaseError) {
-                close(error.toException()) // Hata durumunda akışı kapat
+                close(error.toException())
             }
         }
 
@@ -132,7 +132,7 @@ class MessageRepositoryImp @Inject constructor(
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val userExists = snapshot.children.any { it.value == userId }
-                trySend(!userExists) // Kullanıcı varsa true, yoksa false döner
+                trySend(!userExists)
             }
 
             override fun onCancelled(error: DatabaseError) {

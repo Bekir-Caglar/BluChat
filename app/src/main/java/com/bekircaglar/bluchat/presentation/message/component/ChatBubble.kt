@@ -23,7 +23,7 @@ import androidx.compose.ui.unit.sp
 import com.bekircaglar.bluchat.domain.model.Message
 @Composable
 fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderName: String, senderNameColor: Color) {
-    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color.White.copy(alpha = 0.5f)
+    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color(0xF7CAE4F1).copy(alpha = 0.6f)
     val alignment = if (isSentByMe) Alignment.End else Alignment.Start
 
     val shape = if (isSentByMe) {
@@ -59,7 +59,7 @@ fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderN
                 }
                 Text(
                     text = message.message!!,
-                    color = if (isSentByMe) Color.White else Color.Black,
+                    color = if (isSentByMe) Color.White else Color(0xFF001F3F),
                     fontSize = 16.sp,
                     textAlign = TextAlign.Start
                 )

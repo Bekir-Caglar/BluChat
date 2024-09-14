@@ -2,10 +2,16 @@ package com.bekircaglar.bluchat.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+val MidnightBlue = Color(0xFF001F3F)  // Koyu Mavi (Çok koyu ton)
+val NavyBlue = Color(0xFF003366)      // Lacivert
+val DeepBlue = Color(0xFF004080)      // Derin Mavi
+val OceanBlue = Color(0xFF0059B3)     // Okyanus Mavisi
+val SkyBlue = Color(0xFF0080FF)       // Gök Mavisi
+val BabyBlue = Color(0xFF66B2FF)      // Bebek Mavisi
+val PowderBlue = Color(0xFFB3D9FF)    // Pudra Mavisi
+val IceBlue = Color(0xFFE6F2FF)       // Buz Mavisi (Çok açık ton)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val LightBlue = Color(0xFFDFEDF6)     // Daha önce verdiğin açık tonlardan biri
+val SoftBlue = Color(0xFF879FFF)      // Daha önce verdiğin açık mavimsi tonlardan biri
+val BrightBlue = Color(0xFF002DE3)    // Canlı bir mavi
+val DarkBlue = Color(0xFF001A83)      // Daha koyu bir tonor(0xFFD2D5F9)

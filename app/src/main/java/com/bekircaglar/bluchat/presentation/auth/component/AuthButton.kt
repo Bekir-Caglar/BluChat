@@ -29,8 +29,8 @@ fun AuthButton(
     buttonText: String,
     enabled : Boolean = true,
     buttonTextSize: TextUnit = 16.sp,
-    containerColor: Color = MaterialTheme.colorScheme.secondaryContainer,
-    contentColor: Color = MaterialTheme.colorScheme.onSecondaryContainer
+    containerColor: Color = MaterialTheme.colorScheme.secondary,
+    contentColor: Color = MaterialTheme.colorScheme.onSecondary
 ) {
     ElevatedButton(
         onClick = { onClick() },

@@ -76,7 +76,8 @@ fun SignInScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .padding(paddingValues = it)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -86,6 +87,7 @@ fun SignInScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
+                    .padding(top = 16.dp)
                     .background(color = MaterialTheme.colorScheme.surface)
             ) {
                 AuthTextField(
@@ -121,7 +123,7 @@ fun SignInScreen(navController: NavController) {
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(top = 8.dp),
+                            .padding(vertical = 8.dp),
                         horizontalArrangement = Arrangement.End
                     ) {
                         Text(
@@ -143,7 +145,6 @@ fun SignInScreen(navController: NavController) {
                             )
                         },
                         buttonText = stringResource(R.string.title_login),
-                        contentColor = MaterialTheme.colorScheme.primary,
                     )
 
                     Spacer(modifier = Modifier.padding(top = 16.dp))
@@ -157,7 +158,7 @@ fun SignInScreen(navController: NavController) {
                     ) {
                         Text(
                             text = stringResource(R.string.dont_have_account),
-                            color = MaterialTheme.colorScheme.primary,
+                            color = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .clickable {
                                     navController.navigate(Screens.SingUpScreen.route)

@@ -40,12 +40,11 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
     val currentRoute = navController?.currentBackStackEntryAsState()?.value?.destination?.route
 
     BottomAppBar(
-
         modifier = Modifier
             .navigationBarsPadding()
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .clip(shape = MaterialTheme.shapes.medium),
-        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+        containerColor = MaterialTheme.colorScheme.secondary
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, modifier = Modifier.fillMaxWidth()) {
             items.forEach { item ->
@@ -60,52 +59,51 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
                             restoreState = true
                         }
                     },
+
                     icon = {
                         BadgedBox(
                             badge = {
                                 if (item.badgeCount != 0) {
-                                    Badge {
+                                    Badge(
+                                        containerColor = MaterialTheme.colorScheme.error,
+                                        contentColor = MaterialTheme.colorScheme.onError
+                                    ) {
                                         Text(text = item.badgeCount.toString())
                                     }
                                 }
-
                             }
                         ) {
                             Icon(
                                 painter = painterResource(id = item.icon!!),
                                 contentDescription = item.route,
                                 modifier = Modifier.size(30.dp),
+                                tint = if (currentRoute == item.route) {
+                                    MaterialTheme.colorScheme.onSecondaryContainer
+                                } else {
+                                    MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.5f)
+                                }
                             )
                         }
                     },
                     colors = NavigationBarItemColors(
                         selectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer,
                         selectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                        unselectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                            alpha = 0.6f
-                        ),
-                        unselectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(
-                            alpha = 0.6f
-                        ),
-                        selectedIndicatorColor = Color.White,
-                        disabledIconColor = MaterialTheme.colorScheme.onSurface,
-                        disabledTextColor = MaterialTheme.colorScheme.primary
+                        unselectedTextColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+                        unselectedIconColor = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.6f),
+                        selectedIndicatorColor = MaterialTheme.colorScheme.background,
+                        disabledIconColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f),
+                        disabledTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
                     )
                 )
             }
         }
-
-
     }
 }
-
 
 @Preview
 @Composable
 fun ChatAppBottomAppBarPreview() {
     ChatAppBordoTheme {
-
         ChatAppBottomAppBar()
-
     }
 }

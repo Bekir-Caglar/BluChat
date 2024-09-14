@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.message
 
+import android.provider.CalendarContract.Colors
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -35,8 +36,12 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.imageResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -167,7 +172,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 }
             }
         }
-    }) {
+    }, ) {
+
         if (messages.isNotEmpty()) {
             LazyColumn(
                 state = listState,
@@ -175,7 +181,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 modifier = Modifier
                     .padding(it)
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.secondaryContainer)
+                    .paint(painter = painterResource(R.drawable.img_1), contentScale = ContentScale.FillBounds)
             ) {
                 items(count = messages.size, key = { i -> messages[i].messageId ?: i }) { i ->
                     val message = messages[i]
@@ -206,7 +212,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(MaterialTheme.colorScheme.secondaryContainer),
+                    .background(MaterialTheme.colorScheme.secondary),
                 contentAlignment = Alignment.Center
             ) {
                 Text(

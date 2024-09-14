@@ -15,12 +15,14 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.BottomSheetDefaults
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Text
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import com.bekircaglar.bluchat.R
@@ -38,6 +40,7 @@ fun BottomSheet(onDismiss: () -> Unit, onClicked: (String) -> Unit) {
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
         sheetState = modalBottomSheetState,
+        containerColor = MaterialTheme.colorScheme.background,
         dragHandle = { BottomSheetDefaults.DragHandle() },
     ) {
         LazyColumn {
@@ -50,6 +53,7 @@ fun BottomSheet(onDismiss: () -> Unit, onClicked: (String) -> Unit) {
                         Image(
                             painter = painterResource(id = option.icon),
                             contentDescription = null,
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.8f)),
                             modifier = Modifier
                                 .size(30.dp)
                         )
@@ -58,7 +62,7 @@ fun BottomSheet(onDismiss: () -> Unit, onClicked: (String) -> Unit) {
                     Spacer(modifier = Modifier.width(24.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = option.title)
+                        Text(text = option.title, color = MaterialTheme.colorScheme.onSecondary)
                     }
 
                 }
