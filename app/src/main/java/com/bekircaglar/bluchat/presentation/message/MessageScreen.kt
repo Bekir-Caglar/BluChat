@@ -25,6 +25,7 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateMapOf
@@ -80,6 +81,21 @@ fun MessageScreen(navController: NavController, chatId: String) {
     LaunchedEffect(startPagination) {
         if (startPagination && messages.size >= 15) {
             viewModel.loadMoreMessages(chatId)
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        val groupId = chatId
+        val userId = currentUser.uid
+        viewModel.observeGroupAndUserStatus(groupId, userId)
+    }
+    val isKickedOrGroupDeleted by viewModel.isKickedOrGroupDeleted.collectAsState()
+
+    LaunchedEffect(isKickedOrGroupDeleted) {
+        if (isKickedOrGroupDeleted) {
+            navController.navigate(Screens.ChatListScreen.route) {
+                popUpTo(Screens.MessageScreen.route) { inclusive = true }
+            }
         }
     }
 
