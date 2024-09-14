@@ -13,6 +13,8 @@ import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadMoreMessagesUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.ObserveGroupStatusUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.ObserveUserStatusInGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.google.firebase.auth.FirebaseAuth
@@ -35,7 +37,9 @@ class MessageViewModel @Inject constructor(
     private val sendMessageUseCase: SendMessageUseCase,
     private val loadInitialMessagesUseCase: LoadInitialMessagesUseCase,
     private val loadMoreMessagesUseCase: LoadMoreMessagesUseCase,
-    private val getChatRoomUseCase: GetChatRoomUseCase
+    private val getChatRoomUseCase: GetChatRoomUseCase,
+    private val observeGroupStatusUseCase: ObserveGroupStatusUseCase,
+    private val observeUserStatusInGroupUseCase: ObserveUserStatusInGroupUseCase
 
 
 ) :
@@ -54,6 +58,27 @@ class MessageViewModel @Inject constructor(
     val userNameFromUserId = _userNameFromUserId.asStateFlow()
 
     private var lastKey: String? = null
+
+
+    private val _isKickedOrGroupDeleted = MutableStateFlow(false)
+    val isKickedOrGroupDeleted: StateFlow<Boolean> = _isKickedOrGroupDeleted
+
+    fun observeGroupAndUserStatus(groupId: String, userId: String) {
+        viewModelScope.launch {
+            observeGroupStatusUseCase(groupId).collect { isGroupDeleted ->
+                if (isGroupDeleted) {
+                    _isKickedOrGroupDeleted.value = true
+                }
+            }
+        }
+        viewModelScope.launch {
+            observeUserStatusInGroupUseCase(groupId, userId).collect { isUserKicked ->
+                if (isUserKicked) {
+                    _isKickedOrGroupDeleted.value = true
+                }
+            }
+        }
+    }
 
     fun loadInitialMessages(chatId: String) {
         loadInitialMessagesUseCase(chatId).onEach { messages ->

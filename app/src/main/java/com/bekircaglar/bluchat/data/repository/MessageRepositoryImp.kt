@@ -11,7 +11,10 @@ import com.bekircaglar.bluchat.domain.model.Messages
 import com.bekircaglar.bluchat.domain.repository.MessageRepository
 import com.example.chatapp.data.repository.FirebaseDataSource
 import com.google.firebase.auth.FirebaseAuth
+import com.google.firebase.database.DataSnapshot
+import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
@@ -101,6 +104,44 @@ class MessageRepositoryImp @Inject constructor(
         return firebaseDataSource.getMoreMessages(chatId, lastKey).map { it.map { dataMessage ->
             dataMessage
         }}
+    }
+
+    override fun observeGroupStatus(groupId: String): Flow<Boolean> = callbackFlow {
+        val groupRef = databaseReference.child(CHAT_COLLECTION).child(groupId)
+
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val status =!snapshot.exists()
+
+                trySend(status) // Grup silindiyse true döner
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException()) // Hata durumunda akışı kapat
+            }
+        }
+
+        groupRef.addValueEventListener(listener)
+        awaitClose { groupRef.removeEventListener(listener) }
+    }
+
+    override fun observeUserStatusInGroup(groupId: String, userId: String): Flow<Boolean> = callbackFlow {
+
+        val userRef = databaseReference.child(CHAT_COLLECTION).child(groupId).child(STORED_USERS)
+
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val userExists = snapshot.children.any { it.value == userId }
+                trySend(!userExists) // Kullanıcı varsa true, yoksa false döner
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                close(error.toException())
+            }
+        }
+
+        userRef.addValueEventListener(listener)
+        awaitClose { userRef.removeEventListener(listener) }
     }
 
 

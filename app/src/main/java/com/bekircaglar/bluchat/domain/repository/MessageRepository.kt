@@ -18,4 +18,6 @@ interface MessageRepository {
     fun loadInitialMessages(chatId: String): Flow<List<Message>>
 
     fun loadMoreMessages(chatId: String, lastKey: String): Flow<List<Message>>
-}
+
+    fun observeGroupStatus(groupId: String): Flow<Boolean>
+    fun observeUserStatusInGroup(groupId: String, userId: String): Flow<Boolean>}
