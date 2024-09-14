@@ -4,6 +4,7 @@ package com.bekircaglar.bluchat.presentation.component
 
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -12,6 +13,7 @@ import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.unit.dp
@@ -25,8 +27,8 @@ fun ChatAppTopBar(
     onNavigateIconClicked: () -> Unit? = {},
     actionIcon: ImageVector? = null,
     onActionIconClicked: () -> Unit? = {},
-    containerColor: Color = MaterialTheme.colorScheme.surface,
-    titleColor: Color = MaterialTheme.colorScheme.onSurface,
+    containerColor: Color = MaterialTheme.colorScheme.secondary,
+    titleColor: Color = MaterialTheme.colorScheme.onSecondary,
 ) {
     TopAppBar(
         title = {
@@ -48,7 +50,7 @@ fun ChatAppTopBar(
                         .size(28.dp)
                         .clickable {
                         onNavigateIconClicked()
-                    }
+                    },
                 )
             }
 
@@ -66,13 +68,6 @@ fun ChatAppTopBar(
                 )
             }
         },
-        windowInsets = WindowInsets(
-            top = 16.dp,
-            left = 8.dp,
-            right = 8.dp,
-            ),
-
-
         )
 
 }

@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.auth.signup
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -80,7 +81,8 @@ fun SignUpScreen(navController: NavController) {
         Column(
             modifier = Modifier
                 .padding(paddingValues = it)
-                .fillMaxSize(),
+                .fillMaxSize()
+                .background(color = MaterialTheme.colorScheme.surface),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 

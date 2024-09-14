@@ -112,7 +112,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
         MenuItem(painterResource(id = R.drawable.ic_logout), "Logout") {
             viewModel.signOut(
                 onSuccess = {
-                    navController.navigate(Screens.AuthNav.route){
+                    navController.navigate(Screens.AuthNav.route) {
                         popUpTo(Screens.HomeNav.route) { inclusive = true }
                     }
                 },
@@ -138,7 +138,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
             onDismissRequest = {
                 showAccountDialog = false
             },
-            onSave = {showAccountDialog = false},
+            onSave = { showAccountDialog = false },
             profileImage1 = if (uploadedImageUri != null) uploadedImageUri else currentUser?.profileImageUrl,
             isImageLoading = isImageLoading,
             onImageSelected = { uri ->
@@ -156,9 +156,9 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
         topBar = {
             ChatAppTopBar(
                 title = {
-                    Text(text = "Profile", color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(text = "Profile", color = MaterialTheme.colorScheme.onSecondary)
                 },
-                containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                containerColor = MaterialTheme.colorScheme.secondary,
             )
         },
         bottomBar = {
@@ -175,7 +175,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 Modifier
                     .fillMaxWidth()
                     .height(250.dp)
-                    .background(color = MaterialTheme.colorScheme.secondaryContainer),
+                    .background(color = MaterialTheme.colorScheme.secondary),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 Spacer(modifier = Modifier.height(20.dp))
@@ -186,18 +186,22 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                     contentDescription = null,
                     contentScale = ContentScale.Crop,
                     modifier = Modifier
-                        .size(100.dp)
+                        .size(120.dp)
                         .shadow(elevation = 5.dp, shape = CircleShape)
                         .clip(CircleShape)
                         .background(color = Color.White)
                 )
                 Spacer(modifier = Modifier.height(20.dp))
-                Text(text = userName, style = MaterialTheme.typography.titleLarge)
+                Text(
+                    text = userName,
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
                 Spacer(modifier = Modifier.height(10.dp))
                 Text(
                     text = "+90 $userNumber",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = Color.Gray
+                    color = MaterialTheme.colorScheme.onSecondaryContainer
                 )
             }
             LazyColumn(

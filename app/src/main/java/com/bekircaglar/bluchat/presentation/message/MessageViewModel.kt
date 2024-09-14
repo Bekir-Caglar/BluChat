@@ -54,9 +54,6 @@ class MessageViewModel @Inject constructor(
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages
 
-    private val _userNameFromUserId = MutableStateFlow<String>("")
-    val userNameFromUserId = _userNameFromUserId.asStateFlow()
-
     private var lastKey: String? = null
 
 

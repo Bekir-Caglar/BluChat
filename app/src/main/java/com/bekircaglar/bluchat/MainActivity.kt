@@ -24,8 +24,8 @@ class MainActivity : ComponentActivity() {
     lateinit var auth: FirebaseAuth
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
         installSplashScreen()
+        enableEdgeToEdge()
         setContent {
 
 

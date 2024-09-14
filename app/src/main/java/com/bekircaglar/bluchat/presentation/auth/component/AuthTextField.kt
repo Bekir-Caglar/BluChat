@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.auth.component
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -46,11 +47,11 @@ fun AuthTextField(
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Column {
+    Column() {
         if (title != null) {
             Text(
                 text = title,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSecondary
             )
         }
         Spacer(modifier = Modifier.padding(top = 8.dp))

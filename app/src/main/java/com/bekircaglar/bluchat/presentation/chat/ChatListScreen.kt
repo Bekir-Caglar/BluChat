@@ -8,6 +8,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
@@ -23,6 +24,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarColors
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -47,6 +50,7 @@ import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
+import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 
 
 @Composable
@@ -106,8 +110,13 @@ fun ChatListScreen(navController: NavController) {
         topBar = {
             TopAppBar(
                 title = {
-                    Text(text = "Chats", color = MaterialTheme.colorScheme.onSecondaryContainer)
+                    Text(text = "Chats", color = MaterialTheme.colorScheme.onPrimary)
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
+                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+                ),
                 actions = {
                     AnimatedVisibility(
                         visible = isSearchActive,
@@ -116,20 +125,30 @@ fun ChatListScreen(navController: NavController) {
 
                         SearchTextField(
                             searchText = searchText,
-                            onSearchTextChange = { searchText = it })
+                            height = 50,
+                            width = 300,
+                            onSearchTextChange = { searchText = it },
+                        )
 
                     }
                     IconButton(onClick = { isSearchActive = !isSearchActive }) {
-                        Icon(Icons.Default.Search, contentDescription = "Search")
+                        Icon(
+                            Icons.Default.Search, contentDescription = "Search",
+                            tint = MaterialTheme.colorScheme.onPrimary,
+                        )
                     }
                 }
 
             )
         },
         floatingActionButton = {
-            ChatAppFAB(contentColor = MaterialTheme.colorScheme.onSecondaryContainer, onClick = {
-                isBottomSheetVisible = true
-            })
+            ChatAppFAB(
+                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
+                backgroundColor = MaterialTheme.colorScheme.secondary,
+                onClick = {
+                    isBottomSheetVisible = true
+                }
+            )
         },
         bottomBar = {
             ChatAppBottomAppBar(navController = navController)
@@ -184,7 +203,11 @@ fun ChatListScreen(navController: NavController) {
                 selectedUri = selectedImageUri,
                 onDismissRequest = { createGroupChatDialog = false },
                 onCreateGroupChat = { groupChatName ->
-                    viewModel.createGroupChatRoom(groupMembers,groupChatName, uploadedImageUri.toString())
+                    viewModel.createGroupChatRoom(
+                        groupMembers,
+                        groupChatName,
+                        uploadedImageUri.toString()
+                    )
                     createGroupChatDialog = false
                 },
                 isImageLoading = isLoading,
@@ -197,7 +220,8 @@ fun ChatListScreen(navController: NavController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(it),
+                .padding(it)
+                .background(MaterialTheme.colorScheme.background),
         ) {
             items(chatList) { chat ->
 
