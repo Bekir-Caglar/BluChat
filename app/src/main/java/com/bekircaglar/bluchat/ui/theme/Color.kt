@@ -2,6 +2,7 @@ package com.bekircaglar.bluchat.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
+val AppColor = Color(0xFF0e2949)      // Uygulama rengi
 val MidnightBlue = Color(0xFF001F3F)  // Koyu Mavi (Çok koyu ton)
 val NavyBlue = Color(0xFF003366)      // Lacivert
 val DeepBlue = Color(0xFF004080)      // Derin Mavi

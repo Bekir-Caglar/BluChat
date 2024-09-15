@@ -38,12 +38,12 @@ fun MessageTextField(
         modifier = modifier
             .width(250.dp)
             .clip(MaterialTheme.shapes.medium),
-        placeholder = { Text(placeholderText) },
+        placeholder = { Text(placeholderText, color = MaterialTheme.colorScheme.onSurface) },
         maxLines = 1,
         singleLine = true,
         colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+            unfocusedContainerColor = MaterialTheme.colorScheme.surface,
+            focusedContainerColor = MaterialTheme.colorScheme.onSurface,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         )

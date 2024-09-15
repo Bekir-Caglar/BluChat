@@ -130,7 +130,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 onThemeChange(it)
                 saveThemePreference(context = context, it)
             },
-            darkTheme = loadThemePreference(context)
+            darkTheme = loadThemePreference(context = context)
         )
     }
     if (showAccountDialog) {
@@ -209,12 +209,11 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                     .fillMaxWidth()
                     .height(500.dp),
                 contentPadding = PaddingValues(top = 8.dp),
-
                 ) {
 
                 items(menuItemList) {
                     ProfileMenu(menuIcon = it.icon, menuTitle = it.title, onClick = {
-                        it.onClick?.invoke()
+                        it.onClick.invoke()
                     })
 
 

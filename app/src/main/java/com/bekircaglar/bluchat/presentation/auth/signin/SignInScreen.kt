@@ -24,6 +24,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
@@ -69,7 +71,8 @@ fun SignInScreen(navController: NavController) {
 
                         )
                     }
-                }
+                },
+                containerColor = MaterialTheme.colorScheme.background,
             )
         },
     ) {
@@ -77,7 +80,7 @@ fun SignInScreen(navController: NavController) {
             modifier = Modifier
                 .padding(paddingValues = it)
                 .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface),
+                .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -88,7 +91,7 @@ fun SignInScreen(navController: NavController) {
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
                     .padding(top = 16.dp)
-                    .background(color = MaterialTheme.colorScheme.surface)
+                    .background(color = MaterialTheme.colorScheme.background)
             ) {
                 AuthTextField(
                     hint = { Text(text = stringResource(R.string.enter_your_email)) },
@@ -109,7 +112,7 @@ fun SignInScreen(navController: NavController) {
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
-                    .background(color = MaterialTheme.colorScheme.surface)
+                    .background(color = MaterialTheme.colorScheme.background)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AuthTextField(
@@ -144,6 +147,8 @@ fun SignInScreen(navController: NavController) {
                                 }
                             )
                         },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.background,
                         buttonText = stringResource(R.string.title_login),
                     )
 
@@ -181,6 +186,8 @@ fun SignInScreen(navController: NavController) {
                         onClick = { },
                         buttonIcon = painterResource(id = R.drawable.ic_google),
                         buttonText = stringResource(R.string.google_login),
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.background
                     )
 
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
