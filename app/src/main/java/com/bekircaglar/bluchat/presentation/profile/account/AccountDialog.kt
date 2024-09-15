@@ -160,6 +160,8 @@ fun AccountDialog(
                                 }
                             )
                         },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.background,
                         buttonText = "Save"
                     )
                 }

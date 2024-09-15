@@ -49,6 +49,7 @@ fun AppearanceDialog(
                 Text(
                     text = "Change Theme",
                     style = MaterialTheme.typography.titleLarge,
+                    color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(bottom =16.dp)
                 )
                 Box(

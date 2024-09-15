@@ -24,6 +24,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -64,11 +65,12 @@ fun SignUpScreen(navController: NavController) {
                             fontSize = 22.sp,
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.headlineMedium,
-                            modifier = Modifier.padding(end = 30.dp)
+                            modifier = Modifier.padding(end = 30.dp),
 
                         )
                     }
                 },
+                containerColor = MaterialTheme.colorScheme.background,
                 navigationIcon = Icons.Default.KeyboardArrowLeft,
                 onNavigateIconClicked = {
                     navController.navigate(Screens.SingInScreen.route)
@@ -82,7 +84,7 @@ fun SignUpScreen(navController: NavController) {
             modifier = Modifier
                 .padding(paddingValues = it)
                 .fillMaxSize()
-                .background(color = MaterialTheme.colorScheme.surface),
+                .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
 
@@ -105,7 +107,7 @@ fun SignUpScreen(navController: NavController) {
                 )
 
             }
-            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Spacer(modifier = Modifier.padding(top = 8.dp))
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -122,7 +124,7 @@ fun SignUpScreen(navController: NavController) {
                 )
 
             }
-            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Spacer(modifier = Modifier.padding(top = 8.dp))
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -139,7 +141,7 @@ fun SignUpScreen(navController: NavController) {
                 )
 
             }
-            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Spacer(modifier = Modifier.padding(top = 8.dp))
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -156,7 +158,7 @@ fun SignUpScreen(navController: NavController) {
                 )
 
             }
-            Spacer(modifier = Modifier.padding(top = 16.dp))
+            Spacer(modifier = Modifier.padding(top = 8.dp))
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -174,7 +176,7 @@ fun SignUpScreen(navController: NavController) {
                         title = stringResource(R.string.password)
                     )
 
-                    Spacer(modifier = Modifier.padding(top = 16.dp))
+                    Spacer(modifier = Modifier.padding(top = 32.dp))
 
                     AuthButton(
                         onClick = {
@@ -189,11 +191,13 @@ fun SignUpScreen(navController: NavController) {
                                 },
                                 onError = {errorMessage ->
                                     ShowToastMessage(context = context, message = errorMessage)
-                                }
+                                },
 
                             )
 
                         },
+                        containerColor = MaterialTheme.colorScheme.primary,
+                        contentColor = MaterialTheme.colorScheme.background,
                         buttonText = stringResource(R.string.title_signup),
                     )
 

@@ -15,13 +15,13 @@ private val DarkColorScheme = darkColorScheme(
     primary = OceanBlue,        // Ana vurgu rengi (ör. butonlar)
     onPrimary = IceBlue,        // Primary'nin üzerinde metin rengi (beyaz-açık)
 
-    secondary = SkyBlue,        // İkincil vurgu rengi (ör. aktif durumlar, ikincil butonlar)
-    onSecondary = MidnightBlue, // Secondary'nin üzerindeki metin (koyu)
+    secondary = MidnightBlue,        // İkincil vurgu rengi (ör. aktif durumlar, ikincil butonlar)
+    onSecondary = SkyBlue, // Secondary'nin üzerindeki metin (koyu)
 
     tertiary = BabyBlue,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
     onTertiary = NavyBlue,      // Tertiary'nin üzerindeki metin
 
-    background = DarkBlue,      // Uygulamanın genel arka plan rengi
+    background = AppColor,      // Uygulamanın genel arka plan rengi
     onBackground = IceBlue,     // Arka plandaki metinlerin rengi
 
     surface = NavyBlue,         // Yüzey rengi (kartlar, dialoglar, vb.)

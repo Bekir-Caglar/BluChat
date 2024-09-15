@@ -33,6 +33,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -143,8 +144,8 @@ fun ChatListScreen(navController: NavController) {
         },
         floatingActionButton = {
             ChatAppFAB(
-                contentColor = MaterialTheme.colorScheme.onSecondaryContainer,
-                backgroundColor = MaterialTheme.colorScheme.secondary,
+                contentColor = Color.White,
+                backgroundColor = MaterialTheme.colorScheme.primary,
                 onClick = {
                     isBottomSheetVisible = true
                 }

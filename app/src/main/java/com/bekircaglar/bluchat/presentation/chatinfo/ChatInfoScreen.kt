@@ -229,6 +229,7 @@ fun ChatInfoScreen(
                         Icon(
                             imageVector = Icons.Default.Create,
                             contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurface,
                             modifier = Modifier
                                 .size(30.dp)
                                 .clip(CircleShape)
@@ -245,6 +246,7 @@ fun ChatInfoScreen(
 
                 Text(
                     text = chatRoom.chatName ?: "",
+                    color = MaterialTheme.colorScheme.onSurface,
                     style = MaterialTheme.typography.headlineSmall,
                     fontWeight = FontWeight.Bold
                 )
@@ -276,7 +278,7 @@ fun ChatInfoScreen(
                     .padding(16.dp),
                 shape = RoundedCornerShape(16.dp),
                 colors = TextFieldDefaults.textFieldColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent
                 )
@@ -320,7 +322,7 @@ fun ChatInfoScreen(
                     modifier = Modifier
                         .padding(16.dp),
                     colors = ButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                        containerColor = MaterialTheme.colorScheme.surface,
                         contentColor = Color.Gray,
                         disabledContainerColor = Color.LightGray,
                         disabledContentColor = Color.Blue,
@@ -341,7 +343,7 @@ fun ChatInfoScreen(
                 },
                 modifier = Modifier.padding(bottom = 16.dp),
                 colors = ButtonColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                    containerColor = MaterialTheme.colorScheme.surface,
                     contentColor = Color.Gray,
                     disabledContainerColor = Color.LightGray,
                     disabledContentColor = Color.Blue,
@@ -349,7 +351,7 @@ fun ChatInfoScreen(
             ) {
                 Text(
                     text = "Leave Group",
-                    color = Color.Red
+                    color = MaterialTheme.colorScheme.error
                 )
             }
 

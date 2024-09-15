@@ -56,7 +56,8 @@ fun GroupChatDialog(
     defaultImageUrl : String? = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6",
     defaultGroupName : String = "Group name",
     isImageLoading : Boolean = false,
-    buttonText: String = "Create group chat"
+    buttonText: String = "Create group chat",
+    buttonColor: Color = MaterialTheme.colorScheme.primary
 
 ) {
     val context = LocalContext.current
@@ -155,6 +156,8 @@ fun GroupChatDialog(
                                 )
                             }
                         },
+                        containerColor = buttonColor,
+                        contentColor = Color.White,
                         buttonText = buttonText
                     )
                 }

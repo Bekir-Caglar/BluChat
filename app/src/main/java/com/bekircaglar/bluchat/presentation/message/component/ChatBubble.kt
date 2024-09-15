@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -23,7 +25,7 @@ import androidx.compose.ui.unit.sp
 import com.bekircaglar.bluchat.domain.model.Message
 @Composable
 fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderName: String, senderNameColor: Color) {
-    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color(0xF7CAE4F1).copy(alpha = 0.6f)
+    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
     val alignment = if (isSentByMe) Alignment.End else Alignment.Start
 
     val shape = if (isSentByMe) {
@@ -42,7 +44,9 @@ fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderN
             modifier = Modifier
                 .wrapContentSize()
                 .widthIn(max = 200.dp)
-                .background(bubbleColor, shape),
+                .shadow(elevation = 1.dp, shape = shape)
+                .background(bubbleColor, shape = shape)
+            ,
             shape = shape,
             color = bubbleColor
         ) {

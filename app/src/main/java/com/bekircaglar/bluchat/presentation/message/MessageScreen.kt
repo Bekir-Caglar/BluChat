@@ -1,9 +1,9 @@
 package com.bekircaglar.bluchat.presentation.message
 
-import android.provider.CalendarContract.Colors
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -29,19 +30,16 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.res.imageResource
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -50,7 +48,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.domain.model.Users
+import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ChatBubble
@@ -63,6 +61,7 @@ import java.time.format.DateTimeFormatter
 fun MessageScreen(navController: NavController, chatId: String) {
     val viewModel: MessageViewModel = hiltViewModel()
 
+    val context = LocalContext.current
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val currentUser = viewModel._currentUser
@@ -138,7 +137,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
             onActionIconClicked = {})
     }, bottomBar = {
         BottomAppBar(
-            containerColor = Color.White,
+            containerColor = MaterialTheme.colorScheme.background,
         ) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 IconButton(
@@ -156,6 +155,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         viewModel.sendMessage(chatMessage, chatId)
                         chatMessage = ""
                     },
+                    placeholderText = "Type a message",
+                    modifier = Modifier.width(300.dp)
                 )
 
                 Spacer(modifier = Modifier.weight(1f))
@@ -181,7 +182,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 modifier = Modifier
                     .padding(it)
                     .fillMaxSize()
-                    .paint(painter = painterResource(R.drawable.img_1), contentScale = ContentScale.FillBounds)
+                    .paint(
+                        painter = if(loadThemePreference(context = context)) {
+                            painterResource(id = R.drawable.bg_message_dark)
+                        } else {
+                            painterResource(id = R.drawable.bg_message_light)
+                        },
+                        contentScale = ContentScale.FillBounds)
             ) {
                 items(count = messages.size, key = { i -> messages[i].messageId ?: i }) { i ->
                     val message = messages[i]

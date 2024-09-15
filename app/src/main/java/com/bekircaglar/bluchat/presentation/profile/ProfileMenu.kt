@@ -15,6 +15,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
 
@@ -22,7 +23,8 @@ import androidx.compose.ui.unit.dp
 fun ProfileMenu(
     menuIcon: Painter,
     menuTitle: String,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    iconColor: Color = MaterialTheme.colorScheme.onSurface,
 ) {
     Row(
         modifier = Modifier
@@ -37,6 +39,7 @@ fun ProfileMenu(
         Icon(
             painter = menuIcon,
             contentDescription = null,
+            tint = iconColor,
             modifier = Modifier.size(24.dp)
         )
 
@@ -45,6 +48,7 @@ fun ProfileMenu(
         Text(
             text = menuTitle,
             style = MaterialTheme.typography.bodyLarge,
+            color = MaterialTheme.colorScheme.onSurface,
             modifier = Modifier.weight(1f)
         )
 
