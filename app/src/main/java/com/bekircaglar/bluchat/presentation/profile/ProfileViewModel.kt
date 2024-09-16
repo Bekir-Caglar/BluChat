@@ -49,24 +49,20 @@ class ProfileViewModel @Inject constructor(
 
 
     fun checkPhoneNumber(name:String,surname: String,phoneNumber: String? = "",profileImage:String, onSuccess: () -> Unit, onError: (String) -> Unit) = viewModelScope.launch {
-        when(val result = checkPhoneNumberUseCase.checkPhoneNumber(phoneNumber?:"")){
-            is Response.Success -> {
-                onSuccess()
-                updateUserData(
-                    name = name,
-                    surname = surname,
-                    phoneNumber = phoneNumber,
-                    profileImage = profileImage
-                )
-
-            }
-            is Response.Error -> {
-                onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
-            }
-            else -> {
-                onError("Unknown Error")
-            }
-        }
+       checkPhoneNumberUseCase(phoneNumber?:"").collect{
+              when(it){
+                is Response.Success -> {
+                     updateUserData(name,surname,phoneNumber,profileImage)
+                     onSuccess()
+                }
+                is Response.Error -> {
+                     onError(it.message)
+                }
+                else -> {
+                     onError("Unknown Error")
+                }
+              }
+       }
     }
     private fun updateUserData(name:String,surname: String,phoneNumber: String? = "",profileImage:String) = viewModelScope.launch {
         val user = _users.value

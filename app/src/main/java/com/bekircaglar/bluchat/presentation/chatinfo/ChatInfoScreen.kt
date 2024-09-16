@@ -301,7 +301,7 @@ fun ChatInfoScreen(
                     .fillMaxWidth()
                     .weight(1f)
             ) {
-                items(userList) { member ->
+                items(userList, key = {it.uid}) { member ->
                     MemberItem(member, isCurrentUserAdmin, onUserKicked = {
                         viewModel.kickUser(chatId = chatId!!, userId = member.uid)
                         viewModel.getChatRoom(chatId)

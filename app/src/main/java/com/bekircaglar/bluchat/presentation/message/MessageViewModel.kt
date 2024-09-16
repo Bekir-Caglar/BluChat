@@ -182,16 +182,15 @@ class MessageViewModel @Inject constructor(
 
     fun getUserFromUserId(userId: String?) {
         viewModelScope.launch {
-            when (val response = getUserUseCase.getUserData(userId!!)) {
-                is Response.Loading -> {
-                }
-
-                is Response.Success -> {
-                    _userData.value = response.data
-
-                }
-
-                is Response.Error -> {
+            getUserUseCase.getUserData(userId!!).collect { response ->
+                when (response) {
+                    is Response.Loading -> {
+                    }
+                    is Response.Success -> {
+                        _userData.value = response.data
+                    }
+                    is Response.Error -> {
+                    }
                 }
             }
 
@@ -205,15 +204,16 @@ class MessageViewModel @Inject constructor(
             if (userNameCache.containsKey(userId)) {
                 onResult(userNameCache[userId]!!)
             } else {
-                when (val response = getUserUseCase.getUserData(userId)) {
-                    is Response.Loading -> {
-                    }
-                    is Response.Success -> {
-                        val userName = response.data.name
-                        userNameCache[userId] = userName
-                        onResult(userName)
-                    }
-                    is Response.Error -> {
+                getUserUseCase.getUserData(userId).collect { response ->
+                    when (response) {
+                        is Response.Success -> {
+                            userNameCache[userId] = response.data.name
+                            onResult(response.data.name)
+                        }
+                        is Response.Error -> {
+                        }
+                        else -> {
+                        }
                     }
                 }
             }

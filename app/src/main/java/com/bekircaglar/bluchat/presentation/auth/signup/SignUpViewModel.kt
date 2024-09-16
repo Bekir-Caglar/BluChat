@@ -33,33 +33,34 @@ class SignUpViewModel @Inject constructor(
     ) =
         viewModelScope.launch {
             try {
+                checkPhoneNumberUseCase(phoneNumber).collect {
+                    when (it) {
+                        is Response.Success -> {
+                            onSuccess()
+                            signUp(
+                                name = name,
+                                surname = surname,
+                                phoneNumber = phoneNumber,
+                                email = email,
+                                password = password,
+                                onSuccess = {
+                                    onSuccess()
+                                },
+                                onError = {
+                                    onError(it)
+                                }
+                            )
+                        }
 
-                when (val result = checkPhoneNumberUseCase.checkPhoneNumber(phoneNumber)) {
-                    is Response.Success -> {
-                        onSuccess()
-                        signUp(
-                            name = name,
-                            surname = surname,
-                            phoneNumber = phoneNumber,
-                            email = email,
-                            password = password,
-                            onSuccess = {
-                                onSuccess()
-                            },
-                            onError = {
-                                onError(it)
-                            }
-                        )
-                    }
+                        is Response.Error -> {
+                            onError(
+                                exceptionHandlerUseCase.invoke(Exception(it.message))
+                            )
+                        }
 
-                    is Response.Error -> {
-                        onError(
-                            exceptionHandlerUseCase.invoke(Exception(result.message))
-                        )
-                    }
+                        else -> {
 
-                    else -> {
-
+                        }
                     }
                 }
             } catch (e: Exception) {
@@ -79,7 +80,7 @@ class SignUpViewModel @Inject constructor(
         viewModelScope.launch {
 
             try {
-                when (val result = authUseCase.signUpUseCase.invoke(email, password)) {
+                when (val result = authUseCase.signUpUseCase(email, password)) {
                     is Response.Success -> {
                         onSuccess()
                         createUser(

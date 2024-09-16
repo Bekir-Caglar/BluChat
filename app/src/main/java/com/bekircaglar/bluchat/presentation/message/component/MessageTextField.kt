@@ -17,7 +17,7 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun MessageTextField(
-    onSend : (String) -> Unit,
+    onSend: (String) -> Unit,
     searchText: String,
     onSearchTextChange: (String) -> Unit,
     modifier: Modifier = Modifier,
@@ -42,8 +42,9 @@ fun MessageTextField(
         maxLines = 1,
         singleLine = true,
         colors = TextFieldDefaults.colors(
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
             unfocusedContainerColor = MaterialTheme.colorScheme.surface,
-            focusedContainerColor = MaterialTheme.colorScheme.onSurface,
+            focusedContainerColor = MaterialTheme.colorScheme.surface,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         )
