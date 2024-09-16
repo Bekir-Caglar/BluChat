@@ -73,19 +73,21 @@ class ChatViewModel @Inject constructor(
             _searchQuery
                 .debounce(300)
                 .collect { query ->
-                    when (val result = searchPhoneNumberUseCase(query)) {
-                        is Response.Success -> {
-                            _searchResults.value = result.data.let {
-                                it.filter { user -> user.uid != auth.currentUser?.uid }
+                    searchPhoneNumberUseCase(query).collect {
+                        when (it) {
+                            is Response.Success -> {
+                                _searchResults.value = it.data.let {
+                                    it.filter { user -> user.uid != auth.currentUser?.uid }
+                                }
                             }
-                        }
 
-                        is Response.Error -> {
+                            is Response.Error -> {
+                                _error.value = it.message
+                            }
 
-                        }
-
-                        else -> {
-
+                            else -> {
+                                _error.value = "Unknown Error"
+                            }
                         }
                     }
                 }
@@ -93,24 +95,26 @@ class ChatViewModel @Inject constructor(
         getUsersChatList()
     }
 
-    fun onImageSelected(uri:Uri) {
+    fun onImageSelected(uri: Uri) {
         _selectedImageUri.value = uri
         uploadImage(uri)
     }
 
-    private fun uploadImage(uri: Uri){
+    private fun uploadImage(uri: Uri) {
         viewModelScope.launch {
             _isLoading.value = true
-            uploadImageUseCase.invoke(uri).collect{
-                when(it){
+            uploadImageUseCase.invoke(uri).collect {
+                when (it) {
                     is Response.Success -> {
                         _uploadedImageUri.value = it.data.toUri()
                         _isLoading.value = false
 
                     }
+
                     is Response.Error -> {
                         _error.value = it.message
                     }
+
                     else -> {
                         _error.value = "Unknown Error"
                     }
@@ -121,22 +125,33 @@ class ChatViewModel @Inject constructor(
     }
 
 
-    fun createGroupChatRoom(groupMembers:List<String>,groupName: String, firebaseImageUrl: String) = viewModelScope.launch {
+    fun createGroupChatRoom(
+        groupMembers: List<String>,
+        groupName: String,
+        firebaseImageUrl: String
+    ) = viewModelScope.launch {
 
         val randomUUID = java.util.UUID.randomUUID().toString()
 
-        when (val response = createGroupChatRoomUseCase(currentUserId,groupMembers, randomUUID, groupName, firebaseImageUrl)
-        ) {
-            is Response.Success -> {
-                _success.value = response.data
-            }
+        createGroupChatRoomUseCase.invoke(
+            currentUserId,
+            groupMembers,
+            randomUUID,
+            groupName,
+            firebaseImageUrl
+        ).collect {
+            when (it) {
+                is Response.Success -> {
+                    _success.value = it.data
+                }
 
-            is Response.Error -> {
-                _error.value = response.message
-            }
+                is Response.Error -> {
+                    _error.value = it.message
+                }
 
-            else -> {
-
+                else -> {
+                    _error.value = "Unknown Error"
+                }
             }
         }
 
@@ -144,18 +159,19 @@ class ChatViewModel @Inject constructor(
 
     fun createChatRoom(user: String, navigation: NavController) = viewModelScope.launch {
         val randomUUID = java.util.UUID.randomUUID().toString()
-        when (val response = createChatRoomUseCase(currentUserId, user, randomUUID)
-        ) {
-            is Response.Success -> {
-                navigation.navigate(Screens.MessageScreen.createRoute(response.data))
-            }
+        createChatRoomUseCase.invoke(currentUserId, user, randomUUID).collect {
+            when (it) {
+                is Response.Success -> {
+                    navigation.navigate(Screens.MessageScreen.createRoute(it.data))
+                }
 
-            is Response.Error -> {
-                navigation.navigate(Screens.MessageScreen.createRoute(response.message))
-            }
+                is Response.Error -> {
+                    navigation.navigate(Screens.MessageScreen.createRoute(it.message))
+                }
 
-            else -> {
-
+                else -> {
+                    _error.value = "Unknown Error"
+                }
             }
         }
     }
@@ -169,9 +185,8 @@ class ChatViewModel @Inject constructor(
                     response.data.forEach { chat ->
                         if (chat.chatType == PRIVATE) {
                             getUserFromChat(chat)
-                        }
-                        else if (chat.chatType == GROUP) {
-                             _chatUserList.value += Chats(
+                        } else if (chat.chatType == GROUP) {
+                            _chatUserList.value += Chats(
                                 chatRoomId = chat.chatId.toString(),
                                 name = chat.chatName!!,
                                 imageUrl = chat.chatImage!!,
@@ -192,27 +207,38 @@ class ChatViewModel @Inject constructor(
         }
     }
 
-    private fun getUserFromChat(chat: ChatRoom) = viewModelScope.launch{
-        val listOfChats: MutableList<Chats> = mutableListOf()
+    private fun getUserFromChat(chat: ChatRoom) = viewModelScope.launch {
         val userId = chat.users!!.firstOrNull { it != currentUserId }
         if (userId != null) {
-            when (val userResponse = getUserUseCase.getUserData(userId)) {
-                is Response.Success -> {
-                    _chatUserList.value += Chats(
-                        chatRoomId = chat.chatId.toString(),
-                        name = userResponse.data.name,
-                        surname = userResponse.data.surname,
-                        imageUrl = userResponse.data.profileImageUrl,
-                        isOnline = userResponse.data.status
-                    )
-                }
+            getUserUseCase.getUserData(userId).collect {
+                when (it) {
+                    is Response.Success -> {
+                        val user = it.data
+                        val chatItem = Chats(
+                            chatRoomId = chat.chatId.toString(),
+                            name = user.name,
+                            surname = user.surname,
+                            imageUrl = user.profileImageUrl,
+                            lastMessage = "",
+                            messageTime = "",
+                            isOnline = user.status
+                        )
+                        if (!_chatUserList.value.any { it.chatRoomId == chatItem.chatRoomId }) {
+                            _chatUserList.value += chatItem
+                        } else {
+                            _chatUserList.value = _chatUserList.value.map {
+                                if (it.chatRoomId == chatItem.chatRoomId) chatItem else it
+                            }
+                        }
+                    }
 
-                is Response.Error -> {
-                    _error.value = userResponse.message
-                }
+                    is Response.Error -> {
+                        _error.value = it.message
+                    }
 
-                else -> {
-                    // Handle other cases if necessary
+                    else -> {
+                        // Handle other cases if necessary
+                    }
                 }
             }
         }

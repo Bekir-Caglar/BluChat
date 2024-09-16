@@ -9,6 +9,9 @@ import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
+import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -76,31 +79,35 @@ class AuthRepositoryImp @Inject constructor(
         }
     }
 
-    override suspend fun checkPhoneNumber(phoneNumber: String): Response<String> {
-        return suspendCancellableCoroutine { continuation ->
-            val database = databaseReference.database.getReference(USER_COLLECTION)
-            database.addListenerForSingleValueEvent(object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    var phoneExists = false
-                    for (userSnapshot in snapshot.children) {
-                        val user = userSnapshot.getValue(Users::class.java)
-                        if (user?.phoneNumber.toString().equals(phoneNumber)) {
-                            phoneExists = true
-                            break
-                        }
-                    }
-                    if (phoneExists) {
-                        continuation.resume(Response.Error("Phone Number Exists")) { }
-                    } else {
-                        continuation.resume(Response.Success("Phone Number Does Not Exist")) { }
-                    }
-                }
+    override suspend fun checkPhoneNumber(phoneNumber: String): Flow<Response<String>> = callbackFlow {
+        val database = databaseReference.database.getReference(USER_COLLECTION)
 
-                override fun onCancelled(error: DatabaseError) {
-                    continuation.resume(Response.Error(error.message)) { }
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var phoneExists = false
+                for (userSnapshot in snapshot.children) {
+                    val user = userSnapshot.getValue(Users::class.java)
+                    if (user?.phoneNumber.toString() == phoneNumber) {
+                        phoneExists = true
+                        break
+                    }
                 }
-            })
+                if (phoneExists) {
+                    trySend(Response.Error("Phone Number Exists")).isSuccess
+                } else {
+                    trySend(Response.Success("Phone Number Does Not Exist")).isSuccess
+                }
+                close()
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Response.Error(error.message)).isSuccess
+                close(error.toException())
+            }
         }
+
+        database.addListenerForSingleValueEvent(listener)
+        awaitClose { database.removeEventListener(listener) }
     }
 
 }

@@ -7,16 +7,21 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatsRepository {
 
-    suspend fun searchContacts(query: String): Response<List<Users>>
+    suspend fun searchContacts(query: String): Flow<Response<List<Users>>>
 
-    suspend fun createChatRoom(user1: String, user2: String,chatRoomId: String):Response<String>
+    suspend fun createChatRoom(user1: String, user2: String, chatRoomId: String): Flow<Response<String>>
 
-    suspend fun getUserData(userId:String): Response<Users>
+    suspend fun getUserData(userId: String): Flow<Response<Users>>
 
     suspend fun getUsersChatList(): Flow<Response<List<ChatRoom>>>
 
-    suspend fun openChatRoom(user1: String,user2Id:String):Response<String>
 
-    suspend fun createGroupChatRoom(currentUser:String,groupMembers:List<String>,chatId:String,groupName:String,groupImg: String):Response<String>
+    suspend fun createGroupChatRoom(
+        currentUser: String,
+        groupMembers: List<String>,
+        chatId: String,
+        groupName: String,
+        groupImg: String
+    ): Flow<Response<String>>
 
 }

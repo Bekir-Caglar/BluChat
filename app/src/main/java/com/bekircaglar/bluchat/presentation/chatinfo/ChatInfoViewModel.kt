@@ -42,7 +42,7 @@ class ChatInfoViewModel @Inject constructor(
     private val uploadImageUseCase: UploadImageUseCase,
     private val updateChatInfoUseCase: UpdateChatInfoUseCase
 
-    ) : ViewModel() {
+) : ViewModel() {
 
     var currentUser = authUseCase.currentUser!!
 
@@ -76,136 +76,140 @@ class ChatInfoViewModel @Inject constructor(
             _searchQuery
                 .debounce(300)
                 .collect { query ->
-                    when (val result = searchPhoneNumberUseCase(query)) {
-                        is Response.Success -> {
-                            _searchResults.value = result.data.let {
-                                it.filter { user -> user.uid != authUseCase.currentUser?.uid }
+                    searchPhoneNumberUseCase(query).collect {
+                        when (it) {
+                            is Response.Success -> {
+                                _searchResults.value = it.data.let {
+                                    it.filter { user -> user.uid != authUseCase.currentUser?.uid }
+                                }
+                            }
+
+                            is Response.Error -> {
+
+                            }
+
+                            else -> {
+
                             }
                         }
-
-                        is Response.Error -> {
-
-                        }
-
-                        else -> {
-
-                        }
                     }
                 }
         }
     }
-    fun updateChatInfo(chatId: String, chatName: String,chatImageUrl:String) = viewModelScope.launch {
+        fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String) =
+            viewModelScope.launch {
 
-        updateChatInfoUseCase(chatId, chatName, chatImageUrl)
-    }
-
-
-
-    fun getChatRoom(chatId: String) = viewModelScope.launch {
-        getChatRoomUseCase(chatId).collect { response ->
-            when (response) {
-                is Response.Loading -> {
-                }
-
-                is Response.Success -> {
-                    _chatRoom.value = response.data
-                    getUsersFromChatId(chatId)
-                }
-
-                is Response.Error -> {
-                }
+                updateChatInfoUseCase(chatId, chatName, chatImageUrl)
             }
-        }
-    }
 
-    fun onImageSelected(uri: Uri) {
-        _selectedImageUri.value = uri
-        uploadImage(uri)
-    }
 
-    private fun uploadImage(uri: Uri){
-        viewModelScope.launch {
-            _isLoading.value = true
-            uploadImageUseCase.invoke(uri).collect{
-                when(it){
-                    is Response.Success -> {
-                        _uploadedImageUri.value = it.data.toUri()
-                        _isLoading.value = false
-
-                    }
-                    is Response.Error -> {
-                    }
-                    else -> {
-                    }
-                }
-            }
-        }
-
-    }
-
-    private fun getUsersFromChatId(chatId: String) = viewModelScope.launch {
-
-        getUserFromChatIdUseCase(chatId).collect { response ->
-            when (response) {
-                is Response.Loading -> {
-                }
-
-                is Response.Success -> {
-                    val userIdList = response.data
-                    _chatUserIdList.value = userIdList
-                    userIdList + currentUser.uid
-                    getUsersFromUserId(userIdList)
-
-                }
-
-                is Response.Error -> {
-                }
-            }
-        }
-
-    }
-
-    private fun getUsersFromUserId(userIdList: List<String?>) {
-        viewModelScope.launch {
-            val groupMembers = mutableListOf<Users>()
-
-            for (userId in userIdList) {
-                when (val response = getUserUseCase.getUserData(userId!!)) {
+        fun getChatRoom(chatId: String) = viewModelScope.launch {
+            getChatRoomUseCase(chatId).collect { response ->
+                when (response) {
                     is Response.Loading -> {
                     }
 
                     is Response.Success -> {
-                        val user = response.data
-                        groupMembers.add(user)
+                        _chatRoom.value = response.data
+                        getUsersFromChatId(chatId)
                     }
 
                     is Response.Error -> {
                     }
                 }
             }
-            _chatUserList.value = groupMembers
+        }
+
+        fun onImageSelected(uri: Uri) {
+            _selectedImageUri.value = uri
+            uploadImage(uri)
+        }
+
+        private fun uploadImage(uri: Uri) {
+            viewModelScope.launch {
+                _isLoading.value = true
+                uploadImageUseCase.invoke(uri).collect {
+                    when (it) {
+                        is Response.Success -> {
+                            _uploadedImageUri.value = it.data.toUri()
+                            _isLoading.value = false
+
+                        }
+
+                        is Response.Error -> {
+                        }
+
+                        else -> {
+                        }
+                    }
+                }
+            }
+
+        }
+
+        private fun getUsersFromChatId(chatId: String) = viewModelScope.launch {
+
+            getUserFromChatIdUseCase(chatId).collect { response ->
+                when (response) {
+                    is Response.Loading -> {
+                    }
+
+                    is Response.Success -> {
+                        val userIdList = response.data
+                        _chatUserIdList.value = userIdList + currentUser.uid
+                        getUsersFromUserId(userIdList)
+
+                    }
+
+                    is Response.Error -> {
+                    }
+                }
+            }
+        }
+    private fun getUsersFromUserId(userIdList: List<String?>) = viewModelScope.launch {
+        _chatUserList.value = emptyList()
+        var chatUserList = mutableListOf<Users>()
+        userIdList.forEach { userId ->
+            getUserUseCase.getUserData(userId!!).collect { response ->
+                when (response) {
+                    is Response.Loading -> {
+                    }
+
+                    is Response.Success -> {
+                        chatUserList.add(response.data)
+                    }
+
+                    is Response.Error -> {
+                    }
+                }
+            }
+        }
+        _chatUserList.value = chatUserList
+
+    }
+
+
+        fun leaveChat(chatId: String) = viewModelScope.launch {
+            leaveChatUseCase(userId = currentUser.uid, chatId = chatId)
+
+        }
+
+        fun deleteGroup(chatId: String) = viewModelScope.launch {
+            deleteGroupUseCase(chatId)
+
+        }
+
+        fun kickUser(chatId: String, userId: String) = viewModelScope.launch {
+            kickUserUseCase(userId, chatId)
+
+        }
+
+        fun addParticipant(chatId: String, userIdList: List<String?>) = viewModelScope.launch {
+            addParticipantUseCase(chatId, userIdList)
+        }
+
+        fun onSearchQueryChange(newQuery: String) {
+            _searchQuery.value = newQuery
         }
 
     }
-
-    fun leaveChat(chatId: String) = viewModelScope.launch {
-        leaveChatUseCase(userId = currentUser.uid, chatId = chatId)
-
-    }
-    fun deleteGroup(chatId: String) = viewModelScope.launch {
-        deleteGroupUseCase(chatId)
-
-    }
-    fun kickUser(chatId: String, userId: String) = viewModelScope.launch {
-        kickUserUseCase(userId, chatId)
-
-    }
-    fun addParticipant(chatId: String, userIdList: List<String?>) = viewModelScope.launch {
-        addParticipantUseCase(chatId, userIdList)
-    }
-
-    fun onSearchQueryChange(newQuery: String) {
-        _searchQuery.value = newQuery
-    }
-
-}
