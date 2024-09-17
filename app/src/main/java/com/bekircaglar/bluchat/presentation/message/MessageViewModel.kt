@@ -77,19 +77,24 @@ class MessageViewModel @Inject constructor(
         }
     }
 
+
     fun loadInitialMessages(chatId: String) {
-        loadInitialMessagesUseCase(chatId).onEach { messages ->
-            _messages.value = messages
-            lastKey = messages.lastOrNull()?.messageId
-        }.launchIn(viewModelScope)
+        viewModelScope.launch {
+            loadInitialMessagesUseCase(chatId).collect { messages ->
+                _messages.value = messages
+                lastKey = messages.lastOrNull()?.messageId
+            }
+        }
     }
 
     fun loadMoreMessages(chatId: String) {
         lastKey?.let {
-            loadMoreMessagesUseCase(chatId, it).onEach { moreMessages ->
-                _messages.value += moreMessages
-                lastKey = moreMessages.lastOrNull()?.messageId
-            }.launchIn(viewModelScope)
+            viewModelScope.launch {
+                loadMoreMessagesUseCase(chatId, it).collect { moreMessages ->
+                    _messages.value += moreMessages
+                    lastKey = moreMessages.lastOrNull()?.messageId
+                }
+            }
         }
     }
 

@@ -76,21 +76,19 @@ class ChatInfoViewModel @Inject constructor(
             _searchQuery
                 .debounce(300)
                 .collect { query ->
-                    searchPhoneNumberUseCase(query).collect {
-                        when (it) {
-                            is Response.Success -> {
-                                _searchResults.value = it.data.let {
-                                    it.filter { user -> user.uid != authUseCase.currentUser?.uid }
-                                }
+                    when (val result = searchPhoneNumberUseCase(query)) {
+                        is Response.Success -> {
+                            _searchResults.value = result.data.let {
+                                it.filter { user -> user.uid != authUseCase.currentUser?.uid }
                             }
+                        }
 
-                            is Response.Error -> {
+                        is Response.Error -> {
 
-                            }
+                        }
 
-                            else -> {
+                        else -> {
 
-                            }
                         }
                     }
                 }
@@ -168,7 +166,7 @@ class ChatInfoViewModel @Inject constructor(
         }
     private fun getUsersFromUserId(userIdList: List<String?>) = viewModelScope.launch {
         _chatUserList.value = emptyList()
-        var chatUserList = mutableListOf<Users>()
+        val chatUserList = mutableListOf<Users>()
         userIdList.forEach { userId ->
             getUserUseCase.getUserData(userId!!).collect { response ->
                 when (response) {
@@ -176,7 +174,7 @@ class ChatInfoViewModel @Inject constructor(
                     }
 
                     is Response.Success -> {
-                        chatUserList.add(response.data)
+                        _chatUserList.value += response.data
                     }
 
                     is Response.Error -> {
@@ -184,7 +182,6 @@ class ChatInfoViewModel @Inject constructor(
                 }
             }
         }
-        _chatUserList.value = chatUserList
 
     }
 
