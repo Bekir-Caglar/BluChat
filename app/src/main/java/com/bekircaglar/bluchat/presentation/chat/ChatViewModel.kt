@@ -73,21 +73,19 @@ class ChatViewModel @Inject constructor(
             _searchQuery
                 .debounce(300)
                 .collect { query ->
-                    searchPhoneNumberUseCase(query).collect {
-                        when (it) {
-                            is Response.Success -> {
-                                _searchResults.value = it.data.let {
-                                    it.filter { user -> user.uid != auth.currentUser?.uid }
-                                }
+                    when (val result = searchPhoneNumberUseCase(query)) {
+                        is Response.Success -> {
+                            _searchResults.value = result.data.let {
+                                it.filter { user -> user.uid != auth.currentUser?.uid }
                             }
+                        }
 
-                            is Response.Error -> {
-                                _error.value = it.message
-                            }
+                        is Response.Error -> {
 
-                            else -> {
-                                _error.value = "Unknown Error"
-                            }
+                        }
+
+                        else -> {
+
                         }
                     }
                 }

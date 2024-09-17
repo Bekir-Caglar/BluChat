@@ -1,5 +1,4 @@
-// data/repository/FirebaseDataSource.kt
-package com.example.chatapp.data.repository
+package com.bekircaglar.bluchat.data.repository
 
 import com.bekircaglar.bluchat.MESSAGE_COLLECTION
 import com.bekircaglar.bluchat.STORED_MESSAGES
@@ -14,7 +13,6 @@ import kotlinx.coroutines.flow.callbackFlow
 import javax.inject.Inject
 
 class FirebaseDataSource @Inject constructor(private val database: DatabaseReference) {
-
 
     fun getInitialMessages(chatId: String): Flow<List<Message>> = callbackFlow {
         val messagesRef = database.child(MESSAGE_COLLECTION).child(chatId).child(

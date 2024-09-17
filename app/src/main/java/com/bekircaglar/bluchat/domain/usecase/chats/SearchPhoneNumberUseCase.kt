@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class SearchPhoneNumberUseCase @Inject constructor(private val chatsRepository: ChatsRepository) {
-    suspend operator fun invoke(query: String): Flow<Response<List<Users>>> {
+    suspend operator fun invoke(query: String): Response<List<Users>> {
         return chatsRepository.searchContacts(query)
     }
 
