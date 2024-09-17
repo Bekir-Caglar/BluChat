@@ -165,24 +165,25 @@ class ChatInfoViewModel @Inject constructor(
             }
         }
     private fun getUsersFromUserId(userIdList: List<String?>) = viewModelScope.launch {
-        _chatUserList.value = emptyList()
-        val chatUserList = mutableListOf<Users>()
+        val userList = mutableListOf<Users>()
         userIdList.forEach { userId ->
-            getUserUseCase.getUserData(userId!!).collect { response ->
-                when (response) {
-                    is Response.Loading -> {
-                    }
+            launch {
+                getUserUseCase.getUserData(userId!!).collect { response ->
+                    when (response) {
+                        is Response.Loading -> {
+                        }
 
-                    is Response.Success -> {
-                        _chatUserList.value += response.data
-                    }
+                        is Response.Success -> {
+                            userList.add(response.data)
+                            _chatUserList.value = userList
+                        }
 
-                    is Response.Error -> {
+                        is Response.Error -> {
+                        }
                     }
                 }
             }
         }
-
     }
 
 

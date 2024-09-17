@@ -39,41 +39,45 @@ fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderN
             .fillMaxWidth()
             .padding(8.dp),
         horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
+
     ) {
-        Surface(
-            modifier = Modifier
-                .wrapContentSize()
-                .widthIn(max = 200.dp)
-                .shadow(elevation = 1.dp, shape = shape)
-                .background(bubbleColor, shape = shape)
-            ,
-            shape = shape,
-            color = bubbleColor
+        Row(
+            modifier = Modifier.fillMaxWidth(0.7f),
+            horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
         ) {
-            Column(
-                modifier = Modifier.padding(12.dp)
+            Surface(
+                modifier = Modifier
+                    .wrapContentSize()
+                    .shadow(elevation = 1.dp, shape = shape)
+                    .background(bubbleColor, shape = shape),
+                shape = shape,
+                color = bubbleColor
             ) {
-                if (!isSentByMe) {
+                Column(
+                    modifier = Modifier.padding(12.dp)
+                ) {
+                    if (!isSentByMe) {
+                        Text(
+                            text = senderName,
+                            color = senderNameColor,
+                            fontSize = 14.sp,
+                            textAlign = TextAlign.Start
+                        )
+                    }
                     Text(
-                        text = senderName,
-                        color = senderNameColor,
-                        fontSize = 14.sp,
+                        text = message.message!!,
+                        color = if (isSentByMe) Color.White else Color(0xFF001F3F),
+                        fontSize = 16.sp,
                         textAlign = TextAlign.Start
                     )
+                    Text(
+                        text = timestamp,
+                        color = if (isSentByMe) Color.White else Color.Gray,
+                        fontSize = 12.sp,
+                        textAlign = TextAlign.End,
+                        modifier = Modifier.align(Alignment.End)
+                    )
                 }
-                Text(
-                    text = message.message!!,
-                    color = if (isSentByMe) Color.White else Color(0xFF001F3F),
-                    fontSize = 16.sp,
-                    textAlign = TextAlign.Start
-                )
-                Text(
-                    text = timestamp,
-                    color = if (isSentByMe) Color.White else Color.Gray,
-                    fontSize = 12.sp,
-                    textAlign = TextAlign.End,
-                    modifier = Modifier.align(Alignment.End)
-                )
             }
         }
     }
