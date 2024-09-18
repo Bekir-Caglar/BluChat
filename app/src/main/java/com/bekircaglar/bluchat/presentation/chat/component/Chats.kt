@@ -32,12 +32,15 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
+import com.bekircaglar.bluchat.GROUP
+import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Chats(
     chat: Chats,
+    chatRoom: ChatRoom? = null,
     onClick: () -> Unit,
     isSelected: Boolean = false
 ) {
@@ -64,7 +67,7 @@ fun Chats(
                 painter = rememberImagePainter(data = profileImage),
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
-                modifier = if (chat.surname.isNullOrBlank()) Modifier
+                modifier = if (chat.surname.isBlank()) Modifier
                     .size(50.dp)
                     .clip(shape = MaterialTheme.shapes.medium)
                 else Modifier

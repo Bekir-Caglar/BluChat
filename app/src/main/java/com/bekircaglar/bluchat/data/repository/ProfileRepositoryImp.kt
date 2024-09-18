@@ -57,7 +57,8 @@ class ProfileRepositoryImp @Inject constructor(
 
     }
     override suspend fun uploadImage(uri: Uri): kotlinx.coroutines.flow.Flow<Response<String>>  = flow{
-        val storageReference = storageReference.reference.child("profileImages/${uri.lastPathSegment}")
+        val randomUUID = java.util.UUID.randomUUID().toString()
+        val storageReference = storageReference.reference.child("profileImages/${randomUUID}")
         val uploadTask = storageReference.putFile(uri)
 
         val downloadUrl = uploadTask.continueWithTask { task ->

@@ -39,8 +39,6 @@ class ChatViewModel @Inject constructor(
     private val uploadImageUseCase: UploadImageUseCase,
     private val chatRepositoryImp: ChatRepositoryImp
 ) : ViewModel() {
-
-
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 

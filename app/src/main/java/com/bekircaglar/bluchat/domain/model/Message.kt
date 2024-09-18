@@ -5,5 +5,7 @@ data class Message(
     val senderId:String? = "",
     val message:String? = "",
     val timestamp: Long? = 0,
-    val isRead:Boolean? = false
+    val isRead:Boolean? = false,
+    val messageType : String? = "",
+    val imageUrl: String? = ""
 )
