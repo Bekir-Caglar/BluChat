@@ -11,7 +11,7 @@ val SkyBlue = Color(0xFF0080FF)       // Gök Mavisi
 val BabyBlue = Color(0xFF66B2FF)      // Bebek Mavisi
 val PowderBlue = Color(0xFFB3D9FF)    // Pudra Mavisi
 val IceBlue = Color(0xFFE6F2FF)       // Buz Mavisi (Çok açık ton)
-
+val BlueMinus20 = Color(0xFF66ABF1)           // Daha önce verdiğin açık tonlardan biri
 val LightBlue = Color(0xFFDFEDF6)     // Daha önce verdiğin açık tonlardan biri
 val SoftBlue = Color(0xFF879FFF)      // Daha önce verdiğin açık mavimsi tonlardan biri
 val BrightBlue = Color(0xFF002DE3)    // Canlı bir mavi

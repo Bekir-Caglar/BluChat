@@ -1,12 +1,12 @@
-package com.bekircaglar.bluchat.presentation.message.component
-
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
@@ -18,14 +18,28 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.ui.theme.BabyBlue
+import com.bekircaglar.bluchat.ui.theme.BlueMinus20
+
 @Composable
-fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderName: String, senderNameColor: Color) {
-    val bubbleColor = if (isSentByMe) MaterialTheme.colorScheme.primary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
+fun ChatBubble(
+    messageType: String,
+    message: Message,
+    isSentByMe: Boolean,
+    timestamp: String,
+    senderName: String,
+    senderNameColor: Color,
+    onImageClick: (String) -> Unit = {}
+) {
+    val bubbleColor =
+        if (isSentByMe) MaterialTheme.colorScheme.tertiary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
     val alignment = if (isSentByMe) Alignment.End else Alignment.Start
 
     val shape = if (isSentByMe) {
@@ -39,7 +53,6 @@ fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderN
             .fillMaxWidth()
             .padding(8.dp),
         horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
-
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(0.7f),
@@ -64,12 +77,34 @@ fun ChatBubble(message: Message, isSentByMe: Boolean, timestamp: String, senderN
                             textAlign = TextAlign.Start
                         )
                     }
-                    Text(
-                        text = message.message!!,
-                        color = if (isSentByMe) Color.White else Color(0xFF001F3F),
-                        fontSize = 16.sp,
-                        textAlign = TextAlign.Start
-                    )
+
+                    if (messageType == "text") {
+                        Text(
+                            text = message.message!!,
+                            color = if (isSentByMe) Color.White else Color(0xFF001F3F),
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Start
+                        )
+                    } else if (messageType == "image") {
+                        Image(
+                            rememberImagePainter(data = message.imageUrl),
+                            contentDescription = "Image Message",
+                            modifier = Modifier
+                                .size(200.dp)
+                                .clip(shape = RoundedCornerShape(12.dp))
+                                .clickable {
+                                    message.message?.let { onImageClick(it) }
+                                }
+                                .align(Alignment.CenterHorizontally),
+                            contentScale = ContentScale.Crop
+                        )
+                        Text(
+                            message.message!!,
+                            color = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.padding(top = 8.dp)
+                        )
+                    }
+
                     Text(
                         text = timestamp,
                         color = if (isSentByMe) Color.White else Color.Gray,

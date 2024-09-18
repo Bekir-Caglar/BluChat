@@ -18,7 +18,7 @@ private val DarkColorScheme = darkColorScheme(
     secondary = MidnightBlue,        // İkincil vurgu rengi (ör. aktif durumlar, ikincil butonlar)
     onSecondary = SkyBlue, // Secondary'nin üzerindeki metin (koyu)
 
-    tertiary = BabyBlue,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
+    tertiary = OceanBlue,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
     onTertiary = NavyBlue,      // Tertiary'nin üzerindeki metin
 
     background = AppColor,      // Uygulamanın genel arka plan rengi
@@ -39,7 +39,7 @@ private val LightColorScheme = lightColorScheme(
     secondary = PowderBlue,     // İkincil vurgu rengi (daha yumuşak mavi)
     onSecondary = NavyBlue,     // Secondary'nin üzerindeki metin
 
-    tertiary = BabyBlue,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
+    tertiary = BlueMinus20,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
     onTertiary = DeepBlue,      // Tertiary'nin üzerindeki metin
 
     background = Color.White,       // Arka plan rengi (çok açık ton)

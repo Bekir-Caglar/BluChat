@@ -1,16 +1,26 @@
 package com.bekircaglar.bluchat.presentation.message
 
+import ChatBubble
+import android.net.Uri
+import android.os.Build
 import android.view.WindowInsets.Side
+import android.widget.Toast
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -19,16 +29,23 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
@@ -49,34 +66,68 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.core.net.toUri
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.bekircaglar.bluchat.IMAGE
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.TEXT
+import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
+import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
-import com.bekircaglar.bluchat.presentation.message.component.ChatBubble
+import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
+
+import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 import kotlinx.coroutines.launch
+import java.net.URLEncoder
+import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-@OptIn(ExperimentalFoundationApi::class)
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
+@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun MessageScreen(navController: NavController, chatId: String) {
     val viewModel: MessageViewModel = hiltViewModel()
     val context = LocalContext.current
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
+    val uploadedImage by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
+    val selectedImage by viewModel.selectedImageUri.collectAsStateWithLifecycle()
     val currentUser = viewModel._currentUser
+    var messageText by remember { mutableStateOf("") }
+    var bottomSheetState by remember { mutableStateOf(false) }
+    var imageSendDialogState by remember { mutableStateOf(false) }
+    var openImageDialog by remember { mutableStateOf(false) }
 
     var chatMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
+
+    val galleryLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) { uri: Uri? ->
+        uri?.let {
+            viewModel.onImageSelected(it)
+        }
+    }
+
+    val permissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            galleryLauncher.launch("image/*")
+        } else {
+            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
+        }
+    }
 
     val groupedMessages = messages.groupBy { message ->
         convertTimestampToDay(message.timestamp!!)
@@ -116,77 +167,124 @@ fun MessageScreen(navController: NavController, chatId: String) {
         }
     }
 
-    Scaffold(topBar = {
-        ChatAppTopBar(title = {
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable {
-                        navController.navigate(Screens.ChatInfoScreen.createRoute(chatId))
-                    }
-                    .padding(start = 8.dp)
-
-            ) {
-                Image(
-                    painter = rememberImagePainter(data = userInfo?.profileImageUrl),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
+    Scaffold(
+        topBar = {
+            ChatAppTopBar(title = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
                     modifier = Modifier
-                        .clip(CircleShape)
-                        .size(44.dp),
-                )
-                Text(
-                    text = userInfo?.name ?: "",
-                    modifier = Modifier.padding(start = 10.dp),
-                    fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                )
-            }
-        }, navigationIcon = Icons.Default.KeyboardArrowLeft,
-            onNavigateIconClicked = {
-                navController.navigate(Screens.ChatListScreen.route)
-            },
-            actionIcon = Icons.Default.Search,
-            onActionIconClicked = {})
-    }, bottomBar = {
-        BottomAppBar(
-            containerColor = MaterialTheme.colorScheme.background,
-        ) {
-            Row(verticalAlignment = Alignment.CenterVertically) {
-                IconButton(
-                    onClick = { /*TODO*/ }, modifier = Modifier.padding(end = 8.dp)
+                        .fillMaxWidth()
+                        .clickable {
+                            navController.navigate(Screens.ChatInfoScreen.createRoute(chatId))
+                        }
+                        .padding(start = 8.dp)
+
                 ) {
-                    PlusIcon()
+                    Image(
+                        painter = rememberImagePainter(data = userInfo?.profileImageUrl),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .clip(CircleShape)
+                            .size(44.dp),
+                    )
+                    Text(
+                        text = userInfo?.name ?: "",
+                        modifier = Modifier.padding(start = 10.dp),
+                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    )
                 }
-                MessageTextField(
-                    searchText = chatMessage,
-                    onSearchTextChange = { newText ->
-                        chatMessage =
-                            newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                    },
-                    onSend = {
-                        viewModel.sendMessage(chatMessage, chatId)
-                        chatMessage = ""
-                    },
-                    placeholderText = "Type a message",
-                    modifier = Modifier.width(300.dp)
-                )
+            }, navigationIcon = Icons.Default.KeyboardArrowLeft,
+                onNavigateIconClicked = {
+                    navController.navigate(Screens.ChatListScreen.route)
+                },
+                actionIcon = Icons.Default.Search,
+                onActionIconClicked = {})
+        },
+        bottomBar = {
+            BottomAppBar(
+                containerColor = MaterialTheme.colorScheme.background,
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    IconButton(
+                        onClick = {
+                            bottomSheetState = true
+                        },
+                        modifier = Modifier.padding(end = 8.dp)
+                    ) {
+                        PlusIcon()
+                    }
+                    MessageTextField(
+                        searchText = chatMessage,
+                        onSearchTextChange = { newText ->
+                            chatMessage =
+                                newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                        },
+                        onSend = {
+                            viewModel.sendMessage(message = chatMessage, chatId =  chatId, messageType = TEXT)
+                            chatMessage = ""
+                        },
+                        placeholderText = "Type a message",
+                        modifier = Modifier.width(300.dp)
+                    )
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                IconButton(
-                    onClick = {
-                        if (chatMessage.isNotEmpty()) {
-                            viewModel.sendMessage(chatMessage, chatId)
-                            chatMessage = ""
-                        }
-                    }, modifier = Modifier.padding(end = 16.dp)
-                ) {
-                    SendIcon()
+                    IconButton(
+                        onClick = {
+                            if (chatMessage.isNotEmpty()) {
+                                viewModel.sendMessage(message = chatMessage, chatId =  chatId, messageType = TEXT)
+                                chatMessage = ""
+                            }
+                        }, modifier = Modifier.padding(end = 16.dp)
+                    ) {
+                        SendIcon()
+                    }
                 }
             }
+        },
+    ) {
+
+        if (imageSendDialogState){
+            ImageSendBottomSheet(
+                imageResId = uploadedImage!!,
+                onSend = {  imageResId, message ->
+                    viewModel.sendMessage(message = message, chatId = chatId,imageUrl = imageResId, messageType = IMAGE)
+                    imageSendDialogState = false
+                },
+                onDismiss = {
+                    imageSendDialogState = false
+                }
+            )
         }
-    }, ) {
+
+        LaunchedEffect(uploadedImage) {
+            if (uploadedImage != null) {
+                imageSendDialogState = true
+            }
+        }
+        if (bottomSheetState) {
+            MessageExtraBottomSheet(
+                onDismiss = { bottomSheetState = false },
+                onClicked = { option ->
+                    when (option) {
+                        "Photos" -> {
+                            permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+                        }
+
+                        "Camera" -> {
+                        }
+                    }
+                },
+                myList = listOf(
+                    SheetOption("Photos", R.drawable.ic_photos),
+                    SheetOption("Camera", R.drawable.ic_camera),
+                    SheetOption("Location", R.drawable.ic_location),
+                    SheetOption("Contact", R.drawable.ic_user_square),
+                    SheetOption("Contact", R.drawable.ic_facebook),
+                )
+            )
+        }
         if (messages.isNotEmpty()) {
             LazyColumn(
                 state = listState,
@@ -203,7 +301,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         contentScale = ContentScale.FillBounds
                     )
             ) {
-                // Loop through the groups (dates) and messages under each date
                 groupedMessages.forEach { (date, messagesForDate) ->
                     stickyHeader {
                         Box(
@@ -222,7 +319,9 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         }
                     }
 
-                    itemsIndexed(messagesForDate, key = { _, message -> message.messageId ?: 0 }) { _, message ->
+                    itemsIndexed(
+                        messagesForDate,
+                        key = { _, message -> message.messageId ?: 0 }) { _, message ->
                         if (message != null) {
                             val timestamp = convertTimestampToDate(message.timestamp!!)
                             val senderId = message.senderId
@@ -235,13 +334,19 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             }
 
                             val senderNameColor = viewModel.getUserColor(senderId!!)
-                            ChatBubble(
-                                message = message,
-                                isSentByMe = message.senderId == currentUser.uid,
-                                timestamp = timestamp,
-                                senderName = senderName,
-                                senderNameColor = senderNameColor
-                            )
+                            message.messageType?.let { messageType ->
+                                ChatBubble(
+                                    message = message,
+                                    messageType = messageType,
+                                    isSentByMe = message.senderId == currentUser.uid,
+                                    timestamp = timestamp,
+                                    senderName = senderName,
+                                    senderNameColor = senderNameColor
+                                ) { imageUrl ->
+                                    var encode = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+                                    navController.navigate(Screens.ImageScreen.createRoute(encode))
+                                }
+                            }
                         }
                     }
                 }

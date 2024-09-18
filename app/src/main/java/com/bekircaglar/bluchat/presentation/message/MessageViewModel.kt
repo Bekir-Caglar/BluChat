@@ -1,6 +1,8 @@
 package com.bekircaglar.bluchat.presentation.message
 
+import android.net.Uri
 import androidx.compose.ui.graphics.Color
+import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.GROUP
@@ -17,6 +19,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.ObserveGroupStatusUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveUserStatusInGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
+import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -39,7 +42,8 @@ class MessageViewModel @Inject constructor(
     private val loadMoreMessagesUseCase: LoadMoreMessagesUseCase,
     private val getChatRoomUseCase: GetChatRoomUseCase,
     private val observeGroupStatusUseCase: ObserveGroupStatusUseCase,
-    private val observeUserStatusInGroupUseCase: ObserveUserStatusInGroupUseCase
+    private val observeUserStatusInGroupUseCase: ObserveUserStatusInGroupUseCase,
+    private val uploadImageUseCase: UploadImageUseCase
 
 
 ) :
@@ -55,6 +59,14 @@ class MessageViewModel @Inject constructor(
     val messages: StateFlow<List<Message>> = _messages
 
     private var lastKey: String? = null
+
+    private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
+    val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
+
+    private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
+    val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
+
+
 
 
     private val _isKickedOrGroupDeleted = MutableStateFlow(false)
@@ -75,6 +87,33 @@ class MessageViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+
+    fun onImageSelected(uri: Uri) {
+        _selectedImageUri.value = uri
+        uploadImage(uri)
+    }
+
+    private fun uploadImage(uri: Uri) {
+        viewModelScope.launch {
+            uploadImageUseCase.invoke(uri).collect {
+                when (it) {
+                    is Response.Success -> {
+                        _uploadedImageUri.value = it.data.toUri()
+
+
+                    }
+
+                    is Response.Error -> {
+                    }
+
+                    else -> {
+                    }
+                }
+            }
+        }
+
     }
 
 
@@ -99,13 +138,21 @@ class MessageViewModel @Inject constructor(
     }
 
 
-    fun sendMessage(message: String, chatId: String) = viewModelScope.launch {
+    fun sendMessage(imageUrl: String?="",message: String, chatId: String, messageType: String) = viewModelScope.launch {
 
         val timestamp = System.currentTimeMillis()
         val randomId = "$timestamp-${UUID.randomUUID()}"
 
 
-        val myMessage = Message(randomId, _currentUser.uid, message, timestamp = timestamp, false)
+        val myMessage = Message(
+            randomId,
+            _currentUser.uid,
+            message,
+            timestamp,
+            false,
+            messageType,
+            imageUrl
+        )
 
         sendMessageUseCase(myMessage, chatId).collect { response ->
             when (response) {
@@ -143,6 +190,7 @@ class MessageViewModel @Inject constructor(
             when (response) {
                 is Response.Loading -> {
                 }
+
                 is Response.Success -> {
                     if (response.data.chatType == GROUP) {
                         val myGroupAsUser = Users(
@@ -150,8 +198,7 @@ class MessageViewModel @Inject constructor(
                             profileImageUrl = response.data.chatImage!!,
                         )
                         _userData.value = myGroupAsUser
-                    }
-                    else if (response.data.chatType == PRIVATE) {
+                    } else if (response.data.chatType == PRIVATE) {
                         getUserFromChatId(chatId)
                     }
                 }
@@ -191,9 +238,11 @@ class MessageViewModel @Inject constructor(
                 when (response) {
                     is Response.Loading -> {
                     }
+
                     is Response.Success -> {
                         _userData.value = response.data
                     }
+
                     is Response.Error -> {
                     }
                 }
@@ -202,6 +251,7 @@ class MessageViewModel @Inject constructor(
         }
 
     }
+
     private val userNameCache = mutableMapOf<String, String>()
 
     fun getUserNameFromUserId(userId: String, onResult: (String) -> Unit) {
@@ -215,8 +265,10 @@ class MessageViewModel @Inject constructor(
                             userNameCache[userId] = response.data.name
                             onResult(response.data.name)
                         }
+
                         is Response.Error -> {
                         }
+
                         else -> {
                         }
                     }

@@ -9,6 +9,7 @@ import androidx.navigation.navigation
 import com.bekircaglar.bluchat.presentation.chat.ChatListScreen
 import com.bekircaglar.bluchat.presentation.chatinfo.ChatInfoScreen
 import com.bekircaglar.bluchat.presentation.message.MessageScreen
+import com.bekircaglar.bluchat.presentation.message.component.ImageScreen
 import com.bekircaglar.bluchat.presentation.profile.ProfileScreen
 
 
@@ -39,6 +40,15 @@ fun NavGraphBuilder.MainNavGraph(navController: NavController,onThemeChange: (Bo
         ){
             val infoChatId = it.arguments?.getString("infoChatId")
             ChatInfoScreen(navController,infoChatId)
+        }
+        composable(
+            Screens.ImageScreen.route,
+            arguments = listOf(
+                navArgument("imageUrl") {type = NavType.StringType}
+            )
+        ){
+            val imageId = it.arguments?.getString("imageUrl")
+            imageId?.let { it1 -> ImageScreen(it1) }
         }
     }
 }
