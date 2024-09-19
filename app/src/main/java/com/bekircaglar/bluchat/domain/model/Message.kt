@@ -7,5 +7,6 @@ data class Message(
     val timestamp: Long? = 0,
     val isRead:Boolean? = false,
     val messageType : String? = "",
-    val imageUrl: String? = ""
+    val imageUrl: String? = "",
+    val edited : Boolean? = false
 )

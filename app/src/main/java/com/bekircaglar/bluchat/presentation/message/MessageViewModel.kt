@@ -12,6 +12,7 @@ import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.DeleteMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.EditMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
@@ -45,8 +46,8 @@ class MessageViewModel @Inject constructor(
     private val observeGroupStatusUseCase: ObserveGroupStatusUseCase,
     private val observeUserStatusInGroupUseCase: ObserveUserStatusInGroupUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
-    private val deleteMessageUseCase: DeleteMessageUseCase
-
+    private val deleteMessageUseCase: DeleteMessageUseCase,
+    private val editMessageUseCase: EditMessageUseCase
 
 ) :
     ViewModel() {
@@ -236,6 +237,20 @@ class MessageViewModel @Inject constructor(
 
     fun deleteMessage(messageId: String, chatId: String) = viewModelScope.launch {
         deleteMessageUseCase(messageId, chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
+                is Response.Success -> {
+                }
+
+                is Response.Error -> {
+                }
+            }
+        }
+    }
+
+    fun editMessage(messageId: String, chatId: String, message: String) = viewModelScope.launch {
+        editMessageUseCase(messageId, chatId, message).collect { response ->
             when (response) {
                 is Response.Loading -> {
                 }
