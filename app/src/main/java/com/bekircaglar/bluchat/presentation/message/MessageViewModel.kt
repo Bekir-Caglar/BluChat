@@ -11,6 +11,7 @@ import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.DeleteMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
@@ -43,13 +44,14 @@ class MessageViewModel @Inject constructor(
     private val getChatRoomUseCase: GetChatRoomUseCase,
     private val observeGroupStatusUseCase: ObserveGroupStatusUseCase,
     private val observeUserStatusInGroupUseCase: ObserveUserStatusInGroupUseCase,
-    private val uploadImageUseCase: UploadImageUseCase
+    private val uploadImageUseCase: UploadImageUseCase,
+    private val deleteMessageUseCase: DeleteMessageUseCase
 
 
 ) :
     ViewModel() {
 
-    val _currentUser = auth.currentUser!!
+    val currentUser = auth.currentUser!!
 
 
     private val _userData = MutableStateFlow<Users?>(null)
@@ -146,7 +148,7 @@ class MessageViewModel @Inject constructor(
 
         val myMessage = Message(
             randomId,
-            _currentUser.uid,
+            currentUser.uid,
             message,
             timestamp,
             false,
@@ -231,6 +233,21 @@ class MessageViewModel @Inject constructor(
         }
 
     }
+
+    fun deleteMessage(messageId: String, chatId: String) = viewModelScope.launch {
+        deleteMessageUseCase(messageId, chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
+                is Response.Success -> {
+                }
+
+                is Response.Error -> {
+                }
+            }
+        }
+    }
+
 
     fun getUserFromUserId(userId: String?) {
         viewModelScope.launch {

@@ -27,7 +27,7 @@ private val DarkColorScheme = darkColorScheme(
     surface = NavyBlue,         // Yüzey rengi (kartlar, dialoglar, vb.)
     onSurface = PowderBlue,     // Yüzeylerin üzerindeki metin rengi
 
-    error = BrightBlue,         // Hata rengi (mavi varyasyonu kullanarak özelleştirildi)
+    error = Color.Red,         // Hata rengi (mavi varyasyonu kullanarak özelleştirildi)
     onError = MidnightBlue      // Hatanın üzerindeki metin
 )
 
@@ -48,7 +48,7 @@ private val LightColorScheme = lightColorScheme(
     surface = LightBlue,        // Yüzey rengi (kartlar, dialoglar, vb.)
     onSurface = DeepBlue,       // Yüzeylerin üzerindeki metin rengi
 
-    error = BrightBlue,         // Hata rengi (mavi varyasyonu)
+    error = Color.Red,         // Hata rengi (mavi varyasyonu)
     onError = DarkBlue          // Hata üzerindeki metin
 )
 

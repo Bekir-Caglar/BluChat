@@ -29,21 +29,22 @@ class MessageRepositoryImp @Inject constructor(
 ) : MessageRepository {
 
     private val currentUserId = auth.currentUser?.uid
-    override suspend fun getUserFromChatId(chatId: String): Flow<Response<List<String?>>> = callbackFlow {
-        val chatReference = databaseReference.child(CHAT_COLLECTION).child(chatId)
+    override suspend fun getUserFromChatId(chatId: String): Flow<Response<List<String?>>> =
+        callbackFlow {
+            val chatReference = databaseReference.child(CHAT_COLLECTION).child(chatId)
 
 
-        chatReference.child(STORED_USERS).get().addOnSuccessListener { snapshot ->
-            val usersList = snapshot.children.map { it.getValue(String::class.java) }
+            chatReference.child(STORED_USERS).get().addOnSuccessListener { snapshot ->
+                val usersList = snapshot.children.map { it.getValue(String::class.java) }
 
-            val otherUserId = usersList.filter { it != currentUserId }
-            trySend(Response.Success(otherUserId))
-        }.addOnFailureListener { exception ->
-            close(exception)
+                val otherUserId = usersList.filter { it != currentUserId }
+                trySend(Response.Success(otherUserId))
+            }.addOnFailureListener { exception ->
+                close(exception)
 
+            }
+            awaitClose()
         }
-        awaitClose()
-    }
 
     override suspend fun createMessageRoom(chatId: String): Flow<Response<String>> = flow {
         try {
@@ -67,7 +68,8 @@ class MessageRepositoryImp @Inject constructor(
     override suspend fun sendMessage(message: Message, chatId: String): Flow<Response<String>> {
         return flow {
             try {
-                val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+                val messageRef =
+                    databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
                 val randomId = messageRef.push().key!!
 
                 messageRef.child(randomId).setValue(message.copy(messageId = randomId)).await()
@@ -78,10 +80,11 @@ class MessageRepositoryImp @Inject constructor(
         }
     }
 
-    override suspend fun getChatRoom(chatId: String): Flow<Response<ChatRoom>> = flow{
+    override suspend fun getChatRoom(chatId: String): Flow<Response<ChatRoom>> = flow {
 
         try {
-            val chatRoomSnapshot = databaseReference.child(CHAT_COLLECTION).child(chatId).get().await()
+            val chatRoomSnapshot =
+                databaseReference.child(CHAT_COLLECTION).child(chatId).get().await()
             val chatRoom = chatRoomSnapshot.getValue(ChatRoom::class.java)
             emit(Response.Success(chatRoom!!))
         } catch (e: Exception) {
@@ -89,20 +92,22 @@ class MessageRepositoryImp @Inject constructor(
         }
 
 
-
-
     }
 
     override fun loadInitialMessages(chatId: String): Flow<List<Message>> {
-        return firebaseDataSource.getInitialMessages(chatId).map { it.map { dataMessage ->
-            dataMessage
-        }}
+        return firebaseDataSource.getInitialMessages(chatId).map {
+            it.map { dataMessage ->
+                dataMessage
+            }
+        }
     }
 
     override fun loadMoreMessages(chatId: String, lastKey: String): Flow<List<Message>> {
-        return firebaseDataSource.getMoreMessages(chatId, lastKey).map { it.map { dataMessage ->
-            dataMessage
-        }}
+        return firebaseDataSource.getMoreMessages(chatId, lastKey).map {
+            it.map { dataMessage ->
+                dataMessage
+            }
+        }
     }
 
     override fun observeGroupStatus(groupId: String): Flow<Boolean> = callbackFlow {
@@ -110,7 +115,7 @@ class MessageRepositoryImp @Inject constructor(
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val status =!snapshot.exists()
+                val status = !snapshot.exists()
 
                 trySend(status)
             }
@@ -124,24 +129,38 @@ class MessageRepositoryImp @Inject constructor(
         awaitClose { groupRef.removeEventListener(listener) }
     }
 
-    override fun observeUserStatusInGroup(groupId: String, userId: String): Flow<Boolean> = callbackFlow {
+    override fun observeUserStatusInGroup(groupId: String, userId: String): Flow<Boolean> =
+        callbackFlow {
 
-        val userRef = databaseReference.child(CHAT_COLLECTION).child(groupId).child(STORED_USERS)
+            val userRef =
+                databaseReference.child(CHAT_COLLECTION).child(groupId).child(STORED_USERS)
 
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val userExists = snapshot.children.any { it.value == userId }
-                trySend(!userExists)
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val userExists = snapshot.children.any { it.value == userId }
+                    trySend(!userExists)
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    close(error.toException())
+                }
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                close(error.toException())
-            }
+            userRef.addValueEventListener(listener)
+            awaitClose { userRef.removeEventListener(listener) }
         }
 
-        userRef.addValueEventListener(listener)
-        awaitClose { userRef.removeEventListener(listener) }
-    }
+    override suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>> =
+        flow {
+            try {
+                val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+                    dbRef.removeValue()
+                emit(Response.Success("Message Deleted"))
+            } catch (e: Exception) {
+                emit(Response.Error(e.message.toString()))
+            }
+
+        }
 
 
 }
