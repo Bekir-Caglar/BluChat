@@ -11,7 +11,7 @@ interface MessageRepository {
 
     suspend fun createMessageRoom(chatId: String): Flow<Response<String>>
 
-    suspend fun sendMessage(message: Message,chatId: String): Flow<Response<String>>
+    suspend fun sendMessage(message: Message, chatId: String): Flow<Response<String>>
 
     suspend fun getChatRoom(chatId: String): Flow<Response<ChatRoom>>
 
@@ -20,4 +20,8 @@ interface MessageRepository {
     fun loadMoreMessages(chatId: String, lastKey: String): Flow<List<Message>>
 
     fun observeGroupStatus(groupId: String): Flow<Boolean>
-    fun observeUserStatusInGroup(groupId: String, userId: String): Flow<Boolean>}
+
+    fun observeUserStatusInGroup(groupId: String, userId: String): Flow<Boolean>
+
+    suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>>
+}

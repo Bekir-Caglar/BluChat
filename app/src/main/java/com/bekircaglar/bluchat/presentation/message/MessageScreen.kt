@@ -60,11 +60,13 @@ import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.IMAGE
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.TEXT
+import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
+import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
 
 import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
@@ -88,16 +90,17 @@ fun MessageScreen(navController: NavController, chatId: String) {
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val uploadedImage by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
     val selectedImage by viewModel.selectedImageUri.collectAsStateWithLifecycle()
-    val currentUser = viewModel._currentUser
+    val currentUser = viewModel.currentUser
     var messageText by remember { mutableStateOf("") }
     var bottomSheetState by remember { mutableStateOf(false) }
     var imageSendDialogState by remember { mutableStateOf(false) }
     var openCameraDialog by remember { mutableStateOf(false) }
-
+    var alertDialogState by remember { mutableStateOf(false) }
     var chatMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     val imageCapture = remember { ImageCapture.Builder().build() }
+    var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -290,6 +293,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         contentScale = ContentScale.FillBounds
                     )
             ) {
+
                 groupedMessages.forEach { (date, messagesForDate) ->
                     stickyHeader {
                         Box(
@@ -330,11 +334,19 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                     isSentByMe = message.senderId == currentUser.uid,
                                     timestamp = timestamp,
                                     senderName = senderName,
-                                    senderNameColor = senderNameColor
-                                ) { imageUrl ->
-                                    val encode = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
-                                    navController.navigate(Screens.ImageScreen.createRoute(encode))
-                                }
+                                    senderNameColor = senderNameColor,
+                                    onImageClick = { imageUrl ->
+                                        val encode = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
+                                        navController.navigate(Screens.ImageScreen.createRoute(encode))
+                                    },
+                                    onEditClick = {
+
+                                    },
+                                    onDeleteClick = {
+                                        selectedMessageForDeletion = message
+                                    }
+                                )
+
                             }
                         }
                     }
@@ -355,7 +367,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 )
             }
         }
-    }
+        if (selectedMessageForDeletion != null && selectedMessageForDeletion?.senderId == currentUser.uid) {
+            MessageAlertDialog(
+                message = selectedMessageForDeletion!!,
+                onDismiss = { selectedMessageForDeletion = null },
+                onConfirm = {
+                    viewModel.deleteMessage(chatId, selectedMessageForDeletion!!.messageId!!)
+                    selectedMessageForDeletion = null
+                }
+            )
+        }    }
 }
 
 @Composable

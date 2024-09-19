@@ -7,6 +7,7 @@ import android.graphics.Bitmap
 import android.graphics.Matrix
 import android.net.Uri
 import android.util.Log
+import android.widget.ProgressBar
 import androidx.camera.core.CameraSelector
 import androidx.camera.core.ImageCapture
 import androidx.camera.core.ImageCaptureException
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.BottomSheetScaffold
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,8 +33,10 @@ import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -59,7 +63,7 @@ fun CameraScreen(navController: NavController,chatId:String) {
     val context = LocalContext.current
     val scaffoldState = rememberBottomSheetScaffoldState()
     val viewModel: CameraViewModel = hiltViewModel()
-    val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
+    var isImageUploaded by remember { mutableStateOf(false) }
     val controller = remember {
         LifecycleCameraController(context).apply {
             setEnabledUseCases(
@@ -85,60 +89,83 @@ fun CameraScreen(navController: NavController,chatId:String) {
         ) {
             CameraPreview(controller)
 
+            if (isImageUploaded){
+                CircularProgressIndicator(
+                    modifier = Modifier
+                        .size(100.dp)
+                        .align(Alignment.Center),
+                    color = MaterialTheme.colorScheme.primary
+                )
+            }
 
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .align(alignment = Alignment.BottomCenter)
-                    .padding(16.dp)
-                    .padding(bottom = 32.dp)
-                    .background(MaterialTheme.colorScheme.surface.copy(0.2f), MaterialTheme.shapes.medium)
-                    .padding(vertical = 16.dp),
-                horizontalArrangement = Arrangement.SpaceAround,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                IconButton(
-                    onClick = {
-                        takePhoto(controller = controller, context = context, onPhotoTaken = {uri ->
-                            viewModel.onImageSelected(uri,navController,chatId)
-
-                        }
+            if (!isImageUploaded) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .align(alignment = Alignment.BottomCenter)
+                        .padding(16.dp)
+                        .padding(bottom = 32.dp)
+                        .background(
+                            MaterialTheme.colorScheme.surface.copy(0.2f),
+                            MaterialTheme.shapes.medium
                         )
-                    },
-                    modifier = Modifier
-                        .size(80.dp)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.8f), CircleShape)
+                        .padding(vertical = 16.dp),
+                    horizontalArrangement = Arrangement.SpaceAround,
+                    verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Icon(
-                        painter = painterResource(R.drawable.ic_camera),
-                        tint = MaterialTheme.colorScheme.background,
-                        modifier = Modifier.size(50.dp),
-                        contentDescription = "Take Picture"
-                    )
+                    IconButton(
+                        onClick = {
+                            takePhoto(
+                                controller = controller,
+                                context = context,
+                                onPhotoTaken = { uri ->
+                                    viewModel.onImageSelected(uri, navController, chatId)
+                                    isImageUploaded = true
+
+                                }
+                            )
+                        },
+                        modifier = Modifier
+                            .size(80.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.8f),
+                                CircleShape
+                            )
+                    ) {
+                        Icon(
+                            painter = painterResource(R.drawable.ic_camera),
+                            tint = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.size(50.dp),
+                            contentDescription = "Take Picture"
+                        )
+                    }
+                    IconButton(
+                        onClick = {
+                            controller.cameraSelector =
+                                if (controller.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
+                                    CameraSelector.DEFAULT_FRONT_CAMERA
+                                } else {
+                                    CameraSelector.DEFAULT_BACK_CAMERA
+                                }
+                        },
+                        modifier = Modifier
+                            .size(30.dp)
+                            .background(
+                                MaterialTheme.colorScheme.primary.copy(alpha = 0.3f),
+                                MaterialTheme.shapes.small
+                            )
+                    ) {
+
+                        Icon(
+                            painter = painterResource(R.drawable.ic_reverse),
+                            tint = MaterialTheme.colorScheme.background,
+                            modifier = Modifier.size(30.dp),
+                            contentDescription = "Switch Camera"
+                        )
+
+                    }
+
                 }
-                IconButton(
-                    onClick = {
-                        controller.cameraSelector =
-                            if (controller.cameraSelector == CameraSelector.DEFAULT_BACK_CAMERA) {
-                                CameraSelector.DEFAULT_FRONT_CAMERA
-                            } else {
-                                CameraSelector.DEFAULT_BACK_CAMERA
-                            }
-                    },
-                    modifier = Modifier
-                        .size(30.dp)
-                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f), MaterialTheme.shapes.small)
-                ) {
-
-                    Icon(
-                        painter = painterResource(R.drawable.ic_reverse),
-                        tint = MaterialTheme.colorScheme.background,
-                        modifier = Modifier.size(30.dp),
-                        contentDescription = "Switch Camera"
-                    )
-
-                }
-
             }
 
         }
