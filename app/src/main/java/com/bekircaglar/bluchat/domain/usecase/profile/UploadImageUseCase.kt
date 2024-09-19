@@ -7,5 +7,5 @@ import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject
 
 class UploadImageUseCase @Inject constructor(private val profileRepository: ProfileRepository) {
-    suspend fun invoke(uri: Uri):Flow<Response<String>> = profileRepository.uploadImage(uri)
+    suspend fun invoke(uri: Uri,):Flow<Response<String>> = profileRepository.uploadImage(uri)
 }

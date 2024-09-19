@@ -17,6 +17,12 @@ sealed class Screens(val route:String,val icon:Int? = null,val badgeCount:Int = 
     data object ImageScreen:Screens("image_screen/{imageUrl}"){
         fun createRoute(imageUrl:String):String = "image_screen/$imageUrl"
     }
+    data object CameraScreen:Screens("camera_screen/{chatId}"){
+        fun createRoute(chatId:String):String = "camera_screen/$chatId"
+    }
+    data object SendTakenPhotoScreen:Screens("send_taken_photo_screen/{imageUrl}/{chatId}"){
+        fun createRoute(imageUrl:String,chatId:String):String = "send_taken_photo_screen/$imageUrl/$chatId"
+    }
 
     data object AuthNav : Screens("AUTH_NAV_GRAPH")
 
