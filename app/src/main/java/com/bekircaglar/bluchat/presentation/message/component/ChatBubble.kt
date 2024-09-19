@@ -81,14 +81,16 @@ fun ChatBubble(
     )
 
     Row(
-        modifier = if (isSentByMe){
+        modifier = if (isSentByMe) {
             Modifier
-            .fillMaxWidth()
-            .padding(8.dp)
-            .combinedClickable(enabled = true, onClick = {}, onLongClick = {
-                expanded = true
-            })}else {
-            Modifier.fillMaxWidth()
+                .fillMaxWidth()
+                .padding(8.dp)
+                .combinedClickable(enabled = true, onClick = {}, onLongClick = {
+                    expanded = true
+                })
+        } else {
+            Modifier
+                .fillMaxWidth()
                 .padding(8.dp)
         },
         horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
@@ -146,14 +148,31 @@ fun ChatBubble(
                             )
                         }
                     }
-
-                    Text(
-                        text = timestamp,
-                        color = if (isSentByMe) Color.White else Color.Gray,
-                        fontSize = 12.sp,
-                        textAlign = TextAlign.End,
-                        modifier = Modifier.align(Alignment.End)
-                    )
+                    if (message.edited == true) {
+                        Row(modifier = Modifier.align(Alignment.End), horizontalArrangement = Arrangement.End) {
+                            Text(
+                                text = "Edited",
+                                color = Color.LightGray,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.End
+                            )
+                            Spacer(modifier = Modifier.padding(horizontal = 4.dp))
+                            Text(
+                                text = timestamp,
+                                color = if (isSentByMe) Color.White else Color.Gray,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.End,
+                            )
+                        }
+                    } else {
+                        Text(
+                            text = timestamp,
+                            color = if (isSentByMe) Color.White else Color.Gray,
+                            fontSize = 12.sp,
+                            textAlign = TextAlign.End,
+                            modifier = Modifier.align(Alignment.End)
+                        )
+                    }
                 }
             }
         }

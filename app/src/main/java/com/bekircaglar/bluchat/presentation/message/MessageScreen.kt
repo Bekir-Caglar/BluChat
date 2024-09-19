@@ -1,8 +1,10 @@
 package com.bekircaglar.bluchat.presentation.message
 
 import ChatBubble
+import android.content.Context
 import android.net.Uri
 import android.os.Build
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -12,7 +14,9 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -53,6 +57,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.Dialog
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -64,6 +69,7 @@ import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
+import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
@@ -76,8 +82,6 @@ import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-
-private const val FILENAME_FORMAT = "yyyy-MM-dd-HH-mm-ss-SSS"
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -101,6 +105,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val imageCapture = remember { ImageCapture.Builder().build() }
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
+    var selecedMessageForEdit by remember { mutableStateOf<Message?>(null) }
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -212,7 +217,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                         },
                         onSend = {
-                            viewModel.sendMessage(message = chatMessage, chatId =  chatId, messageType = TEXT)
+                            viewModel.sendMessage(
+                                message = chatMessage,
+                                chatId = chatId,
+                                messageType = TEXT
+                            )
                             chatMessage = ""
                         },
                         placeholderText = "Type a message",
@@ -224,7 +233,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     IconButton(
                         onClick = {
                             if (chatMessage.isNotEmpty()) {
-                                viewModel.sendMessage(message = chatMessage, chatId =  chatId, messageType = TEXT)
+                                viewModel.sendMessage(
+                                    message = chatMessage,
+                                    chatId = chatId,
+                                    messageType = TEXT
+                                )
                                 chatMessage = ""
                             }
                         }, modifier = Modifier.padding(end = 16.dp)
@@ -236,11 +249,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
         },
     ) {
 
-        if (imageSendDialogState){
+        if (imageSendDialogState) {
             ImageSendBottomSheet(
                 imageResId = uploadedImage!!,
-                onSend = {  imageResId, message ->
-                    viewModel.sendMessage(message = message, chatId = chatId,imageUrl = imageResId, messageType = IMAGE)
+                onSend = { imageResId, message ->
+                    viewModel.sendMessage(
+                        message = message,
+                        chatId = chatId,
+                        imageUrl = imageResId,
+                        messageType = IMAGE
+                    )
                     imageSendDialogState = false
                 },
                 onDismiss = {
@@ -336,11 +354,18 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                     senderName = senderName,
                                     senderNameColor = senderNameColor,
                                     onImageClick = { imageUrl ->
-                                        val encode = URLEncoder.encode(imageUrl, StandardCharsets.UTF_8.toString())
-                                        navController.navigate(Screens.ImageScreen.createRoute(encode))
+                                        val encode = URLEncoder.encode(
+                                            imageUrl,
+                                            StandardCharsets.UTF_8.toString()
+                                        )
+                                        navController.navigate(
+                                            Screens.ImageScreen.createRoute(
+                                                encode
+                                            )
+                                        )
                                     },
                                     onEditClick = {
-
+                                        selecedMessageForEdit = message
                                     },
                                     onDeleteClick = {
                                         selectedMessageForDeletion = message
@@ -367,6 +392,64 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 )
             }
         }
+        if (selecedMessageForEdit != null && selecedMessageForEdit?.senderId == currentUser.uid) {
+            Dialog(onDismissRequest = { selecedMessageForEdit = null }) {
+
+                Column() {
+                    ChatBubble(
+                        message = selecedMessageForEdit!!,
+                        messageType = selecedMessageForEdit!!.messageType!!,
+                        isSentByMe = selecedMessageForEdit!!.senderId == currentUser.uid,
+                        timestamp = convertTimestampToDate(selecedMessageForEdit!!.timestamp!!),
+                        senderName = "",
+                        onImageClick = { },
+                        senderNameColor = Color.Transparent,
+                        onEditClick = { },
+                        onDeleteClick = { }
+                    )
+                    Row(verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        modifier = Modifier.background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium)
+
+                    ) {
+                        MessageTextField(
+                            searchText = chatMessage,
+                            onSearchTextChange = { newText ->
+                                chatMessage =
+                                    newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                            },
+                            onSend = {
+                                viewModel.editMessage(
+                                    messageId = selecedMessageForEdit!!.messageId!!,
+                                    chatId = chatId,
+                                    message = chatMessage
+                                )
+                                selecedMessageForEdit = null
+                            },
+                            placeholderText = "Edit your message",
+                            modifier = Modifier
+                                .width(250.dp)
+                        )
+
+                        Spacer(modifier = Modifier.weight(1f))
+
+                        IconButton(
+                            onClick = {
+                                viewModel.editMessage(
+                                    messageId = selecedMessageForEdit!!.messageId!!,
+                                    chatId = chatId,
+                                    message = chatMessage
+                                )
+                                selecedMessageForEdit = null
+
+                            }, modifier = Modifier.padding(end = 16.dp)
+                        ) {
+                            SendIcon()
+                        }
+                    }
+                }
+            }
+        }
         if (selectedMessageForDeletion != null && selectedMessageForDeletion?.senderId == currentUser.uid) {
             MessageAlertDialog(
                 message = selectedMessageForDeletion!!,
@@ -376,7 +459,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     selectedMessageForDeletion = null
                 }
             )
-        }    }
+        }
+    }
 }
 
 @Composable

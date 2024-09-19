@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.message.component
 
+import ChatBubble
 import android.provider.CalendarContract
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.Column
@@ -17,6 +18,10 @@ import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.IMAGE
 import com.bekircaglar.bluchat.domain.model.Message
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
 
 @Composable
 fun MessageAlertDialog(
@@ -24,6 +29,7 @@ fun MessageAlertDialog(
     onConfirm: () -> Unit,
     onDismiss: () -> Unit
 ) {
+    val timestamp = convertTimestampToDate(message.timestamp ?: 0)
     AlertDialog(
         onDismissRequest = onDismiss,
         title = {
@@ -31,22 +37,17 @@ fun MessageAlertDialog(
         },
         text = {
             Column {
-                if (message.messageType == IMAGE) {
-                    Column {
-                        Image(
-                            painter = rememberImagePainter(data = message.imageUrl),
-                            contentDescription = null,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .height(200.dp)
-                        )
-                        Spacer(modifier = Modifier.height(16.dp))
-                        message.message?.let { Text(text = it) }
-                    }
-
-                } else {
-                    message.message?.let { Text(text = it) }
-                }
+               ChatBubble(
+                     messageType = message.messageType ?: "",
+                     message = message,
+                     isSentByMe = true,
+                     timestamp = timestamp,
+                     senderName = "",
+                     senderNameColor = MaterialTheme.colorScheme.primary,
+                     onImageClick = {},
+                     onEditClick = {},
+                     onDeleteClick = {}
+               )
                 Spacer(modifier = Modifier.height(16.dp))
                 Text(text = "Are you sure you want to delete this message?")
             }
@@ -62,4 +63,11 @@ fun MessageAlertDialog(
             }
         }
     )
+}
+
+fun convertTimestampToDate(timestamp: Long): String {
+    val instant = Instant.ofEpochMilli(timestamp)
+    val dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+    val formatter = DateTimeFormatter.ofPattern("HH:mm")
+    return dateTime.format(formatter)
 }

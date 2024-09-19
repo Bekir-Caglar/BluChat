@@ -150,8 +150,7 @@ class MessageRepositoryImp @Inject constructor(
             awaitClose { userRef.removeEventListener(listener) }
         }
 
-    override suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>> =
-        flow {
+    override suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>> = flow {
             try {
                 val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
                     dbRef.removeValue()
@@ -162,5 +161,14 @@ class MessageRepositoryImp @Inject constructor(
 
         }
 
-
+    override suspend fun editMessage(messageId: String, chatId: String, message: String): Flow<Response<String>> = flow {
+        try {
+            val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+            dbRef.child("message").setValue(message).await()
+            dbRef.child("edited").setValue(true).await()
+            emit(Response.Success("Message Edited"))
+        } catch (e: Exception) {
+            emit(Response.Error(e.message.toString()))
+        }
+    }
 }
