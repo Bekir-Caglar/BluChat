@@ -35,6 +35,9 @@
       <SelectionState runConfigName="ImageSendBottomSheetPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
+      <SelectionState runConfigName="SendTakenPhotoScreenPreview">
+        <option name="selectionMode" value="DROPDOWN" />
+      </SelectionState>
     </selectionStates>
   </component>
 </project>

@@ -93,16 +93,18 @@ fun ChatBubble(
                                 .size(200.dp)
                                 .clip(shape = RoundedCornerShape(12.dp))
                                 .clickable {
-                                    message.message?.let { onImageClick(it) }
+                                    message.imageUrl?.let { onImageClick(it) }
                                 }
                                 .align(Alignment.CenterHorizontally),
                             contentScale = ContentScale.Crop
                         )
-                        Text(
-                            message.message!!,
-                            color = MaterialTheme.colorScheme.background,
-                            modifier = Modifier.padding(top = 8.dp)
-                        )
+                        if (message.message != "") {
+                            Text(
+                                message.message!!,
+                                color = MaterialTheme.colorScheme.background,
+                                modifier = Modifier.padding(top = 8.dp)
+                            )
+                        }
                     }
 
                     Text(
