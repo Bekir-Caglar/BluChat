@@ -119,8 +119,8 @@ fun CameraScreen(navController: NavController,chatId:String) {
                                 controller = controller,
                                 context = context,
                                 onPhotoTaken = { uri ->
-                                    viewModel.onImageSelected(uri, navController, chatId)
                                     isImageUploaded = true
+                                    viewModel.onImageSelected(uri, navController, chatId)
 
                                 }
                             )
@@ -173,7 +173,7 @@ fun CameraScreen(navController: NavController,chatId:String) {
     }
 }
 
-private fun takePhoto(controller: LifecycleCameraController,onPhotoTaken: (Uri) -> Unit,context:Context) {
+private fun takePhoto(controller: LifecycleCameraController, onPhotoTaken: (Uri) -> Unit, context: Context) {
     controller.takePicture(
         ContextCompat.getMainExecutor(context),
         object : ImageCapture.OnImageCapturedCallback() {
@@ -182,7 +182,6 @@ private fun takePhoto(controller: LifecycleCameraController,onPhotoTaken: (Uri) 
 
                 val matrix = Matrix().apply {
                     postRotate(image.imageInfo.rotationDegrees.toFloat())
-
                 }
                 val rotatedBitmap = Bitmap.createBitmap(
                     image.toBitmap(),
@@ -194,7 +193,9 @@ private fun takePhoto(controller: LifecycleCameraController,onPhotoTaken: (Uri) 
                     true
                 )
 
-                val uri = saveBitmapToFile(rotatedBitmap, context)
+                val compressedBitmap = compressAndResizeBitmap(rotatedBitmap, 800, 800) // 800x800 piksel
+
+                val uri = saveBitmapToFile(compressedBitmap, context)
                 onPhotoTaken(uri)
             }
 
@@ -202,18 +203,33 @@ private fun takePhoto(controller: LifecycleCameraController,onPhotoTaken: (Uri) 
                 super.onError(exception)
                 Log.e("Camera", "Error taking photo", exception)
             }
-
         }
     )
-
-
 }
 
+private fun compressAndResizeBitmap(bitmap: Bitmap, maxWidth: Int, maxHeight: Int): Bitmap {
+    val width = bitmap.width
+    val height = bitmap.height
+    val aspectRatio = width.toFloat() / height.toFloat()
+
+    val newWidth: Int
+    val newHeight: Int
+
+    if (width > height) {
+        newWidth = maxWidth
+        newHeight = (newWidth / aspectRatio).toInt()
+    } else {
+        newHeight = maxHeight
+        newWidth = (newHeight * aspectRatio).toInt()
+    }
+
+    return Bitmap.createScaledBitmap(bitmap, newWidth, newHeight, true)
+}
 
 private fun saveBitmapToFile(bitmap: Bitmap, context: Context): Uri {
     val file = File(context.cacheDir, "${System.currentTimeMillis()}.jpg")
     FileOutputStream(file).use { out ->
-        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, out)
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, out)
     }
     return file.toUri()
 }
