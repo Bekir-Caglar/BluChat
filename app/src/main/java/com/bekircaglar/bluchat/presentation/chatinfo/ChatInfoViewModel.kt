@@ -11,6 +11,7 @@ import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.AddParticipantUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.DeleteGroupUseCase
+import com.bekircaglar.bluchat.domain.usecase.chatinfo.GetChatImagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.KickUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.LeaveChatUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.UpdateChatInfoUseCase
@@ -40,7 +41,8 @@ class ChatInfoViewModel @Inject constructor(
     private val addParticipantUseCase: AddParticipantUseCase,
     private val searchPhoneNumberUseCase: SearchPhoneNumberUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
-    private val updateChatInfoUseCase: UpdateChatInfoUseCase
+    private val updateChatInfoUseCase: UpdateChatInfoUseCase,
+    private val getChatImagesUseCase: GetChatImagesUseCase
 
 ) : ViewModel() {
 
@@ -61,6 +63,8 @@ class ChatInfoViewModel @Inject constructor(
     private val _chatRoom = MutableStateFlow<ChatRoom>(ChatRoom())
     val chatRoom = _chatRoom.asStateFlow()
 
+    private val _otherUser = MutableStateFlow<Users>(Users())
+    val otherUser = _otherUser.asStateFlow()
 
     private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
     val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
@@ -70,6 +74,9 @@ class ChatInfoViewModel @Inject constructor(
 
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
+
+    private val _ChatImages = MutableStateFlow<List<String>>(emptyList())
+    val ChatImages: StateFlow<List<String>> = _ChatImages
 
     init {
         viewModelScope.launch {
@@ -93,77 +100,97 @@ class ChatInfoViewModel @Inject constructor(
                     }
                 }
         }
+
     }
-        fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String) =
-            viewModelScope.launch {
 
-                updateChatInfoUseCase(chatId, chatName, chatImageUrl)
-            }
+    fun getChatImages(chatId: String) = viewModelScope.launch {
+        getChatImagesUseCase(chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
 
+                is Response.Success -> {
+                    val imageUrlList = response.data
+                    _ChatImages.value = imageUrlList
+                }
 
-        fun getChatRoom(chatId: String) = viewModelScope.launch {
-            getChatRoomUseCase(chatId).collect { response ->
-                when (response) {
-                    is Response.Loading -> {
-                    }
-
-                    is Response.Success -> {
-                        _chatRoom.value = response.data
-                        getUsersFromChatId(chatId)
-                    }
-
-                    is Response.Error -> {
-                    }
+                is Response.Error -> {
                 }
             }
         }
+    }
 
-        fun onImageSelected(uri: Uri) {
-            _selectedImageUri.value = uri
-            uploadImage(uri)
+    fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String) =
+        viewModelScope.launch {
+
+            updateChatInfoUseCase(chatId, chatName, chatImageUrl)
         }
 
-        private fun uploadImage(uri: Uri) {
-            viewModelScope.launch {
-                _isLoading.value = true
-                uploadImageUseCase.invoke(uri).collect {
-                    when (it) {
-                        is Response.Success -> {
-                            _uploadedImageUri.value = it.data.toUri()
-                            _isLoading.value = false
 
-                        }
+    fun getChatRoom(chatId: String) = viewModelScope.launch {
+        getChatRoomUseCase(chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
 
-                        is Response.Error -> {
-                        }
+                is Response.Success -> {
+                    _chatRoom.value = response.data
+                    getUsersFromChatId(chatId)
+                }
 
-                        else -> {
-                        }
-                    }
+                is Response.Error -> {
                 }
             }
-
         }
+    }
 
-        private fun getUsersFromChatId(chatId: String) = viewModelScope.launch {
+    fun onImageSelected(uri: Uri) {
+        _selectedImageUri.value = uri
+        uploadImage(uri)
+    }
 
-            getUserFromChatIdUseCase(chatId).collect { response ->
-                when (response) {
-                    is Response.Loading -> {
-                    }
-
+    private fun uploadImage(uri: Uri) {
+        viewModelScope.launch {
+            _isLoading.value = true
+            uploadImageUseCase.invoke(uri).collect {
+                when (it) {
                     is Response.Success -> {
-                        val userIdList = response.data
-                        _chatUserIdList.value = userIdList + currentUser.uid
-                        getUsersFromUserId(userIdList)
+                        _uploadedImageUri.value = it.data.toUri()
+                        _isLoading.value = false
 
                     }
 
                     is Response.Error -> {
                     }
+
+                    else -> {
+                    }
                 }
             }
         }
+
+    }
+
+    private fun getUsersFromChatId(chatId: String) = viewModelScope.launch {
+
+        getUserFromChatIdUseCase(chatId).collect { response ->
+            when (response) {
+                is Response.Loading -> {
+                }
+
+                is Response.Success -> {
+                    val userIdList = response.data
+                    _chatUserIdList.value = userIdList + currentUser.uid
+                    getUsersFromUserId(userIdList)
+
+                }
+
+                is Response.Error -> {
+                }
+            }
+        }
+    }
+
     private fun getUsersFromUserId(userIdList: List<String?>) = viewModelScope.launch {
         val userList = mutableListOf<Users>()
         userIdList.forEach { userId ->
@@ -176,6 +203,7 @@ class ChatInfoViewModel @Inject constructor(
                         is Response.Success -> {
                             userList.add(response.data)
                             _chatUserList.value = userList
+                            _otherUser.value = userList.first { it.uid != currentUser.uid }
                         }
 
                         is Response.Error -> {
@@ -187,27 +215,27 @@ class ChatInfoViewModel @Inject constructor(
     }
 
 
-        fun leaveChat(chatId: String) = viewModelScope.launch {
-            leaveChatUseCase(userId = currentUser.uid, chatId = chatId)
-
-        }
-
-        fun deleteGroup(chatId: String) = viewModelScope.launch {
-            deleteGroupUseCase(chatId)
-
-        }
-
-        fun kickUser(chatId: String, userId: String) = viewModelScope.launch {
-            kickUserUseCase(userId, chatId)
-
-        }
-
-        fun addParticipant(chatId: String, userIdList: List<String?>) = viewModelScope.launch {
-            addParticipantUseCase(chatId, userIdList)
-        }
-
-        fun onSearchQueryChange(newQuery: String) {
-            _searchQuery.value = newQuery
-        }
+    fun leaveChat(chatId: String) = viewModelScope.launch {
+        leaveChatUseCase(userId = currentUser.uid, chatId = chatId)
 
     }
+
+    fun deleteGroup(chatId: String) = viewModelScope.launch {
+        deleteGroupUseCase(chatId)
+
+    }
+
+    fun kickUser(chatId: String, userId: String) = viewModelScope.launch {
+        kickUserUseCase(userId, chatId)
+
+    }
+
+    fun addParticipant(chatId: String, userIdList: List<String?>) = viewModelScope.launch {
+        addParticipantUseCase(chatId, userIdList)
+    }
+
+    fun onSearchQueryChange(newQuery: String) {
+        _searchQuery.value = newQuery
+    }
+
+}
