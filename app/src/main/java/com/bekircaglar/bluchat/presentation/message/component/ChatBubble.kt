@@ -134,9 +134,15 @@ fun ChatBubble(
                             modifier = Modifier
                                 .size(200.dp)
                                 .clip(shape = RoundedCornerShape(12.dp))
-                                .clickable {
-                                    message.imageUrl?.let { onImageClick(it) }
-                                }
+                                .combinedClickable(
+                                    enabled = true,
+                                    onClick = {
+                                        onImageClick(message.imageUrl!!)
+                                    },
+                                    onLongClick = {
+                                        expanded = true
+                                    }
+                                )
                                 .align(Alignment.CenterHorizontally),
                             contentScale = ContentScale.Crop
                         )

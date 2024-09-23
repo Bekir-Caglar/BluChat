@@ -11,11 +11,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
@@ -326,165 +329,188 @@ fun ChatInfoScreen(
                         )
                     }
                     Spacer(modifier = Modifier.height(32.dp))
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
+
+
+
+                    Column(
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.background,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                            .padding(8.dp)
                     ) {
-                        Text("Media, link and documents ")
                         Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.clickable {
-                                coroutineScope.launch {
-                                    bottomSheetScaffoldState.bottomSheetState.expand()
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                modifier = Modifier.padding(start = 8.dp),
+                                text = "Media, link and documents ",
+                                style = MaterialTheme.typography.titleMedium
+                            )
+                            if (chatImages.size >= 5)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                modifier = Modifier.clickable {
+                                    coroutineScope.launch {
+                                        bottomSheetScaffoldState.bottomSheetState.expand()
+                                    }
+                                }
+                            ) {
+                                Text("View all ${chatImages.size} ")
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowRight,
+                                    contentDescription = "More",
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                )
+                            }
+                        }
+
+                        LazyRow(
+                            contentPadding = PaddingValues(8.dp),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            items(chatImages) { imageUrl ->
+                                Image(
+                                    painter = rememberImagePainter(data = imageUrl),
+                                    contentDescription = null,
+                                    modifier = Modifier
+                                        .size(100.dp)
+                                        .clip(RoundedCornerShape(16.dp))
+                                        .clickable {
+                                            val encodedUrl = Uri.encode(imageUrl)
+                                            navController?.navigate(
+                                                Screens.ImageScreen.createRoute(
+                                                    encodedUrl
+                                                )
+                                            )
+                                        },
+                                    contentScale = ContentScale.Crop
+                                )
+                            }
+
+                        }
+
+                    }
+
+                    Column(
+                        modifier = Modifier
+                            .padding(top = 16.dp)
+                            .background(
+                                color = MaterialTheme.colorScheme.background,
+                                shape = RoundedCornerShape(16.dp)
+                            )
+                    ) {
+                        if (chatType == GROUP) {
+                            TextField(
+                                value = "",
+                                onValueChange = { /*TODO*/ },
+                                leadingIcon = {
+                                    Icon(
+                                        imageVector = Icons.Default.Search,
+                                        contentDescription = "Search"
+                                    )
+                                },
+                                placeholder = {
+                                    Text(text = "Search members")
+                                },
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(16.dp),
+                                shape = RoundedCornerShape(16.dp),
+                                colors = TextFieldDefaults.textFieldColors(
+                                    containerColor = MaterialTheme.colorScheme.surface,
+                                    focusedIndicatorColor = Color.Transparent,
+                                    unfocusedIndicatorColor = Color.Transparent
+                                )
+                            )
+                        }
+                        if (isCurrentUserAdmin) {
+                            MemberItem(
+                                Users(
+                                    uid = "0",
+                                    name = "Add participants",
+                                    surname = "",
+                                    profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2Faddicon.png?alt=media&token=9f24b0b2-0e43-4444-a8d3-7274f00a8ee8"
+                                ), false, onItemClick = {
+                                    selectGroupUserDialog = true
+                                }
+                            )
+                        }
+
+                        if (chatType == GROUP) {
+                            LazyColumn(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .fillMaxHeight(0.5f)
+                            ) {
+                                items(userList, key = { it.uid }) { member ->
+                                    MemberItem(member, isCurrentUserAdmin, onUserKicked = {
+                                        viewModel.kickUser(chatId = chatId!!, userId = member.uid)
+                                        viewModel.getChatRoom(chatId)
+                                    })
                                 }
                             }
-                        ) {
-                            Text("View all ${chatImages.size} ")
-
-                            Icon(
-                                imageVector = Icons.Default.KeyboardArrowRight,
-                                contentDescription = "More",
-                                tint = MaterialTheme.colorScheme.onSurface,
-                            )
-
                         }
                     }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 8.dp)
-                    )
-                    LazyRow {
-                        items(chatImages) { imageUrl ->
-                            Image(
-                                painter = rememberImagePainter(data = imageUrl),
-                                contentDescription = null,
-                                modifier = Modifier
-                                    .size(100.dp)
-                                    .padding(8.dp)
-                                    .clip(RoundedCornerShape(16.dp))
-                                    .clickable {
-                                        val encodedUrl = Uri.encode(imageUrl)
-                                        navController?.navigate(
-                                            Screens.ImageScreen.createRoute(
-                                                encodedUrl
-                                            )
-                                        )
-                                    }
-                            )
-                        }
 
-                    }
-                    HorizontalDivider(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(top = 16.dp)
-                    )
-                    if (chatType == GROUP) {
-                        TextField(
-                            value = "",
-                            onValueChange = { /*TODO*/ },
-                            leadingIcon = {
-                                Icon(
-                                    imageVector = Icons.Default.Search,
-                                    contentDescription = "Search"
-                                )
-                            },
-                            placeholder = {
-                                Text(text = "Search members")
+                    Spacer(modifier = Modifier.weight(1f))
+
+
+                    if (isCurrentUserAdmin) {
+                        ElevatedButton(
+                            onClick = {
+                                viewModel.deleteGroup(chatId!!)
+                                navController?.navigate(Screens.ChatListScreen.route) {
+                                    popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
+                                }
                             },
                             modifier = Modifier
-                                .fillMaxWidth()
                                 .padding(16.dp),
-                            shape = RoundedCornerShape(16.dp),
-                            colors = TextFieldDefaults.textFieldColors(
-                                containerColor = MaterialTheme.colorScheme.surface,
-                                focusedIndicatorColor = Color.Transparent,
-                                unfocusedIndicatorColor = Color.Transparent
+                            colors = ButtonColors(
+                                containerColor = MaterialTheme.colorScheme.background,
+                                contentColor = Color.Gray,
+                                disabledContainerColor = Color.LightGray,
+                                disabledContentColor = Color.Blue,
+                            ),
+                        ) {
+                            Text(
+                                text = "Delete Group",
+                                color = Color.Red
                             )
-                        )
-                    }
-                }
-
-                if (isCurrentUserAdmin) {
-                    MemberItem(
-                        Users(
-                            uid = "0",
-                            name = "Add participants",
-                            surname = "",
-                            profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2Faddicon.png?alt=media&token=9f24b0b2-0e43-4444-a8d3-7274f00a8ee8"
-                        ), false, onItemClick = {
-                            selectGroupUserDialog = true
-                        }
-                    )
-                }
-
-                if (chatType == GROUP) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(300.dp)
-                            .weight(1f)
-                    ) {
-                        items(userList, key = { it.uid }) { member ->
-                            MemberItem(member, isCurrentUserAdmin, onUserKicked = {
-                                viewModel.kickUser(chatId = chatId!!, userId = member.uid)
-                                viewModel.getChatRoom(chatId)
-                            })
                         }
                     }
-                }
-
-
-                if (isCurrentUserAdmin) {
                     ElevatedButton(
                         onClick = {
-                            viewModel.deleteGroup(chatId!!)
+                            viewModel.leaveChat(chatId!!)
                             navController?.navigate(Screens.ChatListScreen.route) {
                                 popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
                             }
                         },
-                        modifier = Modifier
-                            .padding(16.dp),
+                        modifier = Modifier.padding(bottom = 16.dp),
                         colors = ButtonColors(
-                            containerColor = MaterialTheme.colorScheme.surface,
+                            containerColor = MaterialTheme.colorScheme.background,
                             contentColor = Color.Gray,
                             disabledContainerColor = Color.LightGray,
                             disabledContentColor = Color.Blue,
                         ),
                     ) {
-                        Text(
-                            text = "Delete Group",
-                            color = Color.Red
-                        )
+                        if (chatType == PRIVATE) {
+                            Text(
+                                text = "Leave Chat",
+                                color = Color.Red
+                            )
+                        } else
+                            Text(
+                                text = "Leave Group",
+                                color = MaterialTheme.colorScheme.error
+                            )
                     }
-                }
-                ElevatedButton(
-                    onClick = {
-                        viewModel.leaveChat(chatId!!)
-                        navController?.navigate(Screens.ChatListScreen.route) {
-                            popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
-                        }
-                    },
-                    modifier = Modifier.padding(bottom = 16.dp),
-                    colors = ButtonColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = Color.Gray,
-                        disabledContainerColor = Color.LightGray,
-                        disabledContentColor = Color.Blue,
-                    ),
-                ) {
-                    if (chatType == PRIVATE) {
-                        Text(
-                            text = "Leave Chat",
-                            color = Color.Red
-                        )
-                    } else
-                        Text(
-                            text = "Leave Group",
-                            color = MaterialTheme.colorScheme.error
-                        )
+
                 }
 
             }

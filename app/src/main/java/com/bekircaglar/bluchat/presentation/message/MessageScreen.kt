@@ -1,10 +1,8 @@
 package com.bekircaglar.bluchat.presentation.message
 
 import ChatBubble
-import android.content.Context
 import android.net.Uri
 import android.os.Build
-import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -69,7 +67,6 @@ import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
-import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
@@ -101,6 +98,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     var openCameraDialog by remember { mutableStateOf(false) }
     var alertDialogState by remember { mutableStateOf(false) }
     var chatMessage by remember { mutableStateOf("") }
+    var editedMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     val imageCapture = remember { ImageCapture.Builder().build() }
@@ -115,13 +113,23 @@ fun MessageScreen(navController: NavController, chatId: String) {
         }
     }
 
-    val permissionLauncher = rememberLauncherForActivityResult(
+    val permissionLauncherForGallery = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted ->
         if (isGranted) {
             galleryLauncher.launch("image/*")
         } else {
             Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
+        }
+    }
+
+    val permissionLauncherForCamera = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            navController.navigate(Screens.CameraScreen.createRoute(chatId))
+        } else {
+            Toast.makeText(context, "Kamera erişim izni gerekli!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -166,30 +174,42 @@ fun MessageScreen(navController: NavController, chatId: String) {
     Scaffold(
         topBar = {
             ChatAppTopBar(title = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable {
-                            navController.navigate(Screens.ChatInfoScreen.createRoute(chatId))
-                        }
-                        .padding(start = 8.dp)
-
-                ) {
-                    Image(
-                        painter = rememberImagePainter(data = userInfo?.profileImageUrl),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         modifier = Modifier
-                            .clip(CircleShape)
-                            .size(44.dp),
-                    )
-                    Text(
-                        text = userInfo?.name ?: "",
-                        modifier = Modifier.padding(start = 10.dp),
-                        fontSize = MaterialTheme.typography.titleLarge.fontSize,
-                    )
-                }
+                            .fillMaxWidth()
+                            .clickable {
+                                navController.navigate(Screens.ChatInfoScreen.createRoute(chatId))
+                            }
+                            .padding(start = 8.dp)
+
+                    ) {
+                        Image(
+                            painter = rememberImagePainter(data = userInfo?.profileImageUrl),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .size(44.dp),
+                        )
+                        Column {
+                            Text(
+                                text = userInfo?.name ?: "",
+                                modifier = Modifier.padding(start = 8.dp),
+                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                            )
+                            if (userInfo?.status == true){
+                                Text(
+                                    text = "Online",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
+                        }
+                    }
+
+
             }, navigationIcon = Icons.Default.KeyboardArrowLeft,
                 onNavigateIconClicked = {
                     navController.navigate(Screens.ChatListScreen.route)
@@ -278,11 +298,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 onClicked = { option ->
                     when (option) {
                         "Photos" -> {
-                            permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+                            permissionLauncherForGallery.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
                         }
 
                         "Camera" -> {
-                            navController.navigate(Screens.CameraScreen.createRoute(chatId))
+                            permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                         }
                     }
                 },
@@ -395,7 +415,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
         if (selecedMessageForEdit != null && selecedMessageForEdit?.senderId == currentUser.uid) {
             Dialog(onDismissRequest = { selecedMessageForEdit = null }) {
 
-                Column() {
+                Column {
                     ChatBubble(
                         message = selecedMessageForEdit!!,
                         messageType = selecedMessageForEdit!!.messageType!!,
@@ -407,15 +427,19 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         onEditClick = { },
                         onDeleteClick = { }
                     )
-                    Row(verticalAlignment = Alignment.CenterVertically,
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
                         horizontalArrangement = Arrangement.SpaceBetween,
-                        modifier = Modifier.background(MaterialTheme.colorScheme.surface, shape = MaterialTheme.shapes.medium)
-
+                        modifier = Modifier
+                            .background(
+                                color = MaterialTheme.colorScheme.surface,
+                                shape = MaterialTheme.shapes.medium
+                            )
                     ) {
                         MessageTextField(
-                            searchText = chatMessage,
+                            searchText = editedMessage,
                             onSearchTextChange = { newText ->
-                                chatMessage =
+                                editedMessage =
                                     newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
                             },
                             onSend = {

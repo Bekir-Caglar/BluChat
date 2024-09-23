@@ -253,10 +253,10 @@ class MessageViewModel @Inject constructor(
         editMessageUseCase(messageId, chatId, message).collect { response ->
             when (response) {
                 is Response.Loading -> {
+
                 }
                 is Response.Success -> {
                 }
-
                 is Response.Error -> {
                 }
             }
