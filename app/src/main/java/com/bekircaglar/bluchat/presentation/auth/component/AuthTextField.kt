@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.presentation.auth.component
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
@@ -43,11 +44,13 @@ fun AuthTextField(
     onValueChange: (String) -> Unit,
     leadingIcon: ImageVector? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
-    title: String? = null
+    title: String? = null,
+    modifier: Modifier = Modifier,
+    visualTransformation: VisualTransformation = VisualTransformation.None
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
-    Column() {
+    Column {
         if (title != null) {
             Text(
                 text = title,
@@ -80,7 +83,7 @@ fun AuthTextField(
             maxLines = 1,
             singleLine = true,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-            visualTransformation = if (keyboardType == KeyboardType.Password && !passwordVisible) PasswordVisualTransformation() else VisualTransformation.None,
+            visualTransformation = if (keyboardType == KeyboardType.Password && !passwordVisible) PasswordVisualTransformation() else visualTransformation,
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color.White,
                 focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
@@ -88,7 +91,7 @@ fun AuthTextField(
                 unfocusedIndicatorColor = Color.Transparent
             ),
             placeholder = { hint() },
-            modifier = Modifier
+            modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
                 .shadow(4.dp, shape = RoundedCornerShape(8.dp))
@@ -105,6 +108,7 @@ fun AuthTextFieldPreview() {
         value = "",
         onValueChange = {},
         leadingIcon = Icons.Default.Email,
-        title = "Email"
+        title = "Email",
+        modifier = Modifier.border(1.dp, Color.Red, MaterialTheme.shapes.medium)
     )
 }

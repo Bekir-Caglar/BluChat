@@ -201,7 +201,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 Text(
                     text = "+90 $userNumber",
                     style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer
+                    color = MaterialTheme.colorScheme.onSecondaryContainer,
                 )
             }
             LazyColumn(
@@ -209,7 +209,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                     .fillMaxWidth()
                     .height(500.dp),
                 contentPadding = PaddingValues(top = 8.dp),
-                ) {
+            ) {
 
                 items(menuItemList) {
                     ProfileMenu(menuIcon = it.icon, menuTitle = it.title, onClick = {

@@ -33,12 +33,14 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
+import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransformation
 
 
 @Composable
@@ -137,7 +139,8 @@ fun AccountDialog(
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
                     label = { Text("Phone Number: ${currentUsers.phoneNumber}") },
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier.fillMaxWidth(),
+                    visualTransformation = PhoneVisualTransformation()
                 )
 
                 Spacer(modifier = Modifier.height(16.dp))
