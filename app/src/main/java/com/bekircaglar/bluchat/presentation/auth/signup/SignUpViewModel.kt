@@ -78,7 +78,6 @@ class SignUpViewModel @Inject constructor(
         onError: (String) -> Unit
     ) =
         viewModelScope.launch {
-
             try {
                 when (val result = authUseCase.signUpUseCase(email, password)) {
                     is Response.Success -> {

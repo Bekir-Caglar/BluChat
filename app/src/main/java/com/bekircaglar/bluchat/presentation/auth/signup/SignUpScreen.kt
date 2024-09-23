@@ -1,12 +1,15 @@
 package com.bekircaglar.bluchat.presentation.auth.signup
 
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
@@ -40,6 +43,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransformation
 
 @Composable
 fun SignUpScreen(navController: NavController) {
@@ -48,8 +52,15 @@ fun SignUpScreen(navController: NavController) {
     var surname by remember { mutableStateOf("") }
     var emailRegister by remember { mutableStateOf("") }
     var passwordRegister by remember { mutableStateOf("") }
+    var confirmPassword by remember { mutableStateOf("") }
     var phoneNumber by remember { mutableStateOf("") }
+    var passwordError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
+
+    fun isPasswordValid(password: String): Boolean {
+        val passwordRegex = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{8,}$".toRegex()
+        return passwordRegex.matches(password)
+    }
 
     Scaffold(
         topBar = {
@@ -66,7 +77,6 @@ fun SignUpScreen(navController: NavController) {
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.headlineMedium,
                             modifier = Modifier.padding(end = 30.dp),
-
                         )
                     }
                 },
@@ -77,8 +87,6 @@ fun SignUpScreen(navController: NavController) {
                 },
             )
         }
-
-
     ) {
         Column(
             modifier = Modifier
@@ -87,44 +95,44 @@ fun SignUpScreen(navController: NavController) {
                 .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-
-            Spacer(modifier = Modifier.padding(vertical = 12.dp))
-
-            Box(
-                contentAlignment = Alignment.TopStart,
+            Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(horizontal = 32.dp)
             ) {
-                AuthTextField(
-                    hint = { Text(text = "Name")},
-                    value = name,
-                    onValueChange = { name = it },
-                    leadingIcon = Icons.Default.Person,
-                    keyboardType = KeyboardType.Text,
-                    title = "Name"
-                )
+                Box(
+                    contentAlignment = Alignment.TopStart,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    AuthTextField(
+                        hint = { Text(text = "Name") },
+                        value = name,
+                        onValueChange = { name = it.replaceFirstChar { char -> char.uppercase() } },
+                        leadingIcon = Icons.Default.Person,
+                        keyboardType = KeyboardType.Text,
+                        title = "Name"
+                    )
+                }
 
-            }
-            Spacer(modifier = Modifier.padding(top = 8.dp))
-            Box(
-                contentAlignment = Alignment.TopStart,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 32.dp)
-            ) {
-                AuthTextField(
-                    hint = { Text(text = "Surname") },
-                    value = surname,
-                    onValueChange = { surname = it },
-                    leadingIcon = Icons.Default.Person,
-                    keyboardType = KeyboardType.Text,
-                    title = "Surname"
-                )
+                Spacer(modifier = Modifier.width(16.dp))
 
+                Box(
+                    contentAlignment = Alignment.TopStart,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    AuthTextField(
+                        hint = { Text(text = "Surname") },
+                        value = surname,
+                        onValueChange = { surname = it.replaceFirstChar { char -> char.uppercase() } },
+                        leadingIcon = Icons.Default.Person,
+                        keyboardType = KeyboardType.Text,
+                        title = "Surname"
+                    )
+                }
             }
+
             Spacer(modifier = Modifier.padding(top = 8.dp))
+
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -137,11 +145,14 @@ fun SignUpScreen(navController: NavController) {
                     onValueChange = { phoneNumber = it },
                     leadingIcon = Icons.Default.Phone,
                     keyboardType = KeyboardType.Phone,
-                    title = stringResource(R.string.phone_number)
-                )
+                    title = stringResource(R.string.phone_number),
+                    visualTransformation = PhoneVisualTransformation()
 
+                )
             }
+
             Spacer(modifier = Modifier.padding(top = 8.dp))
+
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -156,9 +167,10 @@ fun SignUpScreen(navController: NavController) {
                     keyboardType = KeyboardType.Email,
                     title = stringResource(R.string.e_mail)
                 )
-
             }
+
             Spacer(modifier = Modifier.padding(top = 8.dp))
+
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -166,7 +178,6 @@ fun SignUpScreen(navController: NavController) {
                     .padding(horizontal = 32.dp)
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-
                     AuthTextField(
                         hint = { Text(text = stringResource(R.string.enter_your_password)) },
                         value = passwordRegister,
@@ -175,31 +186,64 @@ fun SignUpScreen(navController: NavController) {
                         keyboardType = KeyboardType.Password,
                         title = stringResource(R.string.password)
                     )
+                    Spacer(modifier = Modifier.padding(top = 8.dp))
+
+                    AuthTextField(
+                        hint = { Text(text = "Confirm password") },
+                        value = confirmPassword,
+                        onValueChange = { confirmPassword = it },
+                        leadingIcon = Icons.Default.Lock,
+                        keyboardType = KeyboardType.Password,
+                        title = "Confirm password",
+                        modifier = if (passwordRegister != confirmPassword) {
+                            Modifier.border(1.dp, Color.Red, MaterialTheme.shapes.medium)
+                        } else {
+                            Modifier
+                        }
+                    )
 
                     Spacer(modifier = Modifier.padding(top = 32.dp))
 
                     AuthButton(
                         onClick = {
-                            viewModel.checkPassword(
-                                email = emailRegister,
-                                password = passwordRegister,
-                                name = name,
-                                surname = surname,
-                                phoneNumber = phoneNumber,
-                                onSuccess = {
-                                    navController.navigate(Screens.HomeNav.route)
-                                },
-                                onError = {errorMessage ->
-                                    ShowToastMessage(context = context, message = errorMessage)
-                                },
-
-                            )
-
+                            if (!isPasswordValid(passwordRegister)) {
+                                passwordError = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+                            } else if (passwordRegister != confirmPassword) {
+                                passwordError = "Passwords do not match."
+                            } else {
+                                passwordError = null
+                                if (emailRegister.isEmpty() || passwordRegister.isEmpty() || name.isEmpty() || surname.isEmpty() || phoneNumber.isEmpty()) {
+                                    ShowToastMessage(context = context, message = "Please fill in all fields.")
+                                    return@AuthButton
+                                }
+                                viewModel.checkPassword(
+                                    email = emailRegister,
+                                    password = passwordRegister,
+                                    name = name,
+                                    surname = surname,
+                                    phoneNumber = phoneNumber,
+                                    onSuccess = {
+                                        navController.navigate(Screens.HomeNav.route)
+                                    },
+                                    onError = { errorMessage ->
+                                        ShowToastMessage(context = context, message = errorMessage)
+                                    }
+                                )
+                            }
                         },
                         containerColor = MaterialTheme.colorScheme.primary,
                         contentColor = MaterialTheme.colorScheme.background,
                         buttonText = stringResource(R.string.title_signup),
                     )
+
+                    passwordError?.let {
+                        Text(
+                            text = it,
+                            color = Color.Red,
+                            modifier = Modifier.padding(top = 8.dp),
+                            textAlign = TextAlign.Center
+                        )
+                    }
 
                     Text(
                         stringResource(R.string.policy),
@@ -211,30 +255,8 @@ fun SignUpScreen(navController: NavController) {
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
                     HorizontalDivider(modifier = Modifier)
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
-
-//                    AuthButton(
-//                        onClick = { },
-//                        buttonIcon = painterResource(R.drawable.ic_google),
-//                        buttonText = stringResource(R.string.google_login)
-//                    )
-//
-//                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-//
-//                    AuthButton(
-//                        onClick = { },
-//                        buttonIcon = painterResource(R.drawable.ic_facebook),
-//                        buttonText = stringResource(R.string.facebook_login),
-//                        containerColor = colorResource(id = R.color.facebook),
-//                        contentColor = MaterialTheme.colorScheme.surface
-//                    )
-//
-//                    Spacer(modifier = Modifier.padding(vertical = 12.dp))
-
                 }
-
             }
         }
-
     }
-
 }

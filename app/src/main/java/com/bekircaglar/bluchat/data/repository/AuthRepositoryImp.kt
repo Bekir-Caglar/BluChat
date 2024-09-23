@@ -67,7 +67,7 @@ class AuthRepositoryImp @Inject constructor(
                 phoneNumber = phoneNumber,
                 email = email,
                 uid = auth.currentUser?.uid.toString(),
-                profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=f49659f9-8128-4400-af7f-a2bc4a938eaf",
+                profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2FSubject.png?alt=media&token=0fcc75d0-a3e8-49f3-926a-e0cb8db0e6b8",
                 status = false,
                 lastSeen = "12:19"
             )

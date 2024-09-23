@@ -8,10 +8,16 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
@@ -32,14 +38,17 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
@@ -216,33 +225,54 @@ fun ChatListScreen(navController: NavController) {
             )
         }
 
-
         Spacer(modifier = Modifier.padding(top = 16.dp))
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(it)
-                .background(MaterialTheme.colorScheme.background),
-        ) {
-            items(chatList) { chat ->
 
-                val myChat = Chats(
-                    chatRoomId = chat.chatRoomId,
-                    imageUrl = chat.imageUrl,
-                    name = chat.name,
-                    surname = chat.surname,
-                    lastMessage = chat.lastMessage,
-                    messageTime = chat.messageTime,
-                    isOnline = chat.isOnline
-                )
-                Chats(chat = myChat, onClick = {
-                    navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
-                })
+        if (chatList.isEmpty()) {
+            Box(
+                modifier = Modifier.fillMaxSize(),
+                contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Image(
+                        painter = painterResource(id = R.drawable.sticker_shake_hand),
+                        contentDescription = "Chat",
+                        modifier = Modifier.size(200.dp)
+                    )
+                    Spacer(modifier = Modifier.height(64.dp))
+                    Text(
+                        text = "No chats yet!",
+                        style = MaterialTheme.typography.titleLarge
+                    )
 
-                HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                }
             }
-        }
+        } else
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it)
+                    .background(MaterialTheme.colorScheme.background),
+            ) {
+                items(chatList) { chat ->
 
+                    val myChat = Chats(
+                        chatRoomId = chat.chatRoomId,
+                        imageUrl = chat.imageUrl,
+                        name = chat.name,
+                        surname = chat.surname,
+                        lastMessage = chat.lastMessage,
+                        messageTime = chat.messageTime,
+                        isOnline = chat.isOnline
+                    )
+                    Chats(chat = myChat, onClick = {
+                        navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
+                    })
 
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
+                }
+            }
     }
 }
