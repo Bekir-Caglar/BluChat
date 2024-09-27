@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.profile
 
+import android.content.Context
 import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
@@ -122,9 +123,9 @@ class ProfileViewModel @Inject constructor(
 
 
 
-    fun signOut(onSuccess: (String) -> Unit, onError:(String) -> Unit) = viewModelScope.launch {
-        val result = signOutUseCase.invoke()
-        when (result) {
+    fun signOut(context: Context,onSuccess: (String) -> Unit, onError:(String) -> Unit) = viewModelScope.launch {
+
+        when (val result = signOutUseCase(context)) {
             is Response.Success -> {
                 onSuccess("Successfully SignOut")
             }

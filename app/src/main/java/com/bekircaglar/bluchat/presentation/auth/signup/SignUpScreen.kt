@@ -222,9 +222,7 @@ fun SignUpScreen(navController: NavController) {
                                     name = name,
                                     surname = surname,
                                     phoneNumber = phoneNumber,
-                                    onSuccess = {
-                                        navController.navigate(Screens.HomeNav.route)
-                                    },
+                                    navController = navController,
                                     onError = { errorMessage ->
                                         ShowToastMessage(context = context, message = errorMessage)
                                     }

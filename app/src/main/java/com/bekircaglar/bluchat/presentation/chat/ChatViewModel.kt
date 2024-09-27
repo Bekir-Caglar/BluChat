@@ -8,6 +8,7 @@ import androidx.navigation.NavController
 import com.bekircaglar.bluchat.GROUP
 import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.data.repository.ChatRepositoryImp
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
@@ -65,6 +66,9 @@ class ChatViewModel @Inject constructor(
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
 
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
+
 
     init {
         viewModelScope.launch {
@@ -104,15 +108,17 @@ class ChatViewModel @Inject constructor(
                     is Response.Success -> {
                         _uploadedImageUri.value = it.data.toUri()
                         _isLoading.value = false
+                        _uiState.value = UiState.Success
 
                     }
 
                     is Response.Error -> {
                         _error.value = it.message
+                        _uiState.value = UiState.Error
                     }
 
-                    else -> {
-                        _error.value = "Unknown Error"
+                    is Response.Loading -> {
+                        _uiState.value = UiState.Loading
                     }
                 }
             }
@@ -139,14 +145,16 @@ class ChatViewModel @Inject constructor(
             when (it) {
                 is Response.Success -> {
                     _success.value = it.data
+                    _uiState.value = UiState.Success
                 }
 
                 is Response.Error -> {
                     _error.value = it.message
+                    _uiState.value = UiState.Error
                 }
 
-                else -> {
-                    _error.value = "Unknown Error"
+                is Response.Loading -> {
+                    _uiState.value = UiState.Loading
                 }
             }
         }
@@ -159,14 +167,16 @@ class ChatViewModel @Inject constructor(
             when (it) {
                 is Response.Success -> {
                     navigation.navigate(Screens.MessageScreen.createRoute(it.data))
+                    _uiState.value = UiState.Success
                 }
 
                 is Response.Error -> {
                     navigation.navigate(Screens.MessageScreen.createRoute(it.message))
+                    _uiState.value = UiState.Error
                 }
 
-                else -> {
-                    _error.value = "Unknown Error"
+                is Response.Loading -> {
+                    _uiState.value = UiState.Loading
                 }
             }
         }
@@ -190,14 +200,16 @@ class ChatViewModel @Inject constructor(
                             )
                         }
                     }
+                    _uiState.value = UiState.Success
                 }
 
                 is Response.Error -> {
                     _error.value = response.message
+                    _uiState.value = UiState.Error
                 }
 
-                else -> {
-                    // Handle other cases if necessary
+                is Response.Loading -> {
+                    _uiState.value = UiState.Loading
                 }
             }
         }
@@ -226,14 +238,16 @@ class ChatViewModel @Inject constructor(
                                 if (it.chatRoomId == chatItem.chatRoomId) chatItem else it
                             }
                         }
+                        _uiState.value = UiState.Success
                     }
 
                     is Response.Error -> {
                         _error.value = it.message
+                        _uiState.value = UiState.Error
                     }
 
-                    else -> {
-                        // Handle other cases if necessary
+                    is Response.Loading -> {
+                        _uiState.value = UiState.Loading
                     }
                 }
             }

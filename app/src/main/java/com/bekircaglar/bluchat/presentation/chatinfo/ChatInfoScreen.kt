@@ -368,7 +368,15 @@ fun ChatInfoScreen(
                                 )
                             }
                         }
-
+                        if (chatImages.isEmpty()) {
+                            Text(
+                                text = "No media found",
+                                style = MaterialTheme.typography.bodyLarge,
+                                modifier = Modifier
+                                    .padding(32.dp)
+                                    .align(Alignment.CenterHorizontally)
+                            )
+                        }else
                         LazyRow(
                             contentPadding = PaddingValues(8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),

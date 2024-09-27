@@ -11,11 +11,13 @@ class CreateUserUseCase @Inject constructor(
         surname: String,
         phoneNumber: String,
         email: String,
+        userImageUrl:String?= ""
     ) = authRepository.createUser(
         name = name,
         surname = surname,
         phoneNumber = phoneNumber,
         email = email,
+        userImageUrl = userImageUrl
     )
 
 }
