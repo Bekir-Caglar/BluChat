@@ -20,6 +20,10 @@
     <string name="name_surmane">Name Surname</string>
     <string name="phone_number">Phone Number</string>
     <string name="enter_your_phone_number">Enter your phone number</string>
+    <string name="facebook_app_id">1052350966281671</string>
+    <string name="facebook_client_token">ee80007e35590101af4758169a82a037</string>
+    <string name="fb_login_protocol_scheme">fb1052350966281671</string>
+
 
 
 </resources>

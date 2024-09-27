@@ -1,10 +1,13 @@
 package com.bekircaglar.bluchat.data.repository
 
+import android.content.Context
 import android.net.Uri
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ProfileRepository
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -73,10 +76,13 @@ class ProfileRepositoryImp @Inject constructor(
         emit(Response.Success(downloadUrl.toString()))
     }
 
-    override suspend fun signOut(): Response<String> {
+    override suspend fun signOut(context:Context): Response<String> {
         auth.signOut()
+
         try {
             if (auth.currentUser == null) {
+                val googleSignInClient = GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN)
+                googleSignInClient.signOut().await()
                 return Response.Success("SignOut")
             } else {
                 return Response.Error("Unknown Error")

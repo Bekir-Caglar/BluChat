@@ -54,11 +54,13 @@ class AuthRepositoryImp @Inject constructor(
         }
     }
 
+
     override suspend fun createUser(
         name: String,
-        surname:String,
+        surname: String,
         phoneNumber: String,
-        email: String
+        email: String,
+        userImageUrl: String?
     ): Response<String> {
         try {
             val user = Users(
@@ -67,7 +69,8 @@ class AuthRepositoryImp @Inject constructor(
                 phoneNumber = phoneNumber,
                 email = email,
                 uid = auth.currentUser?.uid.toString(),
-                profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2FSubject.png?alt=media&token=0fcc75d0-a3e8-49f3-926a-e0cb8db0e6b8",
+                profileImageUrl = if (userImageUrl.isNullOrEmpty()) "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/def_user.png?alt=media&token=54d55dc5-4fad-415a-8b6f-d0f3b0619f31"
+                else userImageUrl,
                 status = false,
                 lastSeen = "12:19"
             )

@@ -41,8 +41,8 @@ fun AuthButton(
         colors = ButtonColors(
             contentColor = contentColor,
             containerColor = containerColor,
-            disabledContainerColor = MaterialTheme.colorScheme.secondaryContainer,
-            disabledContentColor = MaterialTheme.colorScheme.secondary
+            disabledContainerColor = MaterialTheme.colorScheme.primary,
+            disabledContentColor = MaterialTheme.colorScheme.background
         ),
         enabled = enabled
     ) {

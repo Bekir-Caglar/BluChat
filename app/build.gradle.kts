@@ -85,13 +85,18 @@ dependencies {
     // Jetpack Compose Paging integration
     implementation (libs.androidx.paging.compose)
 
+    implementation (platform(libs.firebase.bom.v3220))
+    implementation (libs.google.firebase.auth)
+    implementation (libs.play.services.auth)
+
+    implementation (libs.facebook.android.sdk)
+
+
     implementation(libs.androidx.camera.core)
     implementation(libs.androidx.camera.camera2)
     implementation(libs.androidx.camera.lifecycle)
     implementation(libs.androidx.camera.extensions)
     implementation(libs.androidx.camera.view)
-
-
 
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.kotlinx.coroutines.android)

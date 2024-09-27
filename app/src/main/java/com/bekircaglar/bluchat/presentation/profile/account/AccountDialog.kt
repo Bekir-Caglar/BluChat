@@ -97,7 +97,7 @@ fun AccountDialog(
                             .size(100.dp)
                             .shadow(elevation = 5.dp, shape = CircleShape)
                             .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                            .background(Color.White)
                     )
                     Icon(
                         imageVector = Icons.Default.Create,

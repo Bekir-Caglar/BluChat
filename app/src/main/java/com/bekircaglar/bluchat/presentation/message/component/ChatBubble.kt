@@ -238,6 +238,5 @@ fun MessageDropdownMenu(
             })
 
     }
-    // Delete Option
 
 }

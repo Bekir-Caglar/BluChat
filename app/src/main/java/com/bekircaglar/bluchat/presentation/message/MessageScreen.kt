@@ -446,7 +446,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 viewModel.editMessage(
                                     messageId = selecedMessageForEdit!!.messageId!!,
                                     chatId = chatId,
-                                    message = chatMessage
+                                    message = editedMessage
                                 )
                                 selecedMessageForEdit = null
                             },
@@ -462,7 +462,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 viewModel.editMessage(
                                     messageId = selecedMessageForEdit!!.messageId!!,
                                     chatId = chatId,
-                                    message = chatMessage
+                                    message = editedMessage
                                 )
                                 selecedMessageForEdit = null
 

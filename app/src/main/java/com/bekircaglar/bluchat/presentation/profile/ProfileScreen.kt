@@ -118,7 +118,8 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 },
                 onError = {
                     ShowToastMessage(context = context, message = it)
-                }
+                },
+                context = context
             )
 
         }

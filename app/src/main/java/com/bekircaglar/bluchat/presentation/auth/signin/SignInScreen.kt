@@ -1,5 +1,12 @@
 package com.bekircaglar.bluchat.presentation.auth.signin
 
+import android.app.Activity
+import android.app.Activity.RESULT_CANCELED
+import android.app.Activity.RESULT_OK
+import android.content.Intent
+import android.util.Log
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -18,9 +25,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,6 +45,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
@@ -43,7 +53,13 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
-
+import com.facebook.CallbackManager
+import com.facebook.FacebookCallback
+import com.facebook.FacebookException
+import com.facebook.login.LoginManager
+import com.facebook.login.LoginResult
+import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.google.firebase.auth.FacebookAuthProvider
 
 @Composable
 fun SignInScreen(navController: NavController) {
@@ -51,7 +67,31 @@ fun SignInScreen(navController: NavController) {
     var email by remember { mutableStateOf("") }
     var password by remember { mutableStateOf("") }
     val context = LocalContext.current
+    val callbackManager = remember { CallbackManager.Factory.create() }
 
+    LaunchedEffect(Unit) {
+        viewModel.initGoogleSignInClient(context)
+    }
+
+    val googleSignInLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.StartActivityForResult()
+    ) { result ->
+        if (result.resultCode == RESULT_OK) {
+            val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
+            viewModel.handleGoogleSignInResult(task,
+                onSuccess = {
+                    navController.navigate(Screens.HomeNav.route) {
+                        popUpTo(Screens.AuthNav.route) { inclusive = true }
+                    }
+                },
+                onError = {
+                    ShowToastMessage(context, it)
+                }
+            )
+        } else {
+            ShowToastMessage(context, "Google Sign-In canceled")
+        }
+    }
 
     Scaffold(
         topBar = {
@@ -183,7 +223,10 @@ fun SignInScreen(navController: NavController) {
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
 
                     AuthButton(
-                        onClick = { },
+                        onClick = {
+                            googleSignInLauncher.launch(viewModel.getGoogleSignInIntent())
+
+                        },
                         buttonIcon = painterResource(id = R.drawable.ic_google),
                         buttonText = stringResource(R.string.google_login),
                         containerColor = MaterialTheme.colorScheme.primary,
@@ -193,7 +236,39 @@ fun SignInScreen(navController: NavController) {
                     Spacer(modifier = Modifier.padding(vertical = 8.dp))
 
                     AuthButton(
-                        onClick = { },
+                        onClick = {
+
+                            LoginManager.getInstance().logInWithReadPermissions(
+                                context as Activity,
+                                listOf("public_profile", "email")
+                            )
+
+                            LoginManager.getInstance().registerCallback(callbackManager,
+                                object : FacebookCallback<LoginResult> {
+                                    override fun onSuccess(result: LoginResult) {
+                                        result?.accessToken?.let { token ->
+                                            viewModel.handleFacebookAccessToken(token = token,
+                                                onSuccess = {
+                                                    println("asdadasdasd")
+
+                                            }, onError = { e ->
+                                                Log.e("FacebookLogin", "Login Failed: ${e.message}")
+                                            })
+                                        }
+                                    }
+
+                                    override fun onCancel() {
+                                        Log.d("FacebookLogin", "Login Canceled")
+                                    }
+
+                                    override fun onError(error: FacebookException) {
+                                        Log.e("FacebookLogin", "Login Error: ${error?.message}")
+                                    }
+                                }
+                            )
+
+
+                        },
                         buttonIcon = painterResource(id = R.drawable.ic_facebook),
                         buttonText = stringResource(R.string.facebook_login),
                         containerColor = colorResource(id = R.color.facebook),
@@ -210,3 +285,4 @@ fun SignInScreen(navController: NavController) {
 
 
 }
+
