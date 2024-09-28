@@ -94,20 +94,36 @@ class MessageRepositoryImp @Inject constructor(
 
     }
 
-    override fun loadInitialMessages(chatId: String): Flow<List<Message>> {
-        return firebaseDataSource.getInitialMessages(chatId).map {
-            it.map { dataMessage ->
-                dataMessage
+    override fun loadInitialMessages(chatId: String): Flow<Response<List<Message>>> = flow {
+        firebaseDataSource.getInitialMessages(chatId).collect{
+            when(it){
+                is Response.Success -> {
+                    emit(Response.Success(it.data))
+                }
+                is Response.Error -> {
+                    emit(Response.Error(it.message))
+                }
+                is Response.Loading -> {
+
+                }
             }
         }
     }
 
-    override fun loadMoreMessages(chatId: String, lastKey: String): Flow<List<Message>> {
-        return firebaseDataSource.getMoreMessages(chatId, lastKey).map {
-            it.map { dataMessage ->
-                dataMessage
+    override fun loadMoreMessages(chatId: String, lastKey: String): Flow<Response<List<Message>>> = flow {
+        firebaseDataSource.getMoreMessages(chatId, lastKey).collect{
+            when(it){
+                is Response.Success -> {
+                    emit(Response.Success(it.data))
+                }
+                is Response.Error -> {
+                }
+                is Response.Loading ->{
+
+                }
             }
         }
+
     }
 
     override fun observeGroupStatus(groupId: String): Flow<Boolean> = callbackFlow {

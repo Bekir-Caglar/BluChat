@@ -5,6 +5,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.domain.model.Users
@@ -78,6 +79,13 @@ class ChatInfoViewModel @Inject constructor(
     private val _ChatImages = MutableStateFlow<List<String>>(emptyList())
     val ChatImages: StateFlow<List<String>> = _ChatImages
 
+    private val _stateOfUserListState = MutableStateFlow(UiState.Loading)
+    val stateOfUserListState = _stateOfUserListState.asStateFlow()
+
+    private val _chatImagesState = MutableStateFlow(UiState.Loading)
+    val chatImagesState = _chatImagesState.asStateFlow()
+
+
     init {
         viewModelScope.launch {
             _searchQuery
@@ -107,14 +115,17 @@ class ChatInfoViewModel @Inject constructor(
         getChatImagesUseCase(chatId).collect { response ->
             when (response) {
                 is Response.Loading -> {
+                    _chatImagesState.value = UiState.Loading
                 }
 
                 is Response.Success -> {
                     val imageUrlList = response.data
                     _ChatImages.value = imageUrlList
+                    _chatImagesState.value = UiState.Success
                 }
 
                 is Response.Error -> {
+                    _chatImagesState.value = UiState.Error
                 }
             }
         }
@@ -198,15 +209,21 @@ class ChatInfoViewModel @Inject constructor(
                 getUserUseCase.getUserData(userId!!).collect { response ->
                     when (response) {
                         is Response.Loading -> {
+                            _stateOfUserListState.value = UiState.Loading
+
                         }
 
                         is Response.Success -> {
                             userList.add(response.data)
                             _chatUserList.value = userList
                             _otherUser.value = userList.first { it.uid != currentUser.uid }
+                            _stateOfUserListState.value = UiState.Success
+
                         }
 
                         is Response.Error -> {
+                            _stateOfUserListState.value = UiState.Error
+
                         }
                     }
                 }

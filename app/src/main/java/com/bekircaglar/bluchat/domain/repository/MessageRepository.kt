@@ -15,9 +15,9 @@ interface MessageRepository {
 
     suspend fun getChatRoom(chatId: String): Flow<Response<ChatRoom>>
 
-    fun loadInitialMessages(chatId: String): Flow<List<Message>>
+    fun loadInitialMessages(chatId: String): Flow<Response<List<Message>>>
 
-    fun loadMoreMessages(chatId: String, lastKey: String): Flow<List<Message>>
+    fun loadMoreMessages(chatId: String, lastKey: String): Flow<Response<List<Message>>>
 
     fun observeGroupStatus(groupId: String): Flow<Boolean>
 

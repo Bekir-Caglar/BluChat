@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.GROUP
 import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
@@ -69,6 +70,8 @@ class MessageViewModel @Inject constructor(
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
 
+    private val _state = MutableStateFlow(UiState.Loading)
+    val state = _state.asStateFlow()
 
 
 
@@ -122,9 +125,21 @@ class MessageViewModel @Inject constructor(
 
     fun loadInitialMessages(chatId: String) {
         viewModelScope.launch {
+
             loadInitialMessagesUseCase(chatId).collect { messages ->
-                _messages.value = messages
-                lastKey = messages.lastOrNull()?.messageId
+                when (messages) {
+                    is Response.Success -> {
+                        _messages.value = messages.data
+                        lastKey = messages.data.lastOrNull()?.messageId
+                        _state.value = UiState.Success
+                    }
+                    is Response.Error -> {
+                        _state.value = UiState.Error
+                    }
+                    is Response.Loading -> {
+                        _state.value = UiState.Loading
+                    }
+                }
             }
         }
     }
@@ -133,8 +148,21 @@ class MessageViewModel @Inject constructor(
         lastKey?.let {
             viewModelScope.launch {
                 loadMoreMessagesUseCase(chatId, it).collect { moreMessages ->
-                    _messages.value += moreMessages
-                    lastKey = moreMessages.lastOrNull()?.messageId
+                    when(moreMessages){
+                        is Response.Success ->{
+                            _messages.value = _messages.value + moreMessages.data
+                            lastKey = moreMessages.data.lastOrNull()?.messageId
+                            _state.value = UiState.Success
+
+                        }
+                        is Response.Error ->{
+                            _state.value = UiState.Error
+                        }
+                        is Response.Loading ->{
+                            _state.value = UiState.Loading
+
+                        }
+                    }
                 }
             }
         }
