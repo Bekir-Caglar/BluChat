@@ -74,6 +74,7 @@ dependencies {
     implementation(libs.hilt)
     implementation(libs.firebase.database)
     implementation(libs.firebase.storage)
+    implementation(libs.androidx.benchmark.common)
     ksp(libs.hilt.kapt)
 
     implementation(platform(libs.firebase.bom))
@@ -90,6 +91,8 @@ dependencies {
     implementation (libs.play.services.auth)
 
     implementation (libs.facebook.android.sdk)
+
+    implementation(libs.compose.ui.util)
 
 
     implementation(libs.androidx.camera.core)

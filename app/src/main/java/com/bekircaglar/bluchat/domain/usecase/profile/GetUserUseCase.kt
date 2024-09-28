@@ -9,7 +9,7 @@ import javax.inject.Inject
 
 class GetUserUseCase @Inject constructor(private val profileRepository: ProfileRepository,private val chatsRepository: ChatsRepository){
 
-    suspend operator fun invoke() = profileRepository.getUserProfile()
+    suspend operator fun invoke():Flow<Response<Users?>> = profileRepository.getUserProfile()
 
     suspend fun getUserData(user: String):Flow<Response<Users>> = chatsRepository.getUserData(user)
 }

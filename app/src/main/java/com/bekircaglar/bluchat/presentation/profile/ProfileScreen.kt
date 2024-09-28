@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Spacer
@@ -17,6 +18,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -48,6 +50,7 @@ import com.bekircaglar.bluchat.presentation.profile.account.AccountDialog
 import com.bekircaglar.bluchat.presentation.profile.appearance.AppearanceDialog
 import com.bekircaglar.bluchat.saveThemePreference
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.loadThemePreference
 
 @Composable
@@ -65,10 +68,12 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
     val user by viewModel.users.collectAsStateWithLifecycle()
     val error by viewModel.error.collectAsStateWithLifecycle()
 
-    val currentUser = viewModel.users.collectAsState().value
-    val selectedImageUri by viewModel.selectedImageUri.collectAsState()
-    val uploadedImageUri by viewModel.uploadedImageUri.collectAsState()
-    val isImageLoading by viewModel.isLoading.collectAsState()
+    val currentUser = viewModel.users.collectAsStateWithLifecycle().value
+    val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle()
+    val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
+    val isImageLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+
+    val screenState by viewModel.state.collectAsStateWithLifecycle()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -172,38 +177,47 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 .padding(it)
                 .fillMaxSize()
         ) {
-            Column(
-                Modifier
-                    .fillMaxWidth()
-                    .height(250.dp)
-                    .background(color = MaterialTheme.colorScheme.secondary),
-                horizontalAlignment = Alignment.CenterHorizontally
-            ) {
-                Spacer(modifier = Modifier.height(20.dp))
-                Image(
-                    painter = if (!(userImageUrl.isNullOrEmpty())) rememberImagePainter(userImageUrl) else painterResource(
-                        id = R.drawable.ic_outlined_profile
-                    ),
-                    contentDescription = null,
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier
-                        .size(120.dp)
-                        .shadow(elevation = 5.dp, shape = CircleShape)
-                        .clip(CircleShape)
-                        .background(color = Color.White)
-                )
-                Spacer(modifier = Modifier.height(20.dp))
-                Text(
-                    text = userName,
-                    style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.height(10.dp))
-                Text(
-                    text = "+90 $userNumber",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSecondaryContainer,
-                )
+            if (screenState == UiState.Loading) {
+                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                    CircularProgressIndicator()
+                }
+            }
+            else {
+                Column(
+                    Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .background(color = MaterialTheme.colorScheme.secondary),
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Image(
+                        painter = if (!(userImageUrl.isNullOrEmpty())) rememberImagePainter(
+                            userImageUrl
+                        ) else painterResource(
+                            id = R.drawable.ic_outlined_profile
+                        ),
+                        contentDescription = null,
+                        contentScale = ContentScale.Crop,
+                        modifier = Modifier
+                            .size(120.dp)
+                            .shadow(elevation = 5.dp, shape = CircleShape)
+                            .clip(CircleShape)
+                            .background(color = Color.White)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Text(
+                        text = userName,
+                        style = MaterialTheme.typography.headlineMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(10.dp))
+                    Text(
+                        text = "+90 $userNumber",
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer,
+                    )
+                }
             }
             LazyColumn(
                 modifier = Modifier

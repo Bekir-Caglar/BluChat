@@ -66,7 +66,7 @@ class ChatViewModel @Inject constructor(
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
     val uiState: StateFlow<UiState> = _uiState
 
 

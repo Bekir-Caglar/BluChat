@@ -75,6 +75,7 @@ import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.GROUP
 import com.bekircaglar.bluchat.PRIVATE
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
@@ -107,6 +108,10 @@ fun ChatInfoScreen(
     val otherUser by viewModel.otherUser.collectAsStateWithLifecycle()
 
     val chatImages by viewModel.ChatImages.collectAsStateWithLifecycle()
+
+    val chatImagesState by viewModel.chatImagesState.collectAsStateWithLifecycle()
+
+    val chatListState by viewModel.stateOfUserListState.collectAsStateWithLifecycle()
 
     var selectGroupUserDialog by remember { mutableStateOf(false) }
     var updateGroupInfoDialog by remember { mutableStateOf(false) }
@@ -377,6 +382,9 @@ fun ChatInfoScreen(
                                     .align(Alignment.CenterHorizontally)
                             )
                         }else
+                            if (chatImagesState == UiState.Loading){
+                                CircularProgressIndicator()
+                            }
                         LazyRow(
                             contentPadding = PaddingValues(8.dp),
                             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -413,6 +421,10 @@ fun ChatInfoScreen(
                                 shape = RoundedCornerShape(16.dp)
                             )
                     ) {
+                        if (chatListState == UiState.Loading){
+                            CircularProgressIndicator()
+                        }
+                        else
                         if (chatType == GROUP) {
                             TextField(
                                 value = "",

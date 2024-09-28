@@ -19,7 +19,6 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -29,10 +28,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
-import com.bekircaglar.bluchat.GROUP
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
 
@@ -42,7 +39,7 @@ fun Chats(
     chat: Chats,
     chatRoom: ChatRoom? = null,
     onClick: () -> Unit,
-    isSelected: Boolean = false
+    isSelected: Boolean = false,
 ) {
     val profileImage = chat.imageUrl
     val name = chat.name
@@ -72,7 +69,7 @@ fun Chats(
                     .clip(shape = MaterialTheme.shapes.medium)
                 else Modifier
                     .size(50.dp)
-                    .clip(CircleShape),
+                    .clip(CircleShape)
 
                 )
 
@@ -95,7 +92,8 @@ fun Chats(
                 text = "$name $surname",
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier.padding(top = 4.dp)
+                modifier = Modifier
+                    .padding(top = 4.dp)
             )
             Spacer(modifier = Modifier.height(4.dp))
             if (lastMessage != null)
@@ -103,7 +101,7 @@ fun Chats(
                     text = lastMessage,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
                 )
         }
 
@@ -125,23 +123,5 @@ fun Chats(
                 modifier = Modifier.size(24.dp)
             )
     }
-}
-
-@Preview
-@Composable
-fun ChatsPreview() {
-    Chats(
-        chat = Chats(
-            chatRoomId = "",
-            imageUrl = "",
-            name = "Bekir",
-            surname = "Çağlar",
-            lastMessage = "Hello",
-            messageTime = "12:00",
-            isOnline = true,
-        ),
-        onClick = {},
-        isSelected = true
-    )
 }
 

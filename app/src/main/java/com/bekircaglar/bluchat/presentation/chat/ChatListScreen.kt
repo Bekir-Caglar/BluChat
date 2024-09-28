@@ -13,16 +13,19 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
@@ -31,19 +34,21 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarColors
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,6 +58,8 @@ import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
+import com.bekircaglar.bluchat.placeholder
+import com.bekircaglar.bluchat.presentation.shimmer.placeholder
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
@@ -62,7 +69,6 @@ import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
-import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 
 @Composable
 fun ChatListScreen(navController: NavController) {
@@ -163,22 +169,79 @@ fun ChatListScreen(navController: NavController) {
         }
     ) {
         when (uiState) {
-            UiState.Idle -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
             UiState.Loading -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(it)
+                        .background(MaterialTheme.colorScheme.background),
                 ) {
-                    CircularProgressIndicator()
+                    repeat(10) {
+                        item {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp, horizontal = 16.dp)
+                            ) {
+                                Box {
+                                    Image(
+                                        painter = painterResource(R.drawable.ic_photos),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(CircleShape)
+                                            .placeholder(true),
+
+                                        )
+                                }
+                                Spacer(modifier = Modifier.width(12.dp))
+
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = "ASDASDASDA",
+                                        fontWeight = FontWeight.Bold,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        modifier = Modifier
+                                            .padding(top = 4.dp)
+                                            .placeholder(true)
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+
+                                    Text(
+                                        text = "ASDADASDASDASDADAADADADDAD",
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        maxLines = 1,
+                                        overflow = TextOverflow.Ellipsis,
+                                        modifier = Modifier.placeholder(true)
+                                    )
+                                }
+
+                                Spacer(modifier = Modifier.width(8.dp))
+
+                                Column(horizontalAlignment = Alignment.End) {
+                                    Text(
+                                        text = "12:34",
+                                        style = MaterialTheme.typography.bodySmall,
+                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
+                                        modifier = Modifier.placeholder(true)
+                                    )
+                                }
+
+                            }
+
+                            HorizontalDivider(modifier = Modifier
+                                .padding(16.dp)
+                                .placeholder(true))
+
+                        }
+                    }
+
                 }
+
             }
+
+
             UiState.Success -> {
                 if (selectGroupUserDialog) {
                     SelectGroupMemberDialog(
@@ -242,7 +305,7 @@ fun ChatListScreen(navController: NavController) {
 
                 Spacer(modifier = Modifier.padding(top = 16.dp))
 
-               if(chatList.isNotEmpty()) {
+                if (chatList.isNotEmpty()) {
                     LazyColumn(
                         modifier = Modifier
                             .fillMaxSize()
@@ -261,34 +324,36 @@ fun ChatListScreen(navController: NavController) {
                             )
                             Chats(chat = myChat, onClick = {
                                 navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
-                            })
+                            }
+                            )
 
                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         }
                     }
-                }else{
-                   Box(
-                       modifier = Modifier.fillMaxSize(),
-                       contentAlignment = Alignment.Center
-                   ) {
-                       Column(
-                           horizontalAlignment = Alignment.CenterHorizontally,
-                           verticalArrangement = Arrangement.Center
-                       ) {
-                           Image(
-                               painter = painterResource(id = R.drawable.sticker_shake_hand),
-                               contentDescription = "Chat",
-                               modifier = Modifier.size(200.dp)
-                           )
-                           Spacer(modifier = Modifier.height(64.dp))
-                           Text(
-                               text = "No chats yet!",
-                               style = MaterialTheme.typography.titleLarge
-                           )
-                       }
-                   }
-               }
+                } else {
+                    Box(
+                        modifier = Modifier.fillMaxSize(),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center
+                        ) {
+                            Image(
+                                painter = painterResource(id = R.drawable.sticker_shake_hand),
+                                contentDescription = "Chat",
+                                modifier = Modifier.size(200.dp)
+                            )
+                            Spacer(modifier = Modifier.height(64.dp))
+                            Text(
+                                text = "No chats yet!",
+                                style = MaterialTheme.typography.titleLarge
+                            )
+                        }
+                    }
+                }
             }
+
             UiState.Error -> {
                 // Handle error state if needed
             }

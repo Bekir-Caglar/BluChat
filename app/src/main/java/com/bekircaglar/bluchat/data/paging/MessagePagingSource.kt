@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.data.repository
 
 import com.bekircaglar.bluchat.MESSAGE_COLLECTION
+import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.STORED_MESSAGES
 import com.bekircaglar.bluchat.domain.model.Message
 import com.google.firebase.database.DataSnapshot
@@ -14,7 +15,7 @@ import javax.inject.Inject
 
 class FirebaseDataSource @Inject constructor(private val database: DatabaseReference) {
 
-    fun getInitialMessages(chatId: String): Flow<List<Message>> = callbackFlow {
+    fun getInitialMessages(chatId: String): Flow<Response<List<Message>>> = callbackFlow {
         val messagesRef = database.child(MESSAGE_COLLECTION).child(chatId).child(
             STORED_MESSAGES
         )
@@ -23,7 +24,7 @@ class FirebaseDataSource @Inject constructor(private val database: DatabaseRefer
             ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.reversed()
-                trySend(messages)
+                trySend(Response.Success(messages))
             }
 
             override fun onCancelled(error: DatabaseError) {
@@ -33,7 +34,7 @@ class FirebaseDataSource @Inject constructor(private val database: DatabaseRefer
         awaitClose { messagesRef.removeEventListener(listener) }
     }
 
-    fun getMoreMessages(chatId: String, lastKey: String): Flow<List<Message>> = callbackFlow {
+    fun getMoreMessages(chatId: String, lastKey: String): Flow<Response<List<Message>>> = callbackFlow {
         val messagesRef = database.child(MESSAGE_COLLECTION).child(chatId).child(
             STORED_MESSAGES
         )
@@ -41,7 +42,7 @@ class FirebaseDataSource @Inject constructor(private val database: DatabaseRefer
 
             override fun onDataChange(snapshot: DataSnapshot) {
                 val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.reversed()
-                trySend(messages)
+                trySend(Response.Success(messages))
             }
 
             override fun onCancelled(error: DatabaseError) {

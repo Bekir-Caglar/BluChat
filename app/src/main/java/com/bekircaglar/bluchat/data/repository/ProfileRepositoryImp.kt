@@ -15,6 +15,7 @@ import com.google.firebase.database.DatabaseReference
 import com.google.firebase.database.ValueEventListener
 import com.google.firebase.storage.FirebaseStorage
 import kotlinx.coroutines.channels.awaitClose
+import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
@@ -25,7 +26,7 @@ class ProfileRepositoryImp @Inject constructor(
     private val databaseReference: DatabaseReference,
     private val storageReference: FirebaseStorage
 ) : ProfileRepository {
-    override suspend fun getUserProfile(): kotlinx.coroutines.flow.Flow<Users?> =
+    override suspend fun getUserProfile(): Flow<Response<Users?>> =
         callbackFlow {
 
             val userId = auth.currentUser?.uid
@@ -34,7 +35,7 @@ class ProfileRepositoryImp @Inject constructor(
             val listener = object : ValueEventListener {
                 override fun onDataChange(snapshot: DataSnapshot) {
                     val user = snapshot.getValue(Users::class.java)
-                    trySend(user).isSuccess
+                    trySend(Response.Success(data = user)).isSuccess
                 }
 
                 override fun onCancelled(error: DatabaseError) {

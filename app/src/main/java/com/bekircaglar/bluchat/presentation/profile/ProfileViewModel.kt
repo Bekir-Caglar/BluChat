@@ -6,6 +6,7 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.CheckPhoneNumberUseCase
 import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
@@ -43,6 +44,9 @@ class ProfileViewModel @Inject constructor(
 
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
+
+    private var _state = MutableStateFlow(UiState.Loading)
+    val state: StateFlow<UiState> = _state
 
     init {
         getUserProfile()
@@ -92,10 +96,25 @@ class ProfileViewModel @Inject constructor(
         _selectedImageUri.value = uri
         uploadImage(uri)
     }
-    fun getUserProfile() = viewModelScope.launch {
-        getUserUseCase.invoke().collect {
-            _users.value = it
 
+    fun getUserProfile() = viewModelScope.launch {
+
+        getUserUseCase.invoke().collect{
+            when(it) {
+                is Response.Success -> {
+                    _users.value = it.data
+                    _state.value = UiState.Success
+                }
+
+                is Response.Error -> {
+                    _error.value = it.message
+                    _state.value = UiState.Error
+
+                }
+                is Response.Loading -> {
+                    _state.value = UiState.Loading
+                }
+            }
         }
     }
     private fun uploadImage(uri: Uri){
