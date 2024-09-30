@@ -2,7 +2,7 @@ package com.bekircaglar.bluchat.presentation.auth.signin
 
 import android.content.Context
 import android.content.Intent
-import androidx.compose.runtime.mutableStateOf
+import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.R
@@ -11,7 +11,9 @@ import com.bekircaglar.bluchat.domain.model.Users
 
 import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
+import com.bekircaglar.bluchat.domain.usecase.auth.CheckIsUserAlreadyExistUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CreateUserUseCase
+import com.bekircaglar.bluchat.domain.usecase.auth.SignOutUseCase
 import com.facebook.AccessToken
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -19,7 +21,6 @@ import com.google.android.gms.auth.api.signin.GoogleSignInClient
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions
 import com.google.android.gms.common.api.ApiException
 import com.google.android.gms.tasks.Task
-import com.google.firebase.auth.AuthCredential
 import com.google.firebase.auth.FacebookAuthProvider
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
@@ -34,18 +35,31 @@ class SignInViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
     private val exceptionHandlerUseCase: ExceptionHandlerUseCase,
     private val auth: FirebaseAuth,
-    private val createUserUseCase: CreateUserUseCase
+    private val createUserUseCase: CreateUserUseCase,
+    private val checkIsUserAlreadyExistUseCase: CheckIsUserAlreadyExistUseCase,
+    private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
     private lateinit var googleSignInClient: GoogleSignInClient
 
+
+
+    fun signOut(context: Context,onSuccess: () -> Unit, onError: (String) -> Unit) = viewModelScope.launch {
+        try {
+            signOutUseCase(context = context)
+            onSuccess()
+        } catch (e: Exception) {
+            onError(exceptionHandlerUseCase.invoke(e))
+        }
+    }
+
     fun initGoogleSignInClient(context: Context) {
         val gso = GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
-            .requestIdToken(context.getString(R.string.default_web_client_id))
-            .requestEmail()
+            .requestIdToken(context.getString(R.string.default_web_client_id)).requestEmail()
 
             .build()
         googleSignInClient = GoogleSignIn.getClient(context, gso)
     }
+
     fun getGoogleSignInIntent(): Intent {
         return googleSignInClient.signInIntent
     }
@@ -53,91 +67,143 @@ class SignInViewModel @Inject constructor(
     fun handleGoogleSignInResult(
         task: Task<GoogleSignInAccount>,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit
+        onPhoneNumberNotExist: () -> Unit,
+        onError: (String) -> Unit,
+        context:Context
     ) {
         try {
             val account = task.getResult(ApiException::class.java)
-            account?.idToken?.let { idToken ->
+            val idToken = account?.idToken ?: return onError("ID token is null")
 
-                val credential = GoogleAuthProvider.getCredential(idToken, null)
-                viewModelScope.launch {
-                    FirebaseAuth.getInstance().signInWithCredential(credential)
-                        .addOnCompleteListener { authTask ->
-                            if (authTask.isSuccessful ) {
-                                val user = authTask.result.user
-                                if (user?.phoneNumber.isNullOrBlank()){
-                                    val googleUser = Users(
-                                        uid = user?.uid ?: "",
-                                        name = user?.displayName ?: "",
-                                        email = user?.email ?: "",
-                                        profileImageUrl = user?.photoUrl.toString(),
-                                        phoneNumber = if (user?.phoneNumber.isNullOrBlank()) "61"
-                                        else user?.phoneNumber.toString()
-                                    )
-                                    viewModelScope.launch {
-                                        createUserUseCase.createUser(
-                                            name = googleUser.name,
-                                            surname = " ",
-                                            phoneNumber = googleUser.phoneNumber,
-                                            email = googleUser.email,
-                                            userImageUrl = googleUser.profileImageUrl
-                                        )
+            val credential = GoogleAuthProvider.getCredential(idToken, null)
+            viewModelScope.launch {
+                try {
+                    val authResult =
+                        FirebaseAuth.getInstance().signInWithCredential(credential).await()
+                    val user = authResult.user ?: return@launch onError("User is null")
+
+                    val email = user.email ?: return@launch onError("Email is null")
+                    checkIsUserAlreadyExistUseCase(email).collect { response ->
+                        when (response) {
+                            is Response.Success -> {
+                                if (response.data) {
+                                    onSuccess()
+                                } else {
+                                    if (user.phoneNumber.isNullOrBlank()) {
+                                        onPhoneNumberNotExist()
+
+                                    } else {
+                                        saveUserToDatabase(user, onSuccess, onError)
+                                        onSuccess()
                                     }
-
                                 }
+                            }
 
+                            is Response.Error -> {
+                                onError(response.message)
+                            }
+                            is Response.Loading -> {
 
-                            onSuccess()
+                            }
                         }
-                            else {
-                    onError(authTask.exception?.message ?: "Authentication failed")
-                }
-                }.await()
-            }
-        }
-    } catch (e: ApiException)
-    {
-        onError(exceptionHandlerUseCase.invoke(e))
-    }
-}
-
-fun handleFacebookAccessToken(
-    token: AccessToken,
-    onSuccess: () -> Unit,
-    onError: (Exception) -> Unit
-) {
-    val credential = FacebookAuthProvider.getCredential(token.token)
-    auth.signInWithCredential(credential)
-        .addOnCompleteListener { task ->
-            if (task.isSuccessful) {
-                onSuccess()
-            } else {
-                task.exception?.let { onError(it) }
-            }
-        }
-}
-
-fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
-    viewModelScope.launch {
-        try {
-
-            when (val result = authUseCase.signInUseCase.invoke(email, password)) {
-                is Response.Success -> {
-                    onSuccess()
-                }
-
-                is Response.Error -> {
-                    onError(
-                        exceptionHandlerUseCase.invoke(Exception(result.message))
-                    )
-                }
-
-                else -> {
-
+                    }
+                } catch (e: Exception) {
+                    onError(e.message ?: "Authentication failed")
                 }
             }
-        } catch (e: Exception) {
+        } catch (e: ApiException) {
             onError(exceptionHandlerUseCase.invoke(e))
         }
     }
+
+    fun saveCurrentGoogleUserToDatabase(onSuccess: () -> Unit,phoneNumber:String,user: GoogleSignInAccount?){
+        val googleUser = Users(
+            uid = user?.id ?: "",
+            name = user?.displayName ?: "",
+            email = user?.email ?: "",
+            profileImageUrl = user?.photoUrl.toString(),
+            phoneNumber = phoneNumber
+        )
+        viewModelScope.launch {
+            try {
+                createUserUseCase.createUser(
+                    name = googleUser.name,
+                    surname = " ",
+                    phoneNumber = googleUser.phoneNumber,
+                    email = googleUser.email,
+                    userImageUrl = googleUser.profileImageUrl
+                )
+                onSuccess()
+
+            } catch (e: Exception) {
+                Log.e("SaveUser", "Error creating user: ${e.message}")
+            }
+        }
+
+
+    }
+
+    private fun saveUserToDatabase(
+        user: FirebaseUser, onSuccess: () -> Unit, onError: (String) -> Unit
+    ) {
+        val googleUser = Users(
+            uid = user.uid,
+            name = user.displayName ?: "",
+            email = user.email ?: "",
+            profileImageUrl = user.photoUrl.toString(),
+            phoneNumber = user.phoneNumber ?: "61"
+        )
+
+        viewModelScope.launch {
+            try {
+                createUserUseCase.createUser(
+                    name = googleUser.name,
+                    surname = " ",
+                    phoneNumber = googleUser.phoneNumber,
+                    email = googleUser.email,
+                    userImageUrl = googleUser.profileImageUrl
+                )
+                onSuccess()
+            } catch (e: Exception) {
+                onError(e.message ?: "User creation failed")
+            }
+        }
+    }
+
+    fun handleFacebookAccessToken(
+        token: AccessToken, onSuccess: () -> Unit, onError: (Exception) -> Unit
+    ) {
+        val credential = FacebookAuthProvider.getCredential(token.token)
+        auth.signInWithCredential(credential).addOnCompleteListener { task ->
+                if (task.isSuccessful) {
+                    onSuccess()
+                } else {
+                    task.exception?.let { onError(it) }
+                }
+            }
+    }
+
+    fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
+        viewModelScope.launch {
+            try {
+
+                when (val result = authUseCase.signInUseCase.invoke(email, password)) {
+                    is Response.Success -> {
+                        onSuccess()
+                    }
+
+                    is Response.Error -> {
+                        onError(
+                            exceptionHandlerUseCase.invoke(Exception(result.message))
+                        )
+                    }
+
+                    else -> {
+
+                    }
+                }
+            } catch (e: Exception) {
+                onError(exceptionHandlerUseCase.invoke(e))
+            }
+        }
 }
