@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.data.repository
 
+import androidx.collection.emptyIntSet
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.Users
@@ -12,6 +13,7 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -109,6 +111,35 @@ class AuthRepositoryImp @Inject constructor(
             }
         }
 
+        database.addListenerForSingleValueEvent(listener)
+        awaitClose { database.removeEventListener(listener) }
+    }
+
+    override suspend fun checkIsUserAlreadyExist(email: String): Flow<Response<Boolean>> = callbackFlow {
+
+        val database = databaseReference.database.getReference(USER_COLLECTION)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                var userExists = false
+                for (userSnapshot in snapshot.children) {
+                    val user = userSnapshot.getValue(Users::class.java)
+                    if (user?.email.toString() == email) {
+                        userExists = true
+                        break
+                    }
+                }
+                if (userExists){
+                    trySend(Response.Success(true)).isSuccess
+                }else{
+                    trySend(Response.Success(false)).isSuccess
+                }
+
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+
+            }
+        }
         database.addListenerForSingleValueEvent(listener)
         awaitClose { database.removeEventListener(listener) }
     }
