@@ -1,12 +1,12 @@
 package com.bekircaglar.bluchat.data.repository
 
 import android.util.Log
-import com.bekircaglar.bluchat.CHAT_COLLECTION
-import com.bekircaglar.bluchat.GROUP
-import com.bekircaglar.bluchat.PRIVATE
+import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
+import com.bekircaglar.bluchat.utils.GROUP
+import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.STORED_USERS
-import com.bekircaglar.bluchat.USER_COLLECTION
+import com.bekircaglar.bluchat.utils.STORED_USERS
+import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
@@ -14,7 +14,6 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
-import com.google.firebase.database.ServerValue
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose

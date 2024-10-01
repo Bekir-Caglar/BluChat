@@ -5,8 +5,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bekircaglar.bluchat.GROUP
-import com.bekircaglar.bluchat.PRIVATE
+import com.bekircaglar.bluchat.utils.GROUP
+import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Message
@@ -20,7 +20,9 @@ import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadMoreMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveGroupStatusUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveUserStatusInGroupUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.PinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.UnPinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
@@ -28,8 +30,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -48,7 +48,9 @@ class MessageViewModel @Inject constructor(
     private val observeUserStatusInGroupUseCase: ObserveUserStatusInGroupUseCase,
     private val uploadImageUseCase: UploadImageUseCase,
     private val deleteMessageUseCase: DeleteMessageUseCase,
-    private val editMessageUseCase: EditMessageUseCase
+    private val editMessageUseCase: EditMessageUseCase,
+    private val pinMessageUseCase: PinMessageUseCase,
+    private val unPinMessageUseCase: UnPinMessageUseCase
 
 ) :
     ViewModel() {
@@ -74,9 +76,36 @@ class MessageViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
 
-
     private val _isKickedOrGroupDeleted = MutableStateFlow(false)
     val isKickedOrGroupDeleted: StateFlow<Boolean> = _isKickedOrGroupDeleted
+
+
+    fun pinMessage(message: Message, chatId: String) = viewModelScope.launch {
+        pinMessageUseCase(message.messageId!!, chatId).collect {
+            when (it) {
+                is Response.Success -> {
+                }
+
+                is Response.Error -> {
+                }
+
+                is Response.Loading -> {}
+            }
+        }
+    }
+
+    fun unPinMessage(message: Message, chatId: String) = viewModelScope.launch {
+        unPinMessageUseCase(message.messageId!!, chatId).collect {
+            when (it) {
+                is Response.Success -> {
+                }
+                is Response.Error -> {
+                }
+                is Response.Loading -> {
+                }
+            }
+        }
+    }
 
     fun observeGroupAndUserStatus(groupId: String, userId: String) {
         viewModelScope.launch {
@@ -133,9 +162,11 @@ class MessageViewModel @Inject constructor(
                         lastKey = messages.data.lastOrNull()?.messageId
                         _state.value = UiState.Success
                     }
+
                     is Response.Error -> {
                         _state.value = UiState.Error
                     }
+
                     is Response.Loading -> {
                         _state.value = UiState.Loading
                     }
@@ -148,17 +179,19 @@ class MessageViewModel @Inject constructor(
         lastKey?.let {
             viewModelScope.launch {
                 loadMoreMessagesUseCase(chatId, it).collect { moreMessages ->
-                    when(moreMessages){
-                        is Response.Success ->{
+                    when (moreMessages) {
+                        is Response.Success -> {
                             _messages.value = _messages.value + moreMessages.data
                             lastKey = moreMessages.data.lastOrNull()?.messageId
                             _state.value = UiState.Success
 
                         }
-                        is Response.Error ->{
+
+                        is Response.Error -> {
                             _state.value = UiState.Error
                         }
-                        is Response.Loading ->{
+
+                        is Response.Loading -> {
                             _state.value = UiState.Loading
 
                         }
@@ -169,20 +202,27 @@ class MessageViewModel @Inject constructor(
     }
 
 
-    fun sendMessage(imageUrl: String?="",message: String, chatId: String, messageType: String) = viewModelScope.launch {
+    fun sendMessage(
+        isPinned: Boolean = false,
+        imageUrl: String? = "",
+        message: String,
+        chatId: String,
+        messageType: String
+    ) = viewModelScope.launch {
 
         val timestamp = System.currentTimeMillis()
         val randomId = "$timestamp-${UUID.randomUUID()}"
 
 
         val myMessage = Message(
-            randomId,
-            currentUser.uid,
-            message,
-            timestamp,
-            false,
-            messageType,
-            imageUrl
+            messageId = randomId,
+            senderId = currentUser.uid,
+            message = message,
+            timestamp = timestamp,
+            isRead = false,
+            messageType = messageType,
+            imageUrl = imageUrl,
+            pinned = isPinned,
         )
 
         sendMessageUseCase(myMessage, chatId).collect { response ->
@@ -268,6 +308,7 @@ class MessageViewModel @Inject constructor(
             when (response) {
                 is Response.Loading -> {
                 }
+
                 is Response.Success -> {
                 }
 
@@ -282,8 +323,10 @@ class MessageViewModel @Inject constructor(
             when (response) {
                 is Response.Loading -> {
                 }
+
                 is Response.Success -> {
                 }
+
                 is Response.Error -> {
                 }
             }

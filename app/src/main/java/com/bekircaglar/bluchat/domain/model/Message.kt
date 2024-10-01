@@ -8,5 +8,6 @@ data class Message(
     val isRead:Boolean? = false,
     val messageType : String? = "",
     val imageUrl: String? = "",
-    val edited : Boolean? = false
+    val edited : Boolean? = false,
+    val pinned : Boolean? = false
 )

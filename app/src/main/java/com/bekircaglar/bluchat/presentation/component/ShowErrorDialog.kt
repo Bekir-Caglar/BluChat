@@ -1,4 +1,4 @@
-package com.bekircaglar.bluchat
+package com.bekircaglar.bluchat.presentation.component
 
 import android.app.AlertDialog
 import android.content.Context

@@ -26,4 +26,9 @@ interface MessageRepository {
     suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>>
 
     suspend fun editMessage(messageId: String, chatId: String, message: String): Flow<Response<String>>
+
+    suspend fun pinMessage(messageId: String, chatId: String): Flow<Response<String>>
+
+    suspend fun unPinMessage(messageId: String, chatId: String): Flow<Response<String>>
+
 }

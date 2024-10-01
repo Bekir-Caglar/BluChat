@@ -1,10 +1,10 @@
 package com.bekircaglar.bluchat.data.repository
 
-import com.bekircaglar.bluchat.CHAT_COLLECTION
-import com.bekircaglar.bluchat.MESSAGE_COLLECTION
+import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
+import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
 import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.STORED_MESSAGES
-import com.bekircaglar.bluchat.STORED_USERS
+import com.bekircaglar.bluchat.utils.STORED_MESSAGES
+import com.bekircaglar.bluchat.utils.STORED_USERS
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Messages
@@ -18,7 +18,6 @@ import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
@@ -95,14 +94,16 @@ class MessageRepositoryImp @Inject constructor(
     }
 
     override fun loadInitialMessages(chatId: String): Flow<Response<List<Message>>> = flow {
-        firebaseDataSource.getInitialMessages(chatId).collect{
-            when(it){
+        firebaseDataSource.getInitialMessages(chatId).collect {
+            when (it) {
                 is Response.Success -> {
                     emit(Response.Success(it.data))
                 }
+
                 is Response.Error -> {
                     emit(Response.Error(it.message))
                 }
+
                 is Response.Loading -> {
 
                 }
@@ -110,21 +111,24 @@ class MessageRepositoryImp @Inject constructor(
         }
     }
 
-    override fun loadMoreMessages(chatId: String, lastKey: String): Flow<Response<List<Message>>> = flow {
-        firebaseDataSource.getMoreMessages(chatId, lastKey).collect{
-            when(it){
-                is Response.Success -> {
-                    emit(Response.Success(it.data))
-                }
-                is Response.Error -> {
-                }
-                is Response.Loading ->{
+    override fun loadMoreMessages(chatId: String, lastKey: String): Flow<Response<List<Message>>> =
+        flow {
+            firebaseDataSource.getMoreMessages(chatId, lastKey).collect {
+                when (it) {
+                    is Response.Success -> {
+                        emit(Response.Success(it.data))
+                    }
 
+                    is Response.Error -> {
+                    }
+
+                    is Response.Loading -> {
+
+                    }
                 }
             }
-        }
 
-    }
+        }
 
     override fun observeGroupStatus(groupId: String): Flow<Boolean> = callbackFlow {
         val groupRef = databaseReference.child(CHAT_COLLECTION).child(groupId)
@@ -166,10 +170,13 @@ class MessageRepositoryImp @Inject constructor(
             awaitClose { userRef.removeEventListener(listener) }
         }
 
-    override suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>> = flow {
+    override suspend fun deleteMessage(chatId: String, messageId: String): Flow<Response<String>> =
+        flow {
             try {
-                val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
-                    dbRef.removeValue()
+                val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
+                    STORED_MESSAGES
+                ).child(messageId)
+                dbRef.removeValue()
                 emit(Response.Success("Message Deleted"))
             } catch (e: Exception) {
                 emit(Response.Error(e.message.toString()))
@@ -177,9 +184,15 @@ class MessageRepositoryImp @Inject constructor(
 
         }
 
-    override suspend fun editMessage(messageId: String, chatId: String, message: String): Flow<Response<String>> = flow {
+    override suspend fun editMessage(
+        messageId: String,
+        chatId: String,
+        message: String
+    ): Flow<Response<String>> = flow {
         try {
-            val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+            val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
+                STORED_MESSAGES
+            ).child(messageId)
             dbRef.child("message").setValue(message).await()
             dbRef.child("edited").setValue(true).await()
             emit(Response.Success("Message Edited"))
@@ -187,4 +200,51 @@ class MessageRepositoryImp @Inject constructor(
             emit(Response.Error(e.message.toString()))
         }
     }
+
+    override suspend fun pinMessage(messageId: String, chatId: String): Flow<Response<String>> =
+        callbackFlow {
+            val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+
+            dbRef.get().addOnSuccessListener { snapshot ->
+                val updates = mutableMapOf<String, Any?>()
+
+                snapshot.children.forEach { messageSnapshot ->
+                    updates["${messageSnapshot.key}/pinned"] = false
+                }
+
+                updates["$messageId/pinned"] = true
+
+                dbRef.updateChildren(updates).addOnSuccessListener {
+                    trySend(Response.Success("Message pinned status updated"))
+                }.addOnFailureListener { exception ->
+                    trySend(Response.Error(exception.message.toString()))
+                }
+            }.addOnFailureListener { exception ->
+                trySend(Response.Error(exception.message.toString()))
+            }
+
+            awaitClose()
+        }
+
+    override suspend fun unPinMessage(messageId: String, chatId: String): Flow<Response<String>> = callbackFlow {
+        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId).child("pinned")
+
+        dbRef.get().addOnSuccessListener { snapshot ->
+            val isPinned = snapshot.getValue(Boolean::class.java) ?: false
+            if (isPinned) {
+                dbRef.setValue(false).addOnSuccessListener {
+                    trySend(Response.Success("Message unpinned"))
+                }.addOnFailureListener { exception ->
+                    trySend(Response.Error(exception.message.toString()))
+                }
+            } else {
+                trySend(Response.Success("Message was not pinned"))
+            }
+        }.addOnFailureListener { exception ->
+            trySend(Response.Error(exception.message.toString()))
+        }
+
+        awaitClose()
+    }
+
 }

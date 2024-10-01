@@ -17,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -37,10 +38,12 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.rememberImagePainter
+import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.ui.theme.BabyBlue
 import com.bekircaglar.bluchat.ui.theme.BlueMinus20
@@ -56,7 +59,9 @@ fun ChatBubble(
     senderNameColor: Color,
     onImageClick: (String) -> Unit = {},
     onEditClick: () -> Unit = {},
-    onDeleteClick: () -> Unit = {}
+    onDeleteClick: () -> Unit = {},
+    onPinMessageClick: () -> Unit = {},
+    onUnPinMessageClick : () -> Unit = {}
 ) {
     val bubbleColor =
         if (isSentByMe) MaterialTheme.colorScheme.tertiary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
@@ -77,6 +82,13 @@ fun ChatBubble(
         },
         onDeleteClick = {
             onDeleteClick()
+        },
+        onPinMessageClick = {
+            onPinMessageClick()
+        },
+        message = message,
+        onUnPinMessageClick = {
+            onUnPinMessageClick()
         }
     )
 
@@ -155,7 +167,10 @@ fun ChatBubble(
                         }
                     }
                     if (message.edited == true) {
-                        Row(modifier = Modifier.align(Alignment.End), horizontalArrangement = Arrangement.End) {
+                        Row(
+                            modifier = Modifier.align(Alignment.End),
+                            horizontalArrangement = Arrangement.End
+                        ) {
                             Text(
                                 text = "Edited",
                                 color = Color.LightGray,
@@ -188,25 +203,36 @@ fun ChatBubble(
 @Composable
 fun MessageDropdownMenu(
     expanded: Boolean,
+    message: Message,
     onDismissRequest: () -> Unit,
     onEditClick: () -> Unit,
-    onDeleteClick: () -> Unit
+    onDeleteClick: () -> Unit,
+    onPinMessageClick: () -> Unit,
+    onUnPinMessageClick: () -> Unit
 ) {
 
     DropdownMenu(
         expanded = expanded,
         onDismissRequest = onDismissRequest,
         modifier = Modifier
+            .background(MaterialTheme.colorScheme.background, shape = MaterialTheme.shapes.large)
             .padding(16.dp)
-            .width(120.dp)
+            .width(150.dp)
     ) {
         DropdownMenuItem(
             enabled = true,
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
+                .background(color = MaterialTheme.colorScheme.background),
             onClick = {
                 onEditClick()
                 onDismissRequest()
-            }, text = {
-                Row {
+            },
+            text = {
+                Row(
+
+                ) {
                     Text(text = "Edit")
                     Spacer(modifier = Modifier.weight(1f))
                     Icon(
@@ -215,10 +241,43 @@ fun MessageDropdownMenu(
                     )
                 }
 
-            }
+            },
         )
         DropdownMenuItem(
             enabled = true,
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
+                .background(color = MaterialTheme.colorScheme.background),
+            onClick = {
+                if (message.pinned == true){
+                    onUnPinMessageClick()
+                }else{
+                    onPinMessageClick()
+                }
+                onDismissRequest()
+            },
+            text = {
+                Row {
+                    Text(
+                        text = if (message.pinned == true) "Unpin message" else "Pin message"
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        painter = painterResource(R.drawable.baseline_push_pin_24),
+                        contentDescription = "Delete",
+                    )
+                }
+            }
+        )
+
+        DropdownMenuItem(
+            enabled = true,
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
+                .background(color = MaterialTheme.colorScheme.background)
+                ,
             onClick = {
                 onDeleteClick()
                 onDismissRequest()
@@ -235,7 +294,9 @@ fun MessageDropdownMenu(
                         tint = Color.Red
                     )
                 }
-            })
+            }
+        )
+
 
     }
 

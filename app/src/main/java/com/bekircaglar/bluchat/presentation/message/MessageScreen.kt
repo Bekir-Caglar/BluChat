@@ -19,10 +19,12 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -31,6 +33,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -60,9 +63,9 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
-import com.bekircaglar.bluchat.IMAGE
+import com.bekircaglar.bluchat.utils.IMAGE
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.TEXT
+import com.bekircaglar.bluchat.utils.TEXT
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.loadThemePreference
@@ -80,6 +83,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.TextButton
 import com.bekircaglar.bluchat.UiState
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -105,9 +109,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val imageCapture = remember { ImageCapture.Builder().build() }
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
+    var selectedMessageForPin by remember { mutableStateOf<Message?>(null) }
     var selecedMessageForEdit by remember { mutableStateOf<Message?>(null) }
 
     val screenState by viewModel.state.collectAsStateWithLifecycle()
+
+    val pinnedMessages = messages.filter { it.pinned == true }
+    val lastPinnedMessage = pinnedMessages.lastOrNull()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -165,6 +173,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
         val userId = currentUser.uid
         viewModel.observeGroupAndUserStatus(groupId, userId)
     }
+
     val isKickedOrGroupDeleted by viewModel.isKickedOrGroupDeleted.collectAsState()
 
     LaunchedEffect(isKickedOrGroupDeleted) {
@@ -202,7 +211,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             modifier = Modifier.padding(start = 8.dp),
                             fontSize = MaterialTheme.typography.titleLarge.fontSize,
                         )
-                        if (userInfo?.status == true){
+                        if (userInfo?.status == true) {
                             Text(
                                 text = "Online",
                                 style = MaterialTheme.typography.bodyMedium,
@@ -326,88 +335,145 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     )
                 )
             }
+
+
             if (messages.isNotEmpty()) {
-                LazyColumn(
-                    state = listState,
-                    reverseLayout = true,
-                    modifier = Modifier
-                        .padding(it)
-                        .fillMaxSize()
-                        .paint(
-                            painter = if (loadThemePreference(context = context)) {
-                                painterResource(id = R.drawable.bg_message_dark)
-                            } else {
-                                painterResource(id = R.drawable.bg_message_light)
-                            },
-                            contentScale = ContentScale.FillBounds
-                        )
-                ) {
+                Column(modifier = Modifier.padding(it)) {
+                    if (lastPinnedMessage != null) {
+                        Row(
+    modifier = Modifier
+        .fillMaxWidth()
+        .background(MaterialTheme.colorScheme.surface)
+        .padding(8.dp),
+    verticalAlignment = Alignment.CenterVertically,
+    horizontalArrangement = Arrangement.SpaceBetween
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Box(
+            modifier = Modifier
+                .size(40.dp)
+                .clip(MaterialTheme.shapes.medium)
+                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+        ) {
+            Icon(
+                painter = painterResource(id = R.drawable.baseline_push_pin_24),
+                contentDescription = null,
+                modifier = Modifier.padding(8.dp)
+            )
+        }
+        Text(
+            text = lastPinnedMessage.message ?: "",
+            color = MaterialTheme.colorScheme.onPrimary,
+            style = MaterialTheme.typography.bodyLarge,
+            modifier = Modifier
+                .padding(8.dp)
+                .padding(start = 8.dp)
+        )
+    }
+    lastPinnedMessage.imageUrl?.let { imageUrl ->
+        Image(
+            painter = rememberImagePainter(data = imageUrl),
+            contentDescription = null,
+            contentScale = ContentScale.Crop,
+            modifier = Modifier
+                .size(50.dp)
+                .clip(MaterialTheme.shapes.medium)
+        )
+    }
+}
 
-                    groupedMessages.forEach { (date, messagesForDate) ->
-                        stickyHeader {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                                    .padding(8.dp),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                Text(
-                                    text = date,
-                                    style = MaterialTheme.typography.titleMedium,
-                                    color = MaterialTheme.colorScheme.onSurface,
-                                    textAlign = TextAlign.Center
-                                )
-                            }
-                        }
-
-                        itemsIndexed(
-                            messagesForDate,
-                            key = { _, message -> message.messageId ?: 0 }) { _, message ->
-                            if (message != null) {
-                                val timestamp = convertTimestampToDate(message.timestamp!!)
-                                val senderId = message.senderId
-
-                                var senderName by remember { mutableStateOf("") }
-                                LaunchedEffect(senderId) {
-                                    viewModel.getUserNameFromUserId(senderId!!) { name ->
-                                        senderName = name
-                                    }
-                                }
-
-                                val senderNameColor = viewModel.getUserColor(senderId!!)
-                                message.messageType?.let { messageType ->
-                                    ChatBubble(
-                                        message = message,
-                                        messageType = messageType,
-                                        isSentByMe = message.senderId == currentUser.uid,
-                                        timestamp = timestamp,
-                                        senderName = senderName,
-                                        senderNameColor = senderNameColor,
-                                        onImageClick = { imageUrl ->
-                                            val encode = URLEncoder.encode(
-                                                imageUrl,
-                                                StandardCharsets.UTF_8.toString()
-                                            )
-                                            navController.navigate(
-                                                Screens.ImageScreen.createRoute(
-                                                    encode
-                                                )
-                                            )
-                                        },
-                                        onEditClick = {
-                                            selecedMessageForEdit = message
-                                        },
-                                        onDeleteClick = {
-                                            selectedMessageForDeletion = message
-                                        }
+                    }
+                    LazyColumn(
+                        state = listState,
+                        reverseLayout = true,
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .paint(
+                                painter = if (loadThemePreference(context = context)) {
+                                    painterResource(id = R.drawable.bg_message_dark)
+                                } else {
+                                    painterResource(id = R.drawable.bg_message_light)
+                                },
+                                contentScale = ContentScale.FillBounds
+                            )
+                    ) {
+                        groupedMessages.forEach { (date, messagesForDate) ->
+                            stickyHeader {
+                                Box(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                                        .padding(8.dp),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    Text(
+                                        text = date,
+                                        style = MaterialTheme.typography.titleMedium,
+                                        color = MaterialTheme.colorScheme.onSurface,
+                                        textAlign = TextAlign.Center
                                     )
+                                }
+                            }
 
+                            itemsIndexed(
+                                messagesForDate,
+                                key = { _, message -> message.messageId ?: 0 }) { _, message ->
+                                if (message != null) {
+                                    val timestamp = convertTimestampToDate(message.timestamp!!)
+                                    val senderId = message.senderId
+
+                                    var senderName by remember { mutableStateOf("") }
+                                    LaunchedEffect(senderId) {
+                                        viewModel.getUserNameFromUserId(senderId!!) { name ->
+                                            senderName = name
+                                        }
+                                    }
+
+                                    val senderNameColor = viewModel.getUserColor(senderId!!)
+                                    message.messageType?.let { messageType ->
+                                        ChatBubble(
+                                            message = message,
+                                            messageType = messageType,
+                                            isSentByMe = message.senderId == currentUser.uid,
+                                            timestamp = timestamp,
+                                            senderName = senderName,
+                                            senderNameColor = senderNameColor,
+                                            onImageClick = { imageUrl ->
+                                                val encode = URLEncoder.encode(
+                                                    imageUrl,
+                                                    StandardCharsets.UTF_8.toString()
+                                                )
+                                                navController.navigate(
+                                                    Screens.ImageScreen.createRoute(
+                                                        encode
+                                                    )
+                                                )
+                                            },
+                                            onEditClick = {
+                                                selecedMessageForEdit = message
+                                            },
+                                            onDeleteClick = {
+                                                selectedMessageForDeletion = message
+                                            },
+                                            onPinMessageClick = {
+                                                viewModel.pinMessage(message, chatId)
+                                            },
+                                            onUnPinMessageClick = {
+                                                viewModel.unPinMessage(message,chatId)
+                                            }
+                                        )
+
+                                    }
                                 }
                             }
                         }
                     }
                 }
+
+
             } else {
                 Box(
                     modifier = Modifier
@@ -423,6 +489,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     )
                 }
             }
+
             if (selecedMessageForEdit != null && selecedMessageForEdit?.senderId == currentUser.uid) {
                 Dialog(onDismissRequest = { selecedMessageForEdit = null }) {
 
@@ -490,7 +557,10 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     message = selectedMessageForDeletion!!,
                     onDismiss = { selectedMessageForDeletion = null },
                     onConfirm = {
-                        viewModel.deleteMessage(chatId, selectedMessageForDeletion!!.messageId!!)
+                        viewModel.deleteMessage(
+                            chatId,
+                            selectedMessageForDeletion!!.messageId!!
+                        )
                         selectedMessageForDeletion = null
                     }
                 )
@@ -498,6 +568,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
         }
     }
 }
+
 
 @Composable
 private fun PlusIcon() {

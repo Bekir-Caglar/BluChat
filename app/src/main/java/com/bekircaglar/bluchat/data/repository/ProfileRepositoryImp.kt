@@ -3,7 +3,7 @@ package com.bekircaglar.bluchat.data.repository
 import android.content.Context
 import android.net.Uri
 import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.USER_COLLECTION
+import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ProfileRepository
 import com.google.android.gms.auth.api.signin.GoogleSignIn
