@@ -58,8 +58,7 @@ import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
-import com.bekircaglar.bluchat.placeholder
-import com.bekircaglar.bluchat.presentation.shimmer.placeholder
+import com.bekircaglar.bluchat.utils.placeholder
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet

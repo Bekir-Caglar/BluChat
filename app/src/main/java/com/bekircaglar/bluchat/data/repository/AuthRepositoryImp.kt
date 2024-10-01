@@ -1,8 +1,7 @@
 package com.bekircaglar.bluchat.data.repository
 
-import androidx.collection.emptyIntSet
 import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.USER_COLLECTION
+import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -13,8 +12,6 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
-import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 

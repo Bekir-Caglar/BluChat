@@ -1,4 +1,4 @@
-package com.bekircaglar.bluchat
+package com.bekircaglar.bluchat.utils
 
 const val USER_COLLECTION = "Users"
 const val CHAT_COLLECTION = "Chats"

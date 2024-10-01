@@ -15,12 +15,9 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.TEXT
 import com.bekircaglar.bluchat.ui.theme.ChatAppBordoTheme
-import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

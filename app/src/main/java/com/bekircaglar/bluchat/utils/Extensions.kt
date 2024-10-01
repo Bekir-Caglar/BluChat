@@ -1,4 +1,4 @@
-package com.bekircaglar.bluchat
+package com.bekircaglar.bluchat.utils
 
 import android.annotation.SuppressLint
 import androidx.compose.foundation.shape.RoundedCornerShape

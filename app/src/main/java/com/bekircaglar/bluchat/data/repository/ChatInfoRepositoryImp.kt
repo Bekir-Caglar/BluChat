@@ -1,11 +1,11 @@
 package com.bekircaglar.bluchat.data.repository
 
 import android.util.Log
-import com.bekircaglar.bluchat.CHAT_COLLECTION
-import com.bekircaglar.bluchat.MESSAGE_COLLECTION
+import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
+import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
 import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.STORED_MESSAGES
-import com.bekircaglar.bluchat.STORED_USERS
+import com.bekircaglar.bluchat.utils.STORED_MESSAGES
+import com.bekircaglar.bluchat.utils.STORED_USERS
 import com.bekircaglar.bluchat.domain.repository.ChatInfoRepository
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -14,7 +14,6 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
-import kotlinx.coroutines.flow.flow
 import javax.inject.Inject
 
 class ChatInfoRepositoryImp @Inject constructor(
