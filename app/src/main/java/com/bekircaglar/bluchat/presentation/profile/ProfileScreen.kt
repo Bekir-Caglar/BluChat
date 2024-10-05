@@ -126,7 +126,6 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
                 },
                 context = context
             )
-
         }
     )
     if (showAppearanceDialog) {
@@ -184,7 +183,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
             }
             else {
                 Column(
-                    Modifier
+                    modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
                         .background(color = MaterialTheme.colorScheme.secondary),

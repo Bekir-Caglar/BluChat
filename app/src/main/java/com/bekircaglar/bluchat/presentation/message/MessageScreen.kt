@@ -19,12 +19,10 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
@@ -33,7 +31,6 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material3.BottomAppBar
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -83,7 +80,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.TextButton
 import com.bekircaglar.bluchat.UiState
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -110,12 +106,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
     val imageCapture = remember { ImageCapture.Builder().build() }
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForPin by remember { mutableStateOf<Message?>(null) }
-    var selecedMessageForEdit by remember { mutableStateOf<Message?>(null) }
+    var selectedMessageForEdit by remember { mutableStateOf<Message?>(null) }
+
+    val pinnedMessages by viewModel.pinnedMessages.collectAsStateWithLifecycle()
+    val starredMessages by viewModel.starredMessages.collectAsStateWithLifecycle()
 
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
-    val pinnedMessages = messages.filter { it.pinned == true }
-    val lastPinnedMessage = pinnedMessages.lastOrNull()
+    viewModel.getPinnedMessages(chatId)
+
+
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -339,51 +339,51 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
             if (messages.isNotEmpty()) {
                 Column(modifier = Modifier.padding(it)) {
-                    if (lastPinnedMessage != null) {
+                    if (pinnedMessages.lastOrNull() != null) {
                         Row(
-    modifier = Modifier
-        .fillMaxWidth()
-        .background(MaterialTheme.colorScheme.surface)
-        .padding(8.dp),
-    verticalAlignment = Alignment.CenterVertically,
-    horizontalArrangement = Arrangement.SpaceBetween
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        Box(
-            modifier = Modifier
-                .size(40.dp)
-                .clip(MaterialTheme.shapes.medium)
-                .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-        ) {
-            Icon(
-                painter = painterResource(id = R.drawable.baseline_push_pin_24),
-                contentDescription = null,
-                modifier = Modifier.padding(8.dp)
-            )
-        }
-        Text(
-            text = lastPinnedMessage.message ?: "",
-            color = MaterialTheme.colorScheme.onPrimary,
-            style = MaterialTheme.typography.bodyLarge,
-            modifier = Modifier
-                .padding(8.dp)
-                .padding(start = 8.dp)
-        )
-    }
-    lastPinnedMessage.imageUrl?.let { imageUrl ->
-        Image(
-            painter = rememberImagePainter(data = imageUrl),
-            contentDescription = null,
-            contentScale = ContentScale.Crop,
-            modifier = Modifier
-                .size(50.dp)
-                .clip(MaterialTheme.shapes.medium)
-        )
-    }
-}
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surface)
+                                .padding(8.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.SpaceBetween
+                        ) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.Start
+                            ) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clip(MaterialTheme.shapes.medium)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                ) {
+                                    Icon(
+                                        painter = painterResource(id = R.drawable.baseline_push_pin_24),
+                                        contentDescription = null,
+                                        modifier = Modifier.padding(8.dp)
+                                    )
+                                }
+                                Text(
+                                    text = pinnedMessages.lastOrNull()!!.message ?: "",
+                                    color = MaterialTheme.colorScheme.onPrimary,
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    modifier = Modifier
+                                        .padding(8.dp)
+                                        .padding(start = 8.dp)
+                                )
+                            }
+                            pinnedMessages.lastOrNull()!!.imageUrl?.let { imageUrl ->
+                                Image(
+                                    painter = rememberImagePainter(data = imageUrl),
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(50.dp)
+                                        .clip(MaterialTheme.shapes.medium)
+                                )
+                            }
+                        }
 
                     }
                     LazyColumn(
@@ -453,16 +453,19 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                                 )
                                             },
                                             onEditClick = {
-                                                selecedMessageForEdit = message
+                                                selectedMessageForEdit = message
                                             },
                                             onDeleteClick = {
                                                 selectedMessageForDeletion = message
                                             },
                                             onPinMessageClick = {
                                                 viewModel.pinMessage(message, chatId)
+                                                viewModel.getPinnedMessages(chatId)
                                             },
                                             onUnPinMessageClick = {
-                                                viewModel.unPinMessage(message,chatId)
+                                                viewModel.unPinMessage(message, chatId)
+                                                viewModel.getPinnedMessages(chatId)
+
                                             }
                                         )
 
@@ -490,15 +493,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 }
             }
 
-            if (selecedMessageForEdit != null && selecedMessageForEdit?.senderId == currentUser.uid) {
-                Dialog(onDismissRequest = { selecedMessageForEdit = null }) {
+            if (selectedMessageForEdit != null && selectedMessageForEdit?.senderId == currentUser.uid) {
+                Dialog(onDismissRequest = { selectedMessageForEdit = null }) {
 
                     Column {
                         ChatBubble(
-                            message = selecedMessageForEdit!!,
-                            messageType = selecedMessageForEdit!!.messageType!!,
-                            isSentByMe = selecedMessageForEdit!!.senderId == currentUser.uid,
-                            timestamp = convertTimestampToDate(selecedMessageForEdit!!.timestamp!!),
+                            message = selectedMessageForEdit!!,
+                            messageType = selectedMessageForEdit!!.messageType!!,
+                            isSentByMe = selectedMessageForEdit!!.senderId == currentUser.uid,
+                            timestamp = convertTimestampToDate(selectedMessageForEdit!!.timestamp!!),
                             senderName = "",
                             onImageClick = { },
                             senderNameColor = Color.Transparent,
@@ -522,11 +525,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 },
                                 onSend = {
                                     viewModel.editMessage(
-                                        messageId = selecedMessageForEdit!!.messageId!!,
+                                        messageId = selectedMessageForEdit!!.messageId!!,
                                         chatId = chatId,
                                         message = editedMessage
                                     )
-                                    selecedMessageForEdit = null
+                                    selectedMessageForEdit = null
                                 },
                                 placeholderText = "Edit your message",
                                 modifier = Modifier
@@ -538,11 +541,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             IconButton(
                                 onClick = {
                                     viewModel.editMessage(
-                                        messageId = selecedMessageForEdit!!.messageId!!,
+                                        messageId = selectedMessageForEdit!!.messageId!!,
                                         chatId = chatId,
                                         message = editedMessage
                                     )
-                                    selecedMessageForEdit = null
+                                    selectedMessageForEdit = null
 
                                 }, modifier = Modifier.padding(end = 16.dp)
                             ) {

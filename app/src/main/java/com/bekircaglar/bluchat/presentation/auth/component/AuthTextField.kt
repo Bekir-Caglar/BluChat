@@ -94,7 +94,7 @@ fun AuthTextField(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
-                .shadow(4.dp, shape = RoundedCornerShape(8.dp))
+                .shadow(4.dp, shape = MaterialTheme.shapes.medium)
                 .clip(shape = ShapeDefaults.Medium)
         )
     }
