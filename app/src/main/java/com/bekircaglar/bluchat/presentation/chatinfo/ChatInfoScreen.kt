@@ -432,11 +432,11 @@ fun ChatInfoScreen(
                                     .fillMaxWidth()
                                     .padding(16.dp),
                                 shape = RoundedCornerShape(16.dp),
-                                colors = TextFieldDefaults.textFieldColors(
-                                    containerColor = MaterialTheme.colorScheme.surface,
-                                    focusedIndicatorColor = Color.Transparent,
-                                    unfocusedIndicatorColor = Color.Transparent
-                                )
+//                                colors = TextFieldDefaults.textFieldColors(
+//                                    containerColor = MaterialTheme.colorScheme.surface,
+//                                    focusedIndicatorColor = Color.Transparent,
+//                                    unfocusedIndicatorColor = Color.Transparent
+//                                )
                             )
                         }
                         if (isCurrentUserAdmin) {

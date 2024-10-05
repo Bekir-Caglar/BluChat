@@ -31,4 +31,14 @@ interface MessageRepository {
 
     suspend fun unPinMessage(messageId: String, chatId: String): Flow<Response<String>>
 
+    suspend fun starMessage(messageId: String, chatId: String): Flow<Response<String>>
+
+    suspend fun unStarMessage(messageId: String, chatId: String): Flow<Response<String>>
+
+    suspend fun getPinnedMessages(chatId: String): Flow<Response<List<Message>>>
+
+    suspend fun getStarredMessages(chatId: String): Flow<Response<List<Message>>>
+
+
+
 }

@@ -15,6 +15,8 @@ import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.DeleteMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.EditMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.GetPinnedMessagesUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.GetStarredMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadMoreMessagesUseCase
@@ -50,7 +52,9 @@ class MessageViewModel @Inject constructor(
     private val deleteMessageUseCase: DeleteMessageUseCase,
     private val editMessageUseCase: EditMessageUseCase,
     private val pinMessageUseCase: PinMessageUseCase,
-    private val unPinMessageUseCase: UnPinMessageUseCase
+    private val unPinMessageUseCase: UnPinMessageUseCase,
+    private val getPinnedMessagesUseCase: GetPinnedMessagesUseCase,
+    private val getStarredMessagesUseCase: GetStarredMessagesUseCase
 
 ) :
     ViewModel() {
@@ -74,6 +78,12 @@ class MessageViewModel @Inject constructor(
 
     private val _state = MutableStateFlow(UiState.Loading)
     val state = _state.asStateFlow()
+
+    private val _pinnedMessages = MutableStateFlow<List<Message>>(emptyList())
+    val pinnedMessages: StateFlow<List<Message>> = _pinnedMessages
+
+    private val _starredMessages = MutableStateFlow<List<Message>>(emptyList())
+    val starredMessages: StateFlow<List<Message>> = _starredMessages
 
 
     private val _isKickedOrGroupDeleted = MutableStateFlow(false)
@@ -151,10 +161,24 @@ class MessageViewModel @Inject constructor(
 
     }
 
+    fun getPinnedMessages(chatId: String) = viewModelScope.launch{
+        getPinnedMessagesUseCase(chatId).collect { pinnedMessages ->
+            when(pinnedMessages){
+                is Response.Success -> {
+                    _pinnedMessages.value = pinnedMessages.data
+                }
+                is Response.Error -> {
+
+                }
+                is Response.Loading -> {
+
+                }
+            }
+        }
+    }
 
     fun loadInitialMessages(chatId: String) {
         viewModelScope.launch {
-
             loadInitialMessagesUseCase(chatId).collect { messages ->
                 when (messages) {
                     is Response.Success -> {
@@ -203,7 +227,6 @@ class MessageViewModel @Inject constructor(
 
 
     fun sendMessage(
-        isPinned: Boolean = false,
         imageUrl: String? = "",
         message: String,
         chatId: String,
@@ -214,6 +237,7 @@ class MessageViewModel @Inject constructor(
         val randomId = "$timestamp-${UUID.randomUUID()}"
 
 
+
         val myMessage = Message(
             messageId = randomId,
             senderId = currentUser.uid,
@@ -222,7 +246,6 @@ class MessageViewModel @Inject constructor(
             isRead = false,
             messageType = messageType,
             imageUrl = imageUrl,
-            pinned = isPinned,
         )
 
         sendMessageUseCase(myMessage, chatId).collect { response ->

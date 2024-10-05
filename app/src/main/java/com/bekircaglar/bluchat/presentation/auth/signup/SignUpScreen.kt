@@ -57,6 +57,7 @@ fun SignUpScreen(navController: NavController) {
     var passwordError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
+    // burayı extention olarak yap (interface)
     fun isPasswordValid(password: String): Boolean {
         val passwordRegex = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{8,}$".toRegex()
         return passwordRegex.matches(password)

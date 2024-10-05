@@ -13,6 +13,7 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
 import com.google.firebase.database.DatabaseReference
+import com.google.firebase.database.GenericTypeIndicator
 import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
@@ -201,50 +202,184 @@ class MessageRepositoryImp @Inject constructor(
         }
     }
 
-    override suspend fun pinMessage(messageId: String, chatId: String): Flow<Response<String>> =
-        callbackFlow {
-            val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+    override suspend fun pinMessage(messageId: String, chatId: String): Flow<Response<String>> = callbackFlow {
+        try {
+            val pinnedRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
+                .child("pinnedMessages")
 
-            dbRef.get().addOnSuccessListener { snapshot ->
-                val updates = mutableMapOf<String, Any?>()
+            val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
+                STORED_MESSAGES).child(messageId)
 
-                snapshot.children.forEach { messageSnapshot ->
-                    updates["${messageSnapshot.key}/pinned"] = false
-                }
+            pinnedRef.get().addOnSuccessListener { dataSnapshot ->
+                val pinnedMessages = dataSnapshot.getValue(object : GenericTypeIndicator<MutableList<String>>() {}) ?: mutableListOf()
 
-                updates["$messageId/pinned"] = true
+                if (!pinnedMessages.contains(messageId)) {
+                    pinnedMessages.add(messageId)
 
-                dbRef.updateChildren(updates).addOnSuccessListener {
-                    trySend(Response.Success("Message pinned status updated"))
-                }.addOnFailureListener { exception ->
-                    trySend(Response.Error(exception.message.toString()))
+                    pinnedRef.setValue(pinnedMessages)
+                        .addOnSuccessListener {
+                            messageRef.child("pinned").setValue(true)
+                                .addOnSuccessListener {
+                                    trySend(Response.Success("Message pinned successfully"))
+                                }
+                                .addOnFailureListener { exception ->
+                                    trySend(Response.Error("Failed to set pinned value: ${exception.message}"))
+                                }
+                        }
+                        .addOnFailureListener { exception ->
+                            trySend(Response.Error("Failed to pin message: ${exception.message}"))
+                        }
+                } else {
+                    trySend(Response.Error("Message is already pinned"))
                 }
             }.addOnFailureListener { exception ->
                 trySend(Response.Error(exception.message.toString()))
             }
-
-            awaitClose()
-        }
-
-    override suspend fun unPinMessage(messageId: String, chatId: String): Flow<Response<String>> = callbackFlow {
-        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId).child("pinned")
-
-        dbRef.get().addOnSuccessListener { snapshot ->
-            val isPinned = snapshot.getValue(Boolean::class.java) ?: false
-            if (isPinned) {
-                dbRef.setValue(false).addOnSuccessListener {
-                    trySend(Response.Success("Message unpinned"))
-                }.addOnFailureListener { exception ->
-                    trySend(Response.Error(exception.message.toString()))
-                }
-            } else {
-                trySend(Response.Success("Message was not pinned"))
-            }
-        }.addOnFailureListener { exception ->
-            trySend(Response.Error(exception.message.toString()))
+        } catch (e: Exception) {
+            trySend(Response.Error(e.message.toString()))
         }
 
         awaitClose()
     }
 
+
+
+    override suspend fun unPinMessage(messageId: String, chatId: String): Flow<Response<String>> = callbackFlow {
+        try {
+            val pinnedRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
+                .child("pinnedMessages")
+
+            val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
+                STORED_MESSAGES).child(messageId)
+
+            pinnedRef.get().addOnSuccessListener { dataSnapshot ->
+                val pinnedMessages = dataSnapshot.getValue(object : GenericTypeIndicator<MutableList<String>>() {}) ?: mutableListOf()
+
+                if (pinnedMessages.contains(messageId)) {
+                    pinnedMessages.remove(messageId)
+
+                    pinnedRef.setValue(pinnedMessages)
+                        .addOnSuccessListener {
+                            messageRef.child("pinned").setValue(false)
+                                .addOnSuccessListener {
+                                    trySend(Response.Success("Message unpinned successfully"))
+                                }
+                                .addOnFailureListener { exception ->
+                                    trySend(Response.Error("Failed to set pinned value: ${exception.message}"))
+                                }
+                        }
+                        .addOnFailureListener { exception ->
+                            trySend(Response.Error("Failed to unpin message: ${exception.message}"))
+                        }
+                } else {
+                    trySend(Response.Error("Message is not pinned"))
+                }
+            }.addOnFailureListener { exception ->
+                trySend(Response.Error(exception.message.toString()))
+            }
+        } catch (e: Exception) {
+            trySend(Response.Error(e.message.toString()))
+        }
+
+        awaitClose()
+    }
+
+
+
+    override suspend fun starMessage(messageId: String, chatId: String): Flow<Response<String>> =
+        flow {
+            try {
+                val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
+                    .child("starredMessages")
+                val starredMessagesSnapshot = dbRef.get().await()
+                val starredMessages =
+                    starredMessagesSnapshot.children.map { it.key!! }.toMutableList()
+
+                if (!starredMessages.contains(messageId)) {
+                    starredMessages.add(messageId)
+                    dbRef.setValue(starredMessages).await()
+                    emit(Response.Success("Message starred"))
+                } else {
+                    emit(Response.Error("Message already starred"))
+                }
+            } catch (e: Exception) {
+                emit(Response.Error(e.message.toString()))
+            }
+        }
+
+    override suspend fun unStarMessage(messageId: String, chatId: String): Flow<Response<String>> =
+        flow {
+            try {
+                val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
+                    .child("starredMessages")
+                val starredMessagesSnapshot = dbRef.get().await()
+                val starredMessages =
+                    starredMessagesSnapshot.children.map { it.key!! }.toMutableList()
+
+                if (starredMessages.contains(messageId)) {
+                    starredMessages.remove(messageId)
+                    dbRef.setValue(starredMessages).await()
+                    emit(Response.Success("Message unstarred"))
+                } else {
+                    emit(Response.Error("Message not found in starred messages"))
+                }
+            } catch (e: Exception) {
+                emit(Response.Error(e.message.toString()))
+            }
+        }
+
+    override suspend fun getPinnedMessages(chatId: String): Flow<Response<List<Message>>> = flow {
+        emit(Response.Loading)
+        try {
+            val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("pinnedMessages")
+
+            val pinnedMessagesSnapshot = dbRef.get().await()
+            val pinnedMessageIds = pinnedMessagesSnapshot.getValue(object : GenericTypeIndicator<List<String>>() {}) ?: listOf()
+
+            val messageList = mutableListOf<Message>()
+            for (messageId in pinnedMessageIds) {
+                val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
+                    STORED_MESSAGES).child(messageId)
+                val messageSnapshot = messageRef.get().await()
+
+                val message = messageSnapshot.getValue(Message::class.java)
+                if (message != null) {
+                    messageList.add(message)
+                }
+            }
+
+            emit(Response.Success(messageList))
+
+        } catch (e: Exception) {
+            emit(Response.Error(e.message.toString()))
+        }
+    }
+
+
+    override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Message>>> = flow {
+        emit(Response.Loading)
+        try {
+            val dbRef =
+                databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("starredMessages")
+            val starredMessagesSnapshot = dbRef.get().await()
+            val starredMessageIds = starredMessagesSnapshot.children.map { it.key!! }
+
+            val messages = starredMessageIds.mapNotNull { messageId ->
+                val messageSnapshot =
+                    databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+                        .child(messageId).get().await()
+                messageSnapshot.getValue(Message::class.java)
+            }
+
+            emit(Response.Success(messages))
+        } catch (e: Exception) {
+            emit(Response.Error(e.message.toString()))
+        }
+    }
+
+    fun observePinnedMessages(chatId: String): Flow<Response<List<Message>>> = callbackFlow {
+
+    }
+
 }
+

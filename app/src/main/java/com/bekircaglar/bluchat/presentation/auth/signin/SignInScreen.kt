@@ -61,6 +61,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.presentation.auth.component.LoginFacebookButton
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
 import com.facebook.FacebookException
@@ -89,7 +90,8 @@ fun SignInScreen(navController: NavController) {
     ) { result ->
         if (result.resultCode == RESULT_OK) {
             val task = GoogleSignIn.getSignedInAccountFromIntent(result.data)
-            viewModel.handleGoogleSignInResult(task,
+            viewModel.handleGoogleSignInResult(
+                task,
                 onSuccess = {
                     navController.navigate(Screens.HomeNav.route) {
                         popUpTo(Screens.AuthNav.route) { inclusive = true }
@@ -102,7 +104,6 @@ fun SignInScreen(navController: NavController) {
                     phoneNumberDialogState = true
 
                 },
-                context = context
             )
         } else {
             ShowToastMessage(context, "Google Sign-In canceled")
@@ -112,11 +113,14 @@ fun SignInScreen(navController: NavController) {
     if (phoneNumberDialogState) {
         EnterPhoneNumberDialog(
             onConfirm = { phoneNumber ->
-                viewModel.saveCurrentGoogleUserToDatabase(phoneNumber = phoneNumber, user = googleUser, onSuccess = {
-                    navController.navigate(Screens.HomeNav.route) {
-                        popUpTo(Screens.AuthNav.route) { inclusive = true }
-                    }
-                })
+                viewModel.saveCurrentGoogleUserToDatabase(
+                    phoneNumber = phoneNumber,
+                    user = googleUser,
+                    onSuccess = {
+                        navController.navigate(Screens.HomeNav.route) {
+                            popUpTo(Screens.AuthNav.route) { inclusive = true }
+                        }
+                    })
             },
             onDismiss = {
                 phoneNumberDialogState = false
@@ -274,49 +278,32 @@ fun SignInScreen(navController: NavController) {
                         contentColor = MaterialTheme.colorScheme.background
                     )
 
-                    Spacer(modifier = Modifier.padding(vertical = 8.dp))
-
-                    AuthButton(
-                        onClick = {
-
-                            LoginManager.getInstance().logInWithReadPermissions(
-                                context as Activity,
-                                listOf("public_profile", "email")
-                            )
-
-                            LoginManager.getInstance().registerCallback(callbackManager,
-                                object : FacebookCallback<LoginResult> {
-                                    override fun onSuccess(result: LoginResult) {
-                                        result?.accessToken?.let { token ->
-                                            viewModel.handleFacebookAccessToken(token = token,
-                                                onSuccess = {
-                                                    println("asdadasdasd")
-
-                                                }, onError = { e ->
-                                                    Log.e(
-                                                        "FacebookLogin",
-                                                        "Login Failed: ${e.message}"
-                                                    )
-                                                })
-                                        }
-                                    }
-
-                                    override fun onCancel() {
-                                        Log.d("FacebookLogin", "Login Canceled")
-                                    }
-
-                                    override fun onError(error: FacebookException) {
-                                        Log.e("FacebookLogin", "Login Error: ${error?.message}")
-                                    }
-                                }
-                            )
-
-
+                    LoginFacebookButton(
+                        onAuthError = {
+                            ShowToastMessage(context, it.message.toString())
                         },
-                        buttonIcon = painterResource(id = R.drawable.ic_facebook),
+                        iconRes = R.drawable.ic_facebook,
                         buttonText = stringResource(R.string.facebook_login),
-                        containerColor = colorResource(id = R.color.facebook),
-                        contentColor = MaterialTheme.colorScheme.surface
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(16.dp),
+                        handleFacebookSignInResult = {
+                            viewModel.handleFacebookSignInResult(
+                                result = it,
+                                onSuccess = {
+                                    navController.navigate(Screens.HomeNav.route) {
+                                        popUpTo(Screens.AuthNav.route) { inclusive = true }
+                                    }
+                                },
+                                onError = {
+                                    ShowToastMessage(context, it)
+                                },
+                                onPhoneNumberNotExist = {
+                                    phoneNumberDialogState = true
+
+                                },
+                            )
+                        }
                     )
 
 

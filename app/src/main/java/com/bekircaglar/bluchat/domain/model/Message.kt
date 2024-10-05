@@ -9,5 +9,7 @@ data class Message(
     val messageType : String? = "",
     val imageUrl: String? = "",
     val edited : Boolean? = false,
-    val pinned : Boolean? = false
+    val pinned : Boolean? = false,
+    val starred : Boolean? = false,
+
 )

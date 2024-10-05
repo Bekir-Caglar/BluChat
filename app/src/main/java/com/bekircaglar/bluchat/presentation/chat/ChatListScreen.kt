@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
@@ -65,6 +66,7 @@ import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
 import com.bekircaglar.bluchat.presentation.chat.component.Chats
 import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
+import com.bekircaglar.bluchat.presentation.chat.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
@@ -177,62 +179,7 @@ fun ChatListScreen(navController: NavController) {
                 ) {
                     repeat(10) {
                         item {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 8.dp, horizontal = 16.dp)
-                            ) {
-                                Box {
-                                    Image(
-                                        painter = painterResource(R.drawable.ic_photos),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(CircleShape)
-                                            .placeholder(true),
-
-                                        )
-                                }
-                                Spacer(modifier = Modifier.width(12.dp))
-
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = "ASDASDASDA",
-                                        fontWeight = FontWeight.Bold,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        modifier = Modifier
-                                            .padding(top = 4.dp)
-                                            .placeholder(true)
-                                    )
-                                    Spacer(modifier = Modifier.height(4.dp))
-
-                                    Text(
-                                        text = "ASDADASDASDASDADAADADADDAD",
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        maxLines = 1,
-                                        overflow = TextOverflow.Ellipsis,
-                                        modifier = Modifier.placeholder(true)
-                                    )
-                                }
-
-                                Spacer(modifier = Modifier.width(8.dp))
-
-                                Column(horizontalAlignment = Alignment.End) {
-                                    Text(
-                                        text = "12:34",
-                                        style = MaterialTheme.typography.bodySmall,
-                                        color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                                        modifier = Modifier.placeholder(true)
-                                    )
-                                }
-
-                            }
-
-                            HorizontalDivider(modifier = Modifier
-                                .padding(16.dp)
-                                .placeholder(true))
-
+                            ShimmerItem()
                         }
                     }
 
@@ -311,6 +258,7 @@ fun ChatListScreen(navController: NavController) {
                             .padding(it)
                             .background(MaterialTheme.colorScheme.background),
                     ) {
+//                      itemsIndexed() kullanarak divider kullanımını düzelt indexin 1 eksiğinie göre düzelt
                         items(chatList) { chat ->
                             val myChat = Chats(
                                 chatRoomId = chat.chatRoomId,
@@ -325,7 +273,6 @@ fun ChatListScreen(navController: NavController) {
                                 navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
                             }
                             )
-
                             HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                         }
                     }
@@ -359,3 +306,4 @@ fun ChatListScreen(navController: NavController) {
         }
     }
 }
+
