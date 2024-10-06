@@ -3,11 +3,14 @@
 package com.bekircaglar.bluchat.presentation.component
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarColors
@@ -26,7 +29,9 @@ fun ChatAppTopBar(
     navigationIcon: ImageVector? = null,
     onNavigateIconClicked: () -> Unit? = {},
     actionIcon: ImageVector? = null,
+    actionIcon2: ImageVector? = null,
     onActionIconClicked: () -> Unit? = {},
+    onActionIcon2Clicked: () -> Unit? = {},
     containerColor: Color = MaterialTheme.colorScheme.secondary,
     titleColor: Color = MaterialTheme.colorScheme.onSecondary,
 ) {
@@ -43,31 +48,40 @@ fun ChatAppTopBar(
         ),
         navigationIcon = {
             if (navigationIcon != null) {
-                Icon(
-                    imageVector = navigationIcon,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable {
-                        onNavigateIconClicked()
-                    },
-                )
+                IconButton(onClick = { onNavigateIconClicked() }) {
+                    Icon(
+                        imageVector = navigationIcon,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(28.dp)
+                    )
+                }
             }
 
         },
         actions = {
             if (actionIcon != null) {
-                Icon(
-                    imageVector = actionIcon,
-                    contentDescription = null,
-                    modifier = Modifier
-                        .size(28.dp)
-                        .clickable {
-                        onActionIconClicked()
-                    }
-                )
+                IconButton(onClick = { onActionIconClicked() }) {
+                    Icon(
+                        imageVector = actionIcon,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(28.dp)
+                    )
+
+                }
+            }
+            if (actionIcon2 != null) {
+                IconButton(onClick = { onActionIcon2Clicked() }) {
+                    Icon(
+                        imageVector = actionIcon2,
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(28.dp)
+                    )
+                }
             }
         },
-        )
+    )
 
 }

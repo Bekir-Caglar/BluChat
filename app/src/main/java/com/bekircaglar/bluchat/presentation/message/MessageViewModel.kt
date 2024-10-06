@@ -24,7 +24,9 @@ import com.bekircaglar.bluchat.domain.usecase.message.ObserveGroupStatusUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveUserStatusInGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.PinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.StarMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnPinMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.UnStarMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
@@ -54,7 +56,9 @@ class MessageViewModel @Inject constructor(
     private val pinMessageUseCase: PinMessageUseCase,
     private val unPinMessageUseCase: UnPinMessageUseCase,
     private val getPinnedMessagesUseCase: GetPinnedMessagesUseCase,
-    private val getStarredMessagesUseCase: GetStarredMessagesUseCase
+    private val getStarredMessagesUseCase: GetStarredMessagesUseCase,
+    private val starMessageUseCase: StarMessageUseCase,
+    private val unStarMessageUseCase: UnStarMessageUseCase
 
 ) :
     ViewModel() {
@@ -112,6 +116,38 @@ class MessageViewModel @Inject constructor(
                 is Response.Error -> {
                 }
                 is Response.Loading -> {
+                }
+            }
+        }
+    }
+
+    fun starMessage(message: Message, chatId: String) = viewModelScope.launch {
+        starMessageUseCase(message.messageId!!, chatId).collect {
+            when (it) {
+                is Response.Success -> {
+
+                }
+
+                is Response.Error -> {
+                }
+
+                is Response.Loading -> {
+                }
+            }
+        }
+    }
+
+    fun unStarMessage(message: Message, chatId: String) = viewModelScope.launch {
+        unStarMessageUseCase(message.messageId!!, chatId).collect {
+            when (it) {
+                is Response.Success -> {
+
+                }
+                is Response.Error -> {
+
+                }
+                is Response.Loading -> {
+
                 }
             }
         }
@@ -175,6 +211,26 @@ class MessageViewModel @Inject constructor(
                 }
             }
         }
+    }
+
+    fun getStarredMessages(chatId: String) = viewModelScope.launch{
+        getStarredMessagesUseCase(chatId).collect { starredMessages ->
+
+            when(starredMessages){
+                is Response.Success -> {
+                    _starredMessages.value = starredMessages.data
+                }
+                is Response.Error -> {
+
+                }
+                is Response.Loading -> {
+
+                }
+
+            }
+
+        }
+
     }
 
     fun loadInitialMessages(chatId: String) {

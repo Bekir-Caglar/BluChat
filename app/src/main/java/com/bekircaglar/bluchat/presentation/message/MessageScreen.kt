@@ -29,7 +29,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -227,8 +229,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 onNavigateIconClicked = {
                     navController.navigate(Screens.ChatListScreen.route)
                 },
-                actionIcon = Icons.Default.Search,
-                onActionIconClicked = {})
+                actionIcon = Icons.Outlined.Star,
+                onActionIconClicked = {
+                    navController.navigate(Screens.StarredMessagesScreen.createRoute(chatId))
+                },
+                actionIcon2 = Icons.Default.Search,
+                onActionIcon2Clicked = {}
+            )
         },
         bottomBar = {
             BottomAppBar(
@@ -465,7 +472,12 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             onUnPinMessageClick = {
                                                 viewModel.unPinMessage(message, chatId)
                                                 viewModel.getPinnedMessages(chatId)
-
+                                            },
+                                            onStarMessage = {
+                                                viewModel.starMessage(message, chatId)
+                                            },
+                                            onUnStarMessage = {
+                                                viewModel.unStarMessage(message, chatId)
                                             }
                                         )
 
