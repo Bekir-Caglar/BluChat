@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.LocationOn
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.DropdownMenu
@@ -61,7 +62,9 @@ fun ChatBubble(
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onPinMessageClick: () -> Unit = {},
-    onUnPinMessageClick : () -> Unit = {}
+    onUnPinMessageClick : () -> Unit = {},
+    onStarMessage : () -> Unit = {},
+    onUnStarMessage : () -> Unit = {}
 ) {
     val bubbleColor =
         if (isSentByMe) MaterialTheme.colorScheme.tertiary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
@@ -89,6 +92,12 @@ fun ChatBubble(
         message = message,
         onUnPinMessageClick = {
             onUnPinMessageClick()
+        },
+        onStarMessage = {
+            onStarMessage()
+        },
+        onUnStarMessage = {
+            onUnStarMessage()
         }
     )
 
@@ -208,7 +217,9 @@ fun MessageDropdownMenu(
     onEditClick: () -> Unit,
     onDeleteClick: () -> Unit,
     onPinMessageClick: () -> Unit,
-    onUnPinMessageClick: () -> Unit
+    onUnPinMessageClick: () -> Unit,
+    onStarMessage : () -> Unit,
+    onUnStarMessage : () -> Unit
 ) {
 
     DropdownMenu(
@@ -266,6 +277,34 @@ fun MessageDropdownMenu(
                     Icon(
                         painter = painterResource(R.drawable.baseline_push_pin_24),
                         contentDescription = "Delete",
+                    )
+                }
+            }
+        )
+
+        DropdownMenuItem(
+            enabled = true,
+            modifier = Modifier
+                .padding(vertical = 4.dp)
+                .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
+                .background(color = MaterialTheme.colorScheme.background),
+            onClick = {
+                if (message.starred == true){
+                    onUnStarMessage()
+                }else{
+                    onStarMessage()
+                }
+                onDismissRequest()
+            },
+            text = {
+                Row {
+                    Text(
+                        text = if (message.starred == true) "Unstar message" else "Star message"
+                    )
+                    Spacer(modifier = Modifier.weight(1f))
+                    Icon(
+                        Icons.Default.Star,
+                        contentDescription = "Star",
                     )
                 }
             }
