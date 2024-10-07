@@ -115,8 +115,9 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
-    viewModel.getPinnedMessages(chatId)
-
+    LaunchedEffect(Unit) {
+        viewModel.getPinnedMessages(chatId)
+    }
 
 
     val galleryLauncher = rememberLauncherForActivityResult(

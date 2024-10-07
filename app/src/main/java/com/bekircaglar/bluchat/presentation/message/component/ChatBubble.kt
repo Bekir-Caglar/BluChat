@@ -48,6 +48,7 @@ import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.ui.theme.BabyBlue
 import com.bekircaglar.bluchat.ui.theme.BlueMinus20
+import com.bekircaglar.bluchat.utils.chatBubbleModifier
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -102,17 +103,8 @@ fun ChatBubble(
     )
 
     Row(
-        modifier = if (isSentByMe) {
-            Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
-                .combinedClickable(enabled = true, onClick = {}, onLongClick = {
-                    expanded = true
-                })
-        } else {
-            Modifier
-                .fillMaxWidth()
-                .padding(8.dp)
+        modifier = Modifier.chatBubbleModifier(isSentByMe) {
+            expanded = true
         },
         horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
     ) {

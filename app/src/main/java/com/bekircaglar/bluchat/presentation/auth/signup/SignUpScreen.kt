@@ -44,6 +44,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransformation
+import com.bekircaglar.bluchat.utils.passwordBorder
 
 @Composable
 fun SignUpScreen(navController: NavController) {
@@ -184,8 +185,15 @@ fun SignUpScreen(navController: NavController) {
                         value = passwordRegister,
                         onValueChange = { passwordRegister = it },
                         leadingIcon = Icons.Default.Lock,
+
                         keyboardType = KeyboardType.Password,
-                        title = stringResource(R.string.password)
+                        title = stringResource(R.string.password),
+                        supportedTextList = listOf(
+                            "8 characters" to (passwordRegister.length >= 8),
+                            "Minimum one number" to passwordRegister.any { it.isDigit() },
+                            "Minimum one uppercase letter" to passwordRegister.any { it.isUpperCase() },
+                            "Minimum one lowercase letter" to passwordRegister.any { it.isLowerCase() }
+                        )
                     )
                     Spacer(modifier = Modifier.padding(top = 8.dp))
 
@@ -196,11 +204,8 @@ fun SignUpScreen(navController: NavController) {
                         leadingIcon = Icons.Default.Lock,
                         keyboardType = KeyboardType.Password,
                         title = "Confirm password",
-                        modifier = if (passwordRegister != confirmPassword) {
-                            Modifier.border(1.dp, Color.Red, MaterialTheme.shapes.medium)
-                        } else {
-                            Modifier
-                        }
+                        modifier = Modifier.passwordBorder(passwordRegister == confirmPassword),
+
                     )
 
                     Spacer(modifier = Modifier.padding(top = 32.dp))
