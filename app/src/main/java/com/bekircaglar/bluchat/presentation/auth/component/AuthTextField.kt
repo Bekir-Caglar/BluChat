@@ -46,7 +46,8 @@ fun AuthTextField(
     keyboardType: KeyboardType = KeyboardType.Text,
     title: String? = null,
     modifier: Modifier = Modifier,
-    visualTransformation: VisualTransformation = VisualTransformation.None
+    visualTransformation: VisualTransformation = VisualTransformation.None,
+    supportedTextList: List<Pair<String, Boolean>> = emptyList()
 ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
@@ -97,6 +98,13 @@ fun AuthTextField(
                 .shadow(4.dp, shape = MaterialTheme.shapes.medium)
                 .clip(shape = ShapeDefaults.Medium)
         )
+        supportedTextList.forEach { (text, isValid) ->
+            Text(
+                text = " * $text",
+                color = if (isValid) MaterialTheme.colorScheme.primary else Color.Gray,
+                modifier = Modifier.padding(top = 4.dp)
+            )
+        }
     }
 }
 
@@ -109,6 +117,10 @@ fun AuthTextFieldPreview() {
         onValueChange = {},
         leadingIcon = Icons.Default.Email,
         title = "Email",
-        modifier = Modifier.border(1.dp, Color.Red, MaterialTheme.shapes.medium)
+        modifier = Modifier.border(1.dp, Color.Red, MaterialTheme.shapes.medium),
+        supportedTextList = listOf(
+            "8 characters" to false,
+            "Minimum one number" to true
+        )
     )
 }
