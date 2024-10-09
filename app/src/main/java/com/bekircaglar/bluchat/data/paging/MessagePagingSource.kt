@@ -23,7 +23,7 @@ class FirebaseDataSource @Inject constructor(private val database: DatabaseRefer
         val listener = messagesRef.orderByKey().limitToLast(15).addValueEventListener(object :
             ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.reversed()
+                val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }
                 trySend(Response.Success(messages))
             }
 
@@ -41,7 +41,7 @@ class FirebaseDataSource @Inject constructor(private val database: DatabaseRefer
         val listener = messagesRef.orderByKey().endBefore(lastKey).limitToLast(15).addValueEventListener(object : ValueEventListener {
 
             override fun onDataChange(snapshot: DataSnapshot) {
-                val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }.reversed()
+                val messages = snapshot.children.mapNotNull { it.getValue(Message::class.java) }
                 trySend(Response.Success(messages))
             }
 
