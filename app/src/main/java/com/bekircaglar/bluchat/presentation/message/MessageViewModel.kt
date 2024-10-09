@@ -238,7 +238,7 @@ class MessageViewModel @Inject constructor(
             loadInitialMessagesUseCase(chatId).collect { messages ->
                 when (messages) {
                     is Response.Success -> {
-                        _messages.value = messages.data
+                        _messages.value = messages.data.reversed()
                         lastKey = messages.data.lastOrNull()?.messageId
                         _state.value = UiState.Success
                     }
@@ -255,14 +255,13 @@ class MessageViewModel @Inject constructor(
         }
     }
 
-    fun loadMoreMessages(chatId: String) {
-        lastKey?.let {
+    fun loadMoreMessages(moreLastKey:String?, chatId: String) {
+        moreLastKey?.let { moreLastKey ->
             viewModelScope.launch {
-                loadMoreMessagesUseCase(chatId, it).collect { moreMessages ->
+                loadMoreMessagesUseCase(chatId, moreLastKey).collect { moreMessages ->
                     when (moreMessages) {
                         is Response.Success -> {
-                            _messages.value = _messages.value + moreMessages.data
-                            lastKey = moreMessages.data.lastOrNull()?.messageId
+                            _messages.value = _messages.value + moreMessages.data.reversed()
                             _state.value = UiState.Success
 
                         }

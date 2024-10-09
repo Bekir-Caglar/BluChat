@@ -105,13 +105,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
     var editedMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
+    var pageNumber by remember { mutableStateOf(1) }
+
     val imageCapture = remember { ImageCapture.Builder().build() }
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForPin by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForEdit by remember { mutableStateOf<Message?>(null) }
 
+
     val pinnedMessages by viewModel.pinnedMessages.collectAsStateWithLifecycle()
-    val starredMessages by viewModel.starredMessages.collectAsStateWithLifecycle()
 
     val screenState by viewModel.state.collectAsStateWithLifecycle()
 
@@ -148,7 +150,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
         }
     }
 
-    val groupedMessages = messages.groupBy { message ->
+    val groupedMessages = messages.reversed().groupBy { message ->
         convertTimestampToDay(message.timestamp!!)
     }
 
@@ -160,14 +162,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
     val startPagination by remember {
         derivedStateOf {
-            val lastIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: -3
+            val lastIndex = (pageNumber * 15) - listState.firstVisibleItemIndex
             val totalItemCount = messages.size
             lastIndex >= totalItemCount - 3
         }
     }
     LaunchedEffect(startPagination) {
         if (startPagination && messages.size >= 15) {
-            viewModel.loadMoreMessages(chatId)
+            viewModel.loadMoreMessages(moreLastKey = messages.lastOrNull()?.messageId,chatId)
+            pageNumber++
         }
     }
 
@@ -186,7 +189,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
             }
         }
     }
-
     Scaffold(
         topBar = {
             ChatAppTopBar(title = {
@@ -297,6 +299,9 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 CircularProgressIndicator()
             }
         } else {
+            LaunchedEffect(Unit){
+                listState.scrollToItem(messages.lastIndex)
+            }
             if (imageSendDialogState) {
                 ImageSendBottomSheet(
                     imageResId = uploadedImage!!,
@@ -396,7 +401,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     }
                     LazyColumn(
                         state = listState,
-                        reverseLayout = true,
+                        reverseLayout = false,
                         modifier = Modifier
                             .fillMaxSize()
                             .paint(
@@ -468,11 +473,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             },
                                             onPinMessageClick = {
                                                 viewModel.pinMessage(message, chatId)
-                                                viewModel.getPinnedMessages(chatId)
+//                                                viewModel.getPinnedMessages(chatId)
                                             },
                                             onUnPinMessageClick = {
                                                 viewModel.unPinMessage(message, chatId)
-                                                viewModel.getPinnedMessages(chatId)
+//                                                viewModel.getPinnedMessages(chatId)
                                             },
                                             onStarMessage = {
                                                 viewModel.starMessage(message, chatId)
