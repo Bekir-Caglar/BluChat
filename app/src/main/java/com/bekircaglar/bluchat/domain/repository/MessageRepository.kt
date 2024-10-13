@@ -39,6 +39,6 @@ interface MessageRepository {
 
     suspend fun getStarredMessages(chatId: String): Flow<Response<List<Message>>>
 
-
+    suspend fun markMessageAsRead(messageId: String, chatId: String): Flow<Response<String>>
 
 }
