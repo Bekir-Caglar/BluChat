@@ -448,5 +448,24 @@ override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Mess
     dbRef.addValueEventListener(listener)
     awaitClose { dbRef.removeEventListener(listener) }
 }
+
+    override suspend fun markMessageAsRead(
+        messageId: String,
+        chatId: String
+    ): Flow<Response<String>> = flow {
+
+        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+
+        dbRef.get().addOnSuccessListener {
+
+            val message = it.getValue(Message::class.java)
+            if (message != null) {
+                dbRef.child("read").setValue(true)
+            }
+
+        }
+
+
+    }
 }
 

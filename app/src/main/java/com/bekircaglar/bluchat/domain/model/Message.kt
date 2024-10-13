@@ -5,11 +5,11 @@ data class Message(
     val senderId:String? = "",
     val message:String? = "",
     val timestamp: Long? = 0,
-    val isRead:Boolean? = false,
+    val read:Boolean? = false,
     val messageType : String? = "",
     val imageUrl: String? = "",
     val edited : Boolean? = false,
     val pinned : Boolean? = false,
     val starred : Boolean? = false,
 
-)
+    )

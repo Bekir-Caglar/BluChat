@@ -17,6 +17,7 @@ composeBom = "2024.09.02"
 hilt = "2.50"
 hiltNavigationCompose = "1.2.0"
 material = "1.6.2"
+media3Exoplayer = "1.4.1"
 navigation = "2.7.7"
 firebase = "33.4.0"
 ksp = "2.0.0-1.0.22"
@@ -30,6 +31,9 @@ benchmarkCommon = "1.3.1"
 
 [libraries]
 
+androidx-media3-exoplayer = { module = "androidx.media3:media3-exoplayer", version.ref = "media3Exoplayer" }
+androidx-media3-exoplayer-dash = { module = "androidx.media3:media3-exoplayer-dash", version.ref = "media3Exoplayer" }
+androidx-media3-ui = { module = "androidx.media3:media3-ui", version.ref = "media3Exoplayer" }
 compose-ui-util = { module = "androidx.compose.ui:ui-util" }
 
 

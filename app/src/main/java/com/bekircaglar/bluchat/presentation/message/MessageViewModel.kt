@@ -20,6 +20,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.GetStarredMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadInitialMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.LoadMoreMessagesUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.MarkMessageAsReadUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveGroupStatusUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveUserStatusInGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.PinMessageUseCase
@@ -58,7 +59,8 @@ class MessageViewModel @Inject constructor(
     private val getPinnedMessagesUseCase: GetPinnedMessagesUseCase,
     private val getStarredMessagesUseCase: GetStarredMessagesUseCase,
     private val starMessageUseCase: StarMessageUseCase,
-    private val unStarMessageUseCase: UnStarMessageUseCase
+    private val unStarMessageUseCase: UnStarMessageUseCase,
+    private val markMessageAsReadUseCase: MarkMessageAsReadUseCase
 
 ) :
     ViewModel() {
@@ -93,6 +95,27 @@ class MessageViewModel @Inject constructor(
     private val _isKickedOrGroupDeleted = MutableStateFlow(false)
     val isKickedOrGroupDeleted: StateFlow<Boolean> = _isKickedOrGroupDeleted
 
+
+    fun markMessageAsRead(messageId: String, chatId: String){
+        viewModelScope.launch {
+            markMessageAsReadUseCase(messageId, chatId).collect{
+                when(it) {
+                    is Response.Success -> {
+
+                    }
+
+                    is Response.Error -> {
+
+                    }
+
+                    is Response.Loading -> {
+                    }
+
+                }
+            }
+
+        }
+    }
 
     fun pinMessage(message: Message, chatId: String) = viewModelScope.launch {
         pinMessageUseCase(message.messageId!!, chatId).collect {
@@ -261,7 +284,8 @@ class MessageViewModel @Inject constructor(
                 loadMoreMessagesUseCase(chatId, moreLastKey).collect { moreMessages ->
                     when (moreMessages) {
                         is Response.Success -> {
-                            _messages.value = _messages.value + moreMessages.data.reversed()
+                            _messages.value += moreMessages.data.reversed()
+                                .distinctBy { it.messageId }
                             _state.value = UiState.Success
 
                         }
@@ -298,7 +322,7 @@ class MessageViewModel @Inject constructor(
             senderId = currentUser.uid,
             message = message,
             timestamp = timestamp,
-            isRead = false,
+            read = false,
             messageType = messageType,
             imageUrl = imageUrl,
         )

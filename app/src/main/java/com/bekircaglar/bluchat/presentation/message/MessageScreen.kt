@@ -29,7 +29,6 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.BottomAppBar
@@ -302,6 +301,21 @@ fun MessageScreen(navController: NavController, chatId: String) {
             LaunchedEffect(Unit){
                 listState.scrollToItem(messages.lastIndex)
             }
+
+            LaunchedEffect(listState.isScrollInProgress) {
+                listState.layoutInfo.visibleItemsInfo.forEach { visibleItem ->
+                        val myMessage = messages.find {
+                            visibleItem.key == it.messageId
+                        }
+                        if(myMessage?.read == false && myMessage.senderId != currentUser.uid)
+                            viewModel.markMessageAsRead(visibleItem.key.toString(),chatId)
+
+
+
+                }
+            }
+
+
             if (imageSendDialogState) {
                 ImageSendBottomSheet(
                     imageResId = uploadedImage!!,

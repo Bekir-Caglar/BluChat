@@ -10,6 +10,8 @@ import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
+import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
+import com.bekircaglar.bluchat.utils.STORED_MESSAGES
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -32,6 +34,7 @@ class ChatRepositoryImp @Inject constructor(
     init {
         setUserOnlineStatus(auth.currentUser?.uid.toString())
     }
+
 
     override suspend fun searchContacts(query: String): Response<List<Users>> {
         return suspendCancellableCoroutine { continuation ->
