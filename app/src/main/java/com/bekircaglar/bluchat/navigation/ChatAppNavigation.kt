@@ -7,7 +7,7 @@ import com.google.firebase.auth.FirebaseAuth
 
 // Nested Navigation araştır
 @Composable
-fun ChatAppNavigation(navController: NavHostController,onThemeChange: (Boolean) -> Unit,auth: FirebaseAuth) {
+fun ChatAppNavigation(navController: NavHostController,onThemeChange: () -> Unit,auth: FirebaseAuth) {
 
     NavHost(
         navController = navController,

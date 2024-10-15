@@ -19,13 +19,13 @@ import com.bekircaglar.bluchat.presentation.profile.ProfileScreen
 
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-fun NavGraphBuilder.MainNavGraph(navController: NavController, onThemeChange: (Boolean) -> Unit) {
+fun NavGraphBuilder.MainNavGraph(navController: NavController, onThemeChange: () -> Unit) {
     navigation(startDestination = Screens.ChatListScreen.route, route = Screens.HomeNav.route) {
         composable(Screens.ChatListScreen.route) {
             ChatListScreen(navController)
         }
         composable(Screens.ProfileScreen.route) {
-            ProfileScreen(navController, { onThemeChange(it) })
+            ProfileScreen(navController) { onThemeChange() }
 
         }
         composable(
