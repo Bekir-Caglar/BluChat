@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.domain.repository
 
+import android.net.Uri
 import com.bekircaglar.bluchat.Response
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Message
@@ -40,5 +41,7 @@ interface MessageRepository {
     suspend fun getStarredMessages(chatId: String): Flow<Response<List<Message>>>
 
     suspend fun markMessageAsRead(messageId: String, chatId: String): Flow<Response<String>>
+
+    suspend fun uploadVideo(uri: Uri): Flow<Response<String>>
 
 }

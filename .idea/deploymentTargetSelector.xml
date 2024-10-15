@@ -26,10 +26,10 @@
           </targets>
         </DialogSelection>
       </SelectionState>
-      <SelectionState runConfigName="EnterPhoneNumber">
+      <SelectionState runConfigName="EnterPhoneNumberDialogPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="EnterPhoneNumberDialogPreview">
+      <SelectionState runConfigName="VideoPlayerActivity">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>

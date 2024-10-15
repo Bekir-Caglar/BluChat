@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.message.camera
 
+import VideoThumbnailComposable
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,6 +23,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -36,8 +38,7 @@ import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 fun SendTakenPhotoScreen(imageUrl: String, chatId: String,navController: NavController) {
     val viewModel: SendTakenPhotoViewModel = hiltViewModel()
     var message by remember { mutableStateOf("") }
-
-    println(imageUrl)
+    val context = LocalContext.current
 
     Column(
         modifier = Modifier
@@ -45,6 +46,9 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String,navController: NavCont
             .background(Color.Black),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
+        if (imageUrl.contains(".mp4")){
+            VideoThumbnailComposable(context = context, videoUrl =  imageUrl, isShapeShouldSquare = false, onVideoClick = {})
+        }
         Image(
             painter = rememberImagePainter(imageUrl),
             contentDescription = null,

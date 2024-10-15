@@ -3,7 +3,7 @@
 
     <style name="Theme.ChatAppBordo" parent="android:Theme.Material.Light.NoActionBar" />
 
-    <style name="Theme.ChatAppBordo.Starting" parent="Theme.SplashScreen" >
+    <style name="Theme.ChatAppBordo.Starting" parent="Theme.SplashScreen">
         <item name="android:windowActionBar">false</item>
         <item name="android:windowNoTitle">true</item>
         <item name="windowSplashScreenBackground">@color/splash</item>

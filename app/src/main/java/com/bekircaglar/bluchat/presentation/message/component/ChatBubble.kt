@@ -1,8 +1,10 @@
+import android.content.Context
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +17,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -37,15 +40,17 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import coil.ImageLoader
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.utils.chatBubbleModifier
-
+import com.bekircaglar.bluchat.utils.getVideoThumbnail
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatBubble(
+    context: Context,
     messageType: String,
     message: Message,
     isSentByMe: Boolean,
@@ -53,12 +58,13 @@ fun ChatBubble(
     senderName: String,
     senderNameColor: Color,
     onImageClick: (String) -> Unit = {},
+    onvVideoClick: (String) -> Unit = {},
     onEditClick: () -> Unit = {},
     onDeleteClick: () -> Unit = {},
     onPinMessageClick: () -> Unit = {},
-    onUnPinMessageClick : () -> Unit = {},
-    onStarMessage : () -> Unit = {},
-    onUnStarMessage : () -> Unit = {}
+    onUnPinMessageClick: () -> Unit = {},
+    onStarMessage: () -> Unit = {},
+    onUnStarMessage: () -> Unit = {}
 ) {
     val bubbleColor =
         if (isSentByMe) MaterialTheme.colorScheme.tertiary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
@@ -134,31 +140,39 @@ fun ChatBubble(
                             textAlign = TextAlign.Start
                         )
                     } else if (messageType == "image") {
-                        Image(
-                            rememberImagePainter(data = message.imageUrl),
-                            contentDescription = "Image Message",
-                            modifier = Modifier
-                                .size(200.dp)
-                                .clip(shape = RoundedCornerShape(12.dp))
-                                .combinedClickable(
-                                    enabled = true,
-                                    onClick = {
-                                        onImageClick(message.imageUrl!!)
-                                    },
-                                    onLongClick = {
-                                        expanded = true
-                                    }
-                                )
-                                .align(Alignment.CenterHorizontally),
-                            contentScale = ContentScale.Crop
-                        )
-                        if (message.message != "") {
-                            Text(
-                                message.message!!,
-                                color = if (isSentByMe) Color.White else Color(0xFF001F3F),
-                                modifier = Modifier.padding(top = 8.dp)
+                        if (message.imageUrl?.contains(".mp4") == true) {
+                            VideoThumbnailComposable(
+                                context = context,
+                                videoUrl = message.imageUrl,
+                                onVideoClick = { onvVideoClick(it) }
+                            )
+                        } else {
+                            Image(
+                                painter = rememberImagePainter(data = message.imageUrl),
+                                contentDescription = "Image Message",
+                                modifier = Modifier
+                                    .size(200.dp)
+                                    .clip(shape = RoundedCornerShape(12.dp))
+                                    .combinedClickable(
+                                        enabled = true,
+                                        onClick = {
+                                            onImageClick(message.imageUrl!!)
+                                        },
+                                        onLongClick = {
+                                            expanded = true
+                                        }
+                                    )
+                                    .align(Alignment.CenterHorizontally),
+                                contentScale = ContentScale.Crop
                             )
                         }
+                        Spacer(modifier = Modifier.size(8.dp))
+                        Text(
+                            text = message.message ?: "",
+                            color = if (isSentByMe) Color.White else Color(0xFF001F3F),
+                            fontSize = 16.sp,
+                            textAlign = TextAlign.Start
+                        )
                     }
                     if (message.edited == true) {
                         Row(
@@ -178,31 +192,40 @@ fun ChatBubble(
                                 fontSize = 12.sp,
                                 textAlign = TextAlign.End,
                             )
+                            if (isSentByMe) {
+                                Icon(
+                                    painter = painterResource(R.drawable.double_tick),
+                                    contentDescription = "Tick",
+                                    tint = if (message.read == true) Color.Green else Color.Gray,
+                                )
+                            }
                         }
                     } else {
-                        Text(
-                            text = timestamp,
-                            color = if (isSentByMe) Color.White else Color.Gray,
-                            fontSize = 12.sp,
-                            textAlign = TextAlign.End,
-                            modifier = Modifier.align(Alignment.End)
-                        )
-                    }
-                    if (isSentByMe){
-                        Icon(
-                            painter = painterResource(R.drawable.double_tick),
-                            contentDescription = "Tick",
-                            tint = if (message.read == true) Color.Green else Color.Gray,
-                            modifier = Modifier.align(Alignment.End)
-                        )
-                    }
+                        Row(
+                            modifier = Modifier.align(Alignment.End),
+                            horizontalArrangement = Arrangement.End
+                        ) {
+                            Text(
+                                text = timestamp,
+                                color = if (isSentByMe) Color.White else Color.Gray,
+                                fontSize = 12.sp,
+                                textAlign = TextAlign.End,
+                            )
+                            if (isSentByMe) {
+                                Icon(
+                                    painter = painterResource(R.drawable.double_tick),
+                                    contentDescription = "Tick",
+                                    tint = if (message.read == true) Color.Green else Color.Gray,
+                                )
+                            }
+                        }
 
+                    }
                 }
             }
         }
     }
 }
-
 @Composable
 fun MessageDropdownMenu(
     expanded: Boolean,
@@ -333,4 +356,46 @@ fun MessageDropdownMenu(
 
     }
 
+}
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun VideoThumbnailComposable(context:Context, videoUrl: String, onVideoClick: (String) -> Unit, isShapeShouldSquare:Boolean = true) {
+
+    val imageLoader = remember { ImageLoader(context) }
+    val videoThumbnail by remember {
+        mutableStateOf(imageLoader.getVideoThumbnail(context, videoUrl))
+    }
+
+    videoThumbnail?.let { bitmap ->
+        Box(){
+            Image(
+                painter = rememberImagePainter(bitmap),
+                contentDescription = "Video Thumbnail",
+                modifier = if (isShapeShouldSquare){
+                    Modifier
+                        .size(200.dp)
+                        .clip(shape = RoundedCornerShape(12.dp))
+                        .combinedClickable(
+                            enabled = true,
+                            onClick = {
+                                onVideoClick(videoUrl)
+                            },
+                            onLongClick = {
+                            }
+                        )
+                } else {
+                    Modifier
+                        .fillMaxWidth()
+                },
+                contentScale = ContentScale.Crop
+            )
+            Icon(
+                imageVector = Icons.Default.PlayArrow,
+                contentDescription = "play button",
+                modifier = Modifier
+                    .size(60.dp)
+                    .align(alignment = Alignment.Center)
+            )
+        }
+    }
 }

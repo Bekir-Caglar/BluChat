@@ -169,7 +169,8 @@ fun StarredMessagesScreen(chatId:String,navController: NavController){
                                 },
                                 onUnStarMessage = {
                                     viewModel.unStarMessage(message,chatId)
-                                }
+                                },
+                                context = context
                             )
 
                         }

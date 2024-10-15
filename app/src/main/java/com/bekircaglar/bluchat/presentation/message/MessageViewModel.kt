@@ -5,6 +5,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.Response
@@ -28,6 +29,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.StarMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnPinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnStarMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.UploadVideoUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
@@ -35,6 +37,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -60,9 +63,10 @@ class MessageViewModel @Inject constructor(
     private val getStarredMessagesUseCase: GetStarredMessagesUseCase,
     private val starMessageUseCase: StarMessageUseCase,
     private val unStarMessageUseCase: UnStarMessageUseCase,
-    private val markMessageAsReadUseCase: MarkMessageAsReadUseCase
+    private val markMessageAsReadUseCase: MarkMessageAsReadUseCase,
+    private val uploadVideoUseCase: UploadVideoUseCase,
 
-) :
+    ) :
     ViewModel() {
 
     val currentUser = auth.currentUser!!
@@ -81,6 +85,9 @@ class MessageViewModel @Inject constructor(
 
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
+
+    private val _uploadedVideoUri = MutableStateFlow<Uri?>(null)
+    val uploadedVideoUri: StateFlow<Uri?> = _uploadedVideoUri
 
     private val _state = MutableStateFlow(UiState.Loading)
     val state = _state.asStateFlow()
@@ -198,6 +205,30 @@ class MessageViewModel @Inject constructor(
         _selectedImageUri.value = uri
         uploadImage(uri)
     }
+    fun onVideoSelected(uri: Uri) {
+        _selectedImageUri.value = uri
+        uploadVideo(uri)
+    }
+
+    private fun uploadVideo(uri: Uri){
+        viewModelScope.launch {
+            uploadVideoUseCase(uri).collect{
+                when(it){
+                    is Response.Success -> {
+                        _uploadedVideoUri.value = it.data.toUri()
+                    }
+                    is Response.Error -> {
+
+                    }
+                    is Response.Loading -> {
+
+                    }
+                }
+            }
+
+        }
+
+    }
 
     private fun uploadImage(uri: Uri) {
         viewModelScope.launch {
@@ -205,8 +236,6 @@ class MessageViewModel @Inject constructor(
                 when (it) {
                     is Response.Success -> {
                         _uploadedImageUri.value = it.data.toUri()
-
-
                     }
 
                     is Response.Error -> {

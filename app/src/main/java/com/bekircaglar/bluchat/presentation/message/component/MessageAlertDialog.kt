@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.presentation.message.component
 
 import ChatBubble
+import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -22,7 +23,8 @@ import java.time.format.DateTimeFormatter
 fun MessageAlertDialog(
     message: Message,
     onConfirm: () -> Unit,
-    onDismiss: () -> Unit
+    onDismiss: () -> Unit,
+    context: Context
 ) {
     val timestamp = convertTimestampToDate(message.timestamp ?: 0)
     AlertDialog(
@@ -33,6 +35,7 @@ fun MessageAlertDialog(
         text = {
             Column {
                ChatBubble(
+                   context = context,
                      messageType = message.messageType ?: "",
                      message = message,
                      isSentByMe = true,

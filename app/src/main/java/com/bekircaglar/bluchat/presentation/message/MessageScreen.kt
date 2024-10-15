@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.presentation.message
 
 import ChatBubble
+import android.content.Intent
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -81,7 +82,9 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.core.content.ContextCompat.startActivity
 import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.VideoPlayerActivity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
@@ -93,6 +96,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     val userInfo by viewModel.userData.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val uploadedImage by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
+    val uploadedVideo by viewModel.uploadedVideoUri.collectAsStateWithLifecycle()
     val selectedImage by viewModel.selectedImageUri.collectAsStateWithLifecycle()
     val currentUser = viewModel.currentUser
     var messageText by remember { mutableStateOf("") }
@@ -126,6 +130,24 @@ fun MessageScreen(navController: NavController, chatId: String) {
     ) { uri: Uri? ->
         uri?.let {
             viewModel.onImageSelected(it)
+        }
+    }
+
+    val videoLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.GetContent()
+    ) {uri: Uri? ->
+        uri?.let {
+            viewModel.onVideoSelected(it)
+        }
+    }
+
+    val permissionLauncherForVideo = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            videoLauncher.launch("video/*")
+        } else {
+            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
         }
     }
 
@@ -236,7 +258,9 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     navController.navigate(Screens.StarredMessagesScreen.createRoute(chatId))
                 },
                 actionIcon2 = Icons.Default.Search,
-                onActionIcon2Clicked = {}
+                onActionIcon2Clicked = {
+
+                }
             )
         },
         bottomBar = {
@@ -310,8 +334,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         if(myMessage?.read == false && myMessage.senderId != currentUser.uid)
                             viewModel.markMessageAsRead(visibleItem.key.toString(),chatId)
 
-
-
                 }
             }
 
@@ -339,6 +361,14 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     imageSendDialogState = true
                 }
             }
+
+            LaunchedEffect(uploadedVideo) {
+                if (uploadedVideo != null) {
+                    val encodedVideoUrl = URLEncoder.encode(uploadedVideo.toString(), StandardCharsets.UTF_8.toString())
+                    navController.navigate(Screens.SendTakenPhotoScreen.createRoute(encodedVideoUrl,chatId))
+                }
+            }
+
             if (bottomSheetState) {
                 MessageExtraBottomSheet(
                     onDismiss = { bottomSheetState = false },
@@ -347,7 +377,9 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             "Photos" -> {
                                 permissionLauncherForGallery.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
                             }
-
+                            "Video" -> {
+                                permissionLauncherForVideo.launch(android.Manifest.permission.READ_MEDIA_VIDEO)
+                            }
                             "Camera" -> {
                                 permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                             }
@@ -355,6 +387,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     },
                     myList = listOf(
                         SheetOption("Photos", R.drawable.ic_photos),
+                        SheetOption("Video",R.drawable.ic_video_camera_media),
                         SheetOption("Camera", R.drawable.ic_camera),
                         SheetOption("Location", R.drawable.ic_location),
                         SheetOption("Contact", R.drawable.ic_user_square),
@@ -462,6 +495,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                     val senderNameColor = viewModel.getUserColor(senderId!!)
                                     message.messageType?.let { messageType ->
                                         ChatBubble(
+                                            context = context,
                                             message = message,
                                             messageType = messageType,
                                             isSentByMe = message.senderId == currentUser.uid,
@@ -478,6 +512,12 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                                         encode
                                                     )
                                                 )
+                                            },
+                                            onvVideoClick = {videoUrl ->
+                                                val intent = Intent(context, VideoPlayerActivity::class.java).apply {
+                                                    putExtra("videoUri",videoUrl )
+                                                }
+                                                context.startActivity(intent)
                                             },
                                             onEditClick = {
                                                 selectedMessageForEdit = message
@@ -538,7 +578,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             onImageClick = { },
                             senderNameColor = Color.Transparent,
                             onEditClick = { },
-                            onDeleteClick = { }
+                            onDeleteClick = { },
+                            context = context
                         )
                         Row(
                             verticalAlignment = Alignment.CenterVertically,
@@ -597,7 +638,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             selectedMessageForDeletion!!.messageId!!
                         )
                         selectedMessageForDeletion = null
-                    }
+                    },
+                    context = context
                 )
             }
         }
