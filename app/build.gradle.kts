@@ -52,6 +52,9 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    composeOptions {
+        kotlinCompilerExtensionVersion = "1.5.1"
+    }
 }
 
 
@@ -76,6 +79,9 @@ dependencies {
     implementation(libs.firebase.storage)
     implementation(libs.androidx.benchmark.common)
     ksp(libs.hilt.kapt)
+
+    implementation (libs.glide)
+
 
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)

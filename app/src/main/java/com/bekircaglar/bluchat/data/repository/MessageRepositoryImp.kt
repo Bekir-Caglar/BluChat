@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.data.repository
 
+import android.net.Uri
 import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
 import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
 import com.bekircaglar.bluchat.Response
@@ -25,7 +26,8 @@ import javax.inject.Inject
 class MessageRepositoryImp @Inject constructor(
     private val databaseReference: DatabaseReference,
     private val auth: FirebaseAuth,
-    private val firebaseDataSource: FirebaseDataSource
+    private val firebaseDataSource: FirebaseDataSource,
+    private val storageReference: com.google.firebase.storage.FirebaseStorage
 ) : MessageRepository {
 
     private val currentUserId = auth.currentUser?.uid
@@ -465,6 +467,25 @@ override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Mess
 
         }
 
+
+    }
+
+    override suspend fun uploadVideo(uri: Uri): Flow<Response<String>> = flow {
+
+        val randomUUID = java.util.UUID.randomUUID().toString()
+        val storageReference = storageReference.reference.child("videos/${"$randomUUID.mp4"}")
+        val uploadTask = storageReference.putFile(uri)
+
+        val downloadUrl = uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful){
+                task.exception?.let {
+                    throw it
+                }
+            }
+            storageReference.downloadUrl
+
+        }.await()
+        emit(Response.Success(downloadUrl.toString()))
 
     }
 }

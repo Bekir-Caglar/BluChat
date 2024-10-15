@@ -1,6 +1,9 @@
 package com.bekircaglar.bluchat.utils
 
 import android.annotation.SuppressLint
+import android.content.Context
+import android.graphics.Bitmap
+import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
@@ -15,6 +18,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
 import androidx.compose.ui.unit.dp
+import coil.ImageLoader
 import com.bekircaglar.bluchat.presentation.shimmer.PlaceholderHighlight
 import com.bekircaglar.bluchat.presentation.shimmer.placeholder
 import com.bekircaglar.bluchat.presentation.shimmer.shimmer
@@ -61,4 +65,17 @@ fun Modifier.chatBubbleModifier(isSentByMe: Boolean, onLongClick: () -> Unit): M
                 Modifier
             }
         )
+}
+
+fun ImageLoader.getVideoThumbnail(context: Context, videoUrl: String): Bitmap? {
+    val retriever = MediaMetadataRetriever()
+    return try {
+        retriever.setDataSource(videoUrl, HashMap())
+        retriever.getFrameAtTime(100 * 1000L, MediaMetadataRetriever.OPTION_CLOSEST_SYNC)
+    } catch (e: Exception) {
+        e.printStackTrace()
+        null
+    } finally {
+        retriever.release()
+    }
 }

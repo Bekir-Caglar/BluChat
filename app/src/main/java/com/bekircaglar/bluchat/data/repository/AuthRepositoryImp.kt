@@ -22,7 +22,6 @@ class AuthRepositoryImp @Inject constructor(
 
     override fun isUserAuthenticatedInFirebase(): Response<String> {
         return Response.Success(auth.currentUser?.uid ?: "")
-
     }
 
     override suspend fun signIn(email: String, password: String): Response<String> {
