@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.presentation.message.starredmessages
 
 import ChatBubble
+import android.content.Intent
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -43,6 +44,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.VideoPlayerActivity
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
@@ -169,6 +171,13 @@ fun StarredMessagesScreen(chatId:String,navController: NavController){
                                 },
                                 onUnStarMessage = {
                                     viewModel.unStarMessage(message,chatId)
+                                },
+                                onvVideoClick ={
+                                    val videoUrl = it
+                                    val intent = Intent(context, VideoPlayerActivity::class.java).apply {
+                                        putExtra("videoUri",videoUrl )
+                                    }
+                                    context.startActivity(intent)
                                 },
                                 context = context
                             )

@@ -33,6 +33,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
+import kotlin.coroutines.cancellation.CancellationException
 
 @HiltViewModel
 class SignInViewModel @Inject constructor(
@@ -122,8 +123,7 @@ class SignInViewModel @Inject constructor(
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             viewModelScope.launch {
                 try {
-                    val authResult =
-                        FirebaseAuth.getInstance().signInWithCredential(credential).await()
+                    val authResult = FirebaseAuth.getInstance().signInWithCredential(credential).await()
                     val user = authResult.user ?: return@launch onError("User is null")
 
                     val email = authResult.user?.email ?: return@launch onError("Email is null")
@@ -135,7 +135,6 @@ class SignInViewModel @Inject constructor(
                                 } else {
                                     if (user.phoneNumber.isNullOrBlank()) {
                                         onPhoneNumberNotExist()
-
                                     } else {
                                         saveUserToDatabase(user, onSuccess, onError)
                                         onSuccess()
@@ -148,10 +147,12 @@ class SignInViewModel @Inject constructor(
                             }
 
                             is Response.Loading -> {
-
+                                // Handle loading state if needed
                             }
                         }
                     }
+                } catch (e: CancellationException) {
+
                 } catch (e: Exception) {
                     onError(e.message ?: "Authentication failed")
                 }
