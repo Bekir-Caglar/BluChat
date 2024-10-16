@@ -28,14 +28,18 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
 import com.bekircaglar.bluchat.R
 
+
+import androidx.appcompat.app.AppCompatDelegate
+
 @Composable
 fun AppearanceDialog(
     onDismissRequest: () -> Unit,
-    onThemeChange: (Boolean) -> Unit,
+    onThemeChange: () -> Unit,
     darkTheme: Boolean
 ) {
     var isChecked by remember { mutableStateOf(darkTheme) }
-    Dialog(onDismissRequest = { onDismissRequest() }) {
+
+    Dialog(onDismissRequest = onDismissRequest) {
         Surface(
             shape = MaterialTheme.shapes.medium,
             color = MaterialTheme.colorScheme.background
@@ -50,7 +54,7 @@ fun AppearanceDialog(
                     text = "Change Theme",
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(bottom =16.dp)
+                    modifier = Modifier.padding(bottom = 16.dp)
                 )
                 Box(
                     modifier = Modifier
@@ -59,7 +63,7 @@ fun AppearanceDialog(
                         .background(if (isChecked) Color.Gray else Color.Yellow)
                         .clickable {
                             isChecked = !isChecked
-                            onThemeChange(isChecked)
+                            onThemeChange()
                         },
                     contentAlignment = Alignment.Center
                 ) {
@@ -81,7 +85,6 @@ fun AppearanceDialog(
                         }
                     }
                 }
-
             }
         }
     }

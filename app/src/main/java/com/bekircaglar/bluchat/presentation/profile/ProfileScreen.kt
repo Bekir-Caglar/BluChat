@@ -6,6 +6,7 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -54,7 +55,7 @@ import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.loadThemePreference
 
 @Composable
-fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit) {
+fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
 
     val context = LocalContext.current
     val viewModel: ProfileViewModel = hiltViewModel()
@@ -128,16 +129,17 @@ fun ProfileScreen(navController: NavController, onThemeChange: (Boolean) -> Unit
             )
         }
     )
+
     if (showAppearanceDialog) {
         AppearanceDialog(
             onDismissRequest = { showAppearanceDialog = false },
             onThemeChange = {
-                onThemeChange(it)
-                saveThemePreference(context = context, it)
+                onThemeChange()
             },
             darkTheme = loadThemePreference(context = context)
         )
     }
+
     if (showAccountDialog) {
         AccountDialog(
             onDismissRequest = {

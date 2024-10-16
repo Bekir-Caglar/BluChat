@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat
 
 import android.content.Intent
+import android.content.res.Configuration
 import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -17,15 +18,14 @@ import com.facebook.CallbackManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
-import com.facebook.FacebookSdk;
-import com.facebook.appevents.AppEventsLogger;
+import com.facebook.FacebookSdk
+import com.facebook.appevents.AppEventsLogger
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
     @Inject
     lateinit var auth: FirebaseAuth
-
 
     private lateinit var callbackManager: CallbackManager
 
@@ -40,7 +40,7 @@ class MainActivity : ComponentActivity() {
         setContent {
 
             var isDarkTheme by remember {
-                mutableStateOf(loadThemePreference(this))
+                mutableStateOf(loadThemePreference(context = this))
             }
 
             ChatAppBordoTheme(darkTheme = isDarkTheme) {
@@ -49,15 +49,28 @@ class MainActivity : ComponentActivity() {
                     navController = navController,
                     auth = auth,
                     onThemeChange = {
-                        isDarkTheme = it
-                        saveThemePreference(this, it)
-                    })
+                        isDarkTheme = !isDarkTheme
+                        saveThemePreference(context = this, isDarkTheme)
+                    }
+                )
             }
         }
     }
+
+    override fun onConfigurationChanged(newConfig: Configuration) {
+        super.onConfigurationChanged(newConfig)
+        when (newConfig.uiMode and Configuration.UI_MODE_NIGHT_MASK) {
+            Configuration.UI_MODE_NIGHT_NO -> {
+                saveThemePreference(context = this, false)
+            }
+            Configuration.UI_MODE_NIGHT_YES -> {
+                saveThemePreference(context = this, true)
+            }
+        }
+    }
+
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
     }
 }
-
