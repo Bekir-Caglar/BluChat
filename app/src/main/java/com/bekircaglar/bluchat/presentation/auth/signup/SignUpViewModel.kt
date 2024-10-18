@@ -4,12 +4,15 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.usecase.CheckPhoneNumberUseCase
 import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CreateUserUseCase
 import com.bekircaglar.bluchat.navigation.Screens
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -19,10 +22,10 @@ class SignUpViewModel @Inject constructor(
     private val createUserUseCase: CreateUserUseCase,
     private val exceptionHandlerUseCase: ExceptionHandlerUseCase,
     private val checkPhoneNumberUseCase: CheckPhoneNumberUseCase,
-):ViewModel() {
+) : ViewModel() {
 
-
-
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
 
     fun checkPassword(
         password: String,
@@ -32,40 +35,43 @@ class SignUpViewModel @Inject constructor(
         phoneNumber: String,
         onError: (String) -> Unit,
         navController: NavController,
-    ) =
-        viewModelScope.launch {
-            try {
-                checkPhoneNumberUseCase(phoneNumber).collect {
-                    when (it) {
-                        is Response.Success -> {
-                            signUp(
-                                name = name,
-                                surname = surname,
-                                phoneNumber = phoneNumber,
-                                email = email,
-                                password = password,
-                                navController = navController,
-                                onError = {
-                                    onError(it)
-                                }
-                            )
-                        }
+    ) = viewModelScope.launch {
+        _uiState.value = UiState.Loading
+        try {
+            checkPhoneNumberUseCase(phoneNumber).collect {
+                when (it) {
+                    is Response.Success -> {
+                        signUp(
+                            name = name,
+                            surname = surname,
+                            phoneNumber = phoneNumber,
+                            email = email,
+                            password = password,
+                            navController = navController,
+                            onError = {
+                                _uiState.value = UiState.Error(it)
+                                onError(it)
+                            }
+                        )
+                    }
 
-                        is Response.Error -> {
-                            onError(
-                                exceptionHandlerUseCase.invoke(Exception(it.message))
-                            )
-                        }
+                    is Response.Error -> {
+                        val errorMessage = exceptionHandlerUseCase.invoke(Exception(it.message))
+                        _uiState.value = UiState.Error(errorMessage)
+                        onError(errorMessage)
+                    }
 
-                        else -> {
-
-                        }
+                    else -> {
+                        _uiState.value = UiState.Idle
                     }
                 }
-            } catch (e: Exception) {
-                onError(exceptionHandlerUseCase.invoke(e))
             }
+        } catch (e: Exception) {
+            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            _uiState.value = UiState.Error(errorMessage)
+            onError(errorMessage)
         }
+    }
 
     private fun signUp(
         name: String,
@@ -75,35 +81,38 @@ class SignUpViewModel @Inject constructor(
         navController: NavController,
         password: String,
         onError: (String) -> Unit
-    ) =
-        viewModelScope.launch {
-            try {
-                when (val result = authUseCase.signUpUseCase(email, password)) {
-                    is Response.Success -> {
-                        createUser(
-                            name = name,
-                            surname = surname,
-                            phoneNumber = phoneNumber,
-                            email = email,
-                            navController = navController,
-                            onError = {
-                                onError(it)
-                            })
-                    }
-
-                    is Response.Error -> {
-                        onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
-                    }
-
-                    else -> {
-                    }
+    ) = viewModelScope.launch {
+        _uiState.value = UiState.Loading
+        try {
+            when (val result = authUseCase.signUpUseCase(email, password)) {
+                is Response.Success -> {
+                    createUser(
+                        name = name,
+                        surname = surname,
+                        phoneNumber = phoneNumber,
+                        email = email,
+                        navController = navController,
+                        onError = {
+                            onError(it)
+                        })
                 }
-            } catch (e: Exception) {
-                onError(exceptionHandlerUseCase.invoke(e))
+
+                is Response.Error -> {
+                    val errorMessage = exceptionHandlerUseCase.invoke(Exception(result.message))
+                    _uiState.value = UiState.Error(errorMessage)
+                    onError(errorMessage)
+                }
+
+                else -> {
+                    _uiState.value = UiState.Idle
+                }
             }
-
-
+        } catch (e: Exception) {
+            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            _uiState.value = UiState.Error(errorMessage)
+            onError(errorMessage)
         }
+    }
 
     private fun createUser(
         onError: (String) -> Unit,
@@ -113,7 +122,7 @@ class SignUpViewModel @Inject constructor(
         email: String,
         navController: NavController
     ) = viewModelScope.launch {
-
+        _uiState.value = UiState.Loading
         try {
             val result = createUserUseCase.createUser(
                 name = name,
@@ -123,26 +132,26 @@ class SignUpViewModel @Inject constructor(
             )
             when (result) {
                 is Response.Success -> {
+                    _uiState.value = UiState.Success("User created successfully")
                     navController.navigate(Screens.HomeNav.route)
                 }
 
                 is Response.Error -> {
-                    onError(exceptionHandlerUseCase.invoke(Exception(result.message)))
+                    val errorMessage = exceptionHandlerUseCase.invoke(Exception(result.message))
+                    _uiState.value = UiState.Error(errorMessage)
+                    onError(errorMessage)
                 }
 
                 else -> {
-                    onError("Unknown Error")
-
+                    val errorMessage = "Unknown Error"
+                    _uiState.value = UiState.Error(errorMessage)
+                    onError(errorMessage)
                 }
             }
         } catch (e: Exception) {
-            onError(exceptionHandlerUseCase.invoke(e))
+            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            _uiState.value = UiState.Error(errorMessage)
+            onError(errorMessage)
         }
-
-
     }
-
-
-
-
 }

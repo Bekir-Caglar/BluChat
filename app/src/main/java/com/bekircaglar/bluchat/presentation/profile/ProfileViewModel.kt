@@ -17,6 +17,7 @@ import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,15 +40,11 @@ class ProfileViewModel @Inject constructor(
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> get() = _error
-
     private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading
 
-    private var _state = MutableStateFlow(UiState.Loading)
-    val state: StateFlow<UiState> = _state
-
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState = _uiState.asStateFlow()
     init {
         getUserProfile()
     }
@@ -83,10 +80,14 @@ class ProfileViewModel @Inject constructor(
 
             }
             is Response.Error -> {
-                _error.value = result.message
+                _uiState.value = UiState.Error(result.message)
+            }
+
+            is Response.Loading ->{
+
             }
             else -> {
-                _error.value = "Unknown Error"
+
             }
         }
 
@@ -97,23 +98,26 @@ class ProfileViewModel @Inject constructor(
         uploadImage(uri)
     }
 
-    fun getUserProfile() = viewModelScope.launch {
-
+    private fun getUserProfile() = viewModelScope.launch {
+        _uiState.value = UiState.Loading
         getUserUseCase.invoke().collect{
             when(it) {
                 is Response.Success -> {
                     _users.value = it.data
-                    _state.value = UiState.Success
+                    _uiState.value = UiState.Success()
                 }
 
                 is Response.Error -> {
-                    _error.value = it.message
-                    _state.value = UiState.Error
+                    _uiState.value = UiState.Error(it.message)
 
                 }
                 is Response.Loading -> {
-                    _state.value = UiState.Loading
+                    _uiState.value = UiState.Loading
                 }
+                else -> {
+                    _uiState.value = UiState.Idle
+                }
+
             }
         }
     }
@@ -128,10 +132,9 @@ class ProfileViewModel @Inject constructor(
 
                     }
                     is Response.Error -> {
-                        _error.value = it.message
+                        _uiState.value = UiState.Error(it.message)
                     }
                     else -> {
-                        _error.value = "Unknown Error"
                     }
                 }
             }

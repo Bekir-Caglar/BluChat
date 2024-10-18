@@ -48,6 +48,8 @@ class SendTakenPhotoViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+                else -> {}
+
             }
         }
     }

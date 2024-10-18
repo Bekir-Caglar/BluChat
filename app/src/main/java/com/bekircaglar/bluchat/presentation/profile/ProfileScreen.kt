@@ -41,6 +41,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.MenuItem
 import com.bekircaglar.bluchat.navigation.Screens
@@ -67,14 +69,12 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
     var userImageUrl: String? = null
 
     val user by viewModel.users.collectAsStateWithLifecycle()
-    val error by viewModel.error.collectAsStateWithLifecycle()
 
     val currentUser = viewModel.users.collectAsStateWithLifecycle().value
     val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle()
     val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
     val isImageLoading by viewModel.isLoading.collectAsStateWithLifecycle()
-
-    val screenState by viewModel.state.collectAsStateWithLifecycle()
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
@@ -94,8 +94,11 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
         }
     }
 
-    if (error != null) {
-        ShowToastMessage(context = context, message = error.toString())
+    if (uiState is UiState.Error) {
+        val errorMessage = (uiState as UiState.Error).message
+        if (errorMessage != null) {
+            ShowToastMessage(context = context, message = errorMessage)
+        }
     } else {
         user?.let {
             userName = "${it.name} ${it.surname}"
@@ -146,7 +149,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                 showAccountDialog = false
             },
             onSave = { showAccountDialog = false },
-            profileImage1 = if (uploadedImageUri != null) uploadedImageUri else currentUser?.profileImageUrl,
+            profileImage = if (uploadedImageUri != null) uploadedImageUri else currentUser?.profileImageUrl,
             isImageLoading = isImageLoading,
             onImageSelected = { uri ->
                 viewModel.onImageSelected(uri)
@@ -178,12 +181,19 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                 .padding(it)
                 .fillMaxSize()
         ) {
-            if (screenState == UiState.Loading) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    CircularProgressIndicator()
+            if (uiState == UiState.Loading) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(250.dp)
+                        .background(color = MaterialTheme.colorScheme.secondary),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(80.dp),
+                    )
                 }
-            }
-            else {
+            } else {
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -192,20 +202,35 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
-                    Image(
-                        painter = if (!(userImageUrl.isNullOrEmpty())) rememberImagePainter(
-                            userImageUrl
-                        ) else painterResource(
-                            id = R.drawable.ic_outlined_profile
-                        ),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
+                    val painter = rememberAsyncImagePainter(model = userImageUrl)
+                    val painterState = painter.state
+                    Box(
                         modifier = Modifier
                             .size(120.dp)
                             .shadow(elevation = 5.dp, shape = CircleShape)
                             .clip(CircleShape)
-                            .background(color = Color.White)
-                    )
+                            .background(color = Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (painterState is AsyncImagePainter.State.Success){
+
+                        }else {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .background(color = Color.White, shape = CircleShape)
+                                    .size(80.dp)
+                            )
+                        }
+                        Image(
+                            painter = painter,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(120.dp)
+                        )
+
+                    }
+
+
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = userName,

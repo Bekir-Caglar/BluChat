@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.presentation.message
 
 import ChatBubble
+import VideoThumbnailComposable
 import android.content.Intent
 import android.net.Uri
 import android.os.Build
@@ -82,7 +83,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.core.content.ContextCompat.startActivity
 import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.VideoPlayerActivity
 
@@ -102,23 +102,24 @@ fun MessageScreen(navController: NavController, chatId: String) {
     var messageText by remember { mutableStateOf("") }
     var bottomSheetState by remember { mutableStateOf(false) }
     var imageSendDialogState by remember { mutableStateOf(false) }
-    var openCameraDialog by remember { mutableStateOf(false) }
-    var alertDialogState by remember { mutableStateOf(false) }
     var chatMessage by remember { mutableStateOf("") }
     var editedMessage by remember { mutableStateOf("") }
     val listState = rememberLazyListState()
 
     var pageNumber by remember { mutableStateOf(1) }
 
-    val imageCapture = remember { ImageCapture.Builder().build() }
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForPin by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForEdit by remember { mutableStateOf<Message?>(null) }
 
+    var videoUploadState by remember { mutableStateOf(false) }
+    var imageUploadState by remember { mutableStateOf(false) }
+
 
     val pinnedMessages by viewModel.pinnedMessages.collectAsStateWithLifecycle()
 
-    val screenState by viewModel.state.collectAsStateWithLifecycle()
+    val screenState by viewModel.uiState.collectAsStateWithLifecycle()
+    val moreMessageState by viewModel.moreMessageState.collectAsStateWithLifecycle()
 
     LaunchedEffect(Unit) {
         viewModel.getPinnedMessages(chatId)
@@ -130,14 +131,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
     ) { uri: Uri? ->
         uri?.let {
             viewModel.onImageSelected(it)
+            imageUploadState = true
         }
     }
 
     val videoLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
-    ) {uri: Uri? ->
+    ) { uri: Uri? ->
         uri?.let {
             viewModel.onVideoSelected(it)
+            videoUploadState = true
         }
     }
 
@@ -190,7 +193,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     }
     LaunchedEffect(startPagination) {
         if (startPagination && messages.size >= 15) {
-            viewModel.loadMoreMessages(moreLastKey = messages.lastOrNull()?.messageId,chatId)
+            viewModel.loadMoreMessages(moreLastKey = messages.lastOrNull()?.messageId, chatId)
             pageNumber++
         }
     }
@@ -314,25 +317,28 @@ fun MessageScreen(navController: NavController, chatId: String) {
             }
         },
     ) {
-        if (screenState == UiState.Loading) {
+        if (screenState is UiState.Loading) {
             Box(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                CircularProgressIndicator()
+                CircularProgressIndicator(
+                    modifier = Modifier.size(60.dp),
+                )
             }
-        } else {
-            LaunchedEffect(Unit){
-                listState.scrollToItem(messages.lastIndex)
+        } else if (screenState is UiState.Success) {
+            LaunchedEffect(Unit) {
+                listState.scrollToItem(messages.lastIndex + 1)
             }
 
             LaunchedEffect(listState.isScrollInProgress) {
                 listState.layoutInfo.visibleItemsInfo.forEach { visibleItem ->
-                        val myMessage = messages.find {
-                            visibleItem.key == it.messageId
-                        }
-                        if(myMessage?.read == false && myMessage.senderId != currentUser.uid)
-                            viewModel.markMessageAsRead(visibleItem.key.toString(),chatId)
+                    val myMessage = messages.find {
+                        visibleItem.key == it.messageId
+                    }
+                    if (myMessage?.read == false && myMessage.senderId != currentUser.uid)
+                        viewModel.markMessageAsRead(visibleItem.key.toString(), chatId)
 
                 }
             }
@@ -357,15 +363,25 @@ fun MessageScreen(navController: NavController, chatId: String) {
             }
 
             LaunchedEffect(uploadedImage) {
+                imageUploadState = false
                 if (uploadedImage != null) {
                     imageSendDialogState = true
                 }
             }
 
             LaunchedEffect(uploadedVideo) {
+                videoUploadState = false
                 if (uploadedVideo != null) {
-                    val encodedVideoUrl = URLEncoder.encode(uploadedVideo.toString(), StandardCharsets.UTF_8.toString())
-                    navController.navigate(Screens.SendTakenPhotoScreen.createRoute(encodedVideoUrl,chatId))
+                    val encodedVideoUrl = URLEncoder.encode(
+                        uploadedVideo.toString(),
+                        StandardCharsets.UTF_8.toString()
+                    )
+                    navController.navigate(
+                        Screens.SendTakenPhotoScreen.createRoute(
+                            encodedVideoUrl,
+                            chatId
+                        )
+                    )
                 }
             }
 
@@ -377,9 +393,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             "Photos" -> {
                                 permissionLauncherForGallery.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
                             }
+
                             "Video" -> {
                                 permissionLauncherForVideo.launch(android.Manifest.permission.READ_MEDIA_VIDEO)
                             }
+
                             "Camera" -> {
                                 permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                             }
@@ -387,7 +405,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     },
                     myList = listOf(
                         SheetOption("Photos", R.drawable.ic_photos),
-                        SheetOption("Video",R.drawable.ic_video_camera_media),
+                        SheetOption("Video", R.drawable.ic_video_camera_media),
                         SheetOption("Camera", R.drawable.ic_camera),
                         SheetOption("Location", R.drawable.ic_location),
                         SheetOption("Contact", R.drawable.ic_user_square),
@@ -396,8 +414,22 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 )
             }
 
-
             if (messages.isNotEmpty()) {
+                Column(modifier = Modifier.padding(it)) {
+                    if (moreMessageState is UiState.Loading) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(MaterialTheme.colorScheme.surface),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(24.dp)
+                            )
+                        }
+                    }
+                }
                 Column(modifier = Modifier.padding(it)) {
                     if (pinnedMessages.lastOrNull() != null) {
                         Row(
@@ -434,14 +466,22 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 )
                             }
                             pinnedMessages.lastOrNull()!!.imageUrl?.let { imageUrl ->
-                                Image(
-                                    painter = rememberImagePainter(data = imageUrl),
-                                    contentDescription = null,
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(50.dp)
-                                        .clip(MaterialTheme.shapes.medium)
-                                )
+                                if (imageUrl.contains(".mp4")) {
+                                    VideoThumbnailComposable(
+                                        context = context,
+                                        size = 50.dp,
+                                        videoUrl = imageUrl,
+                                        onVideoClick = {})
+                                } else {
+                                    Image(
+                                        painter = rememberImagePainter(data = imageUrl),
+                                        contentDescription = null,
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(50.dp)
+                                            .clip(MaterialTheme.shapes.medium)
+                                    )
+                                }
                             }
                         }
 
@@ -513,9 +553,12 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                                     )
                                                 )
                                             },
-                                            onvVideoClick = {videoUrl ->
-                                                val intent = Intent(context, VideoPlayerActivity::class.java).apply {
-                                                    putExtra("videoUri",videoUrl )
+                                            onvVideoClick = { videoUrl ->
+                                                val intent = Intent(
+                                                    context,
+                                                    VideoPlayerActivity::class.java
+                                                ).apply {
+                                                    putExtra("videoUri", videoUrl)
                                                 }
                                                 context.startActivity(intent)
                                             },
@@ -642,6 +685,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     context = context
                 )
             }
+        }
+    }
+    if (videoUploadState || imageUploadState) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator()
         }
     }
 }

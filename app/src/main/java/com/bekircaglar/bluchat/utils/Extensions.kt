@@ -9,6 +9,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
@@ -66,7 +67,6 @@ fun Modifier.chatBubbleModifier(isSentByMe: Boolean, onLongClick: () -> Unit): M
             }
         )
 }
-
 fun ImageLoader.getVideoThumbnail(context: Context, videoUrl: String): Bitmap? {
     val retriever = MediaMetadataRetriever()
     return try {

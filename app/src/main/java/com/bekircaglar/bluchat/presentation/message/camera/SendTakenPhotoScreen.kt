@@ -47,24 +47,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
     val viewModel: SendTakenPhotoViewModel = hiltViewModel()
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
-    val mediaItem: MediaItem
-    if (imageUrl.contains(".mp4")) {
-        mediaItem = imageUrl.let { MediaItem.fromUri(it) }
-    } else {
-        mediaItem = MediaItem.EMPTY
-    }
 
-    val mediaSource: MediaSource = remember {
-        ProgressiveMediaSource.Factory(DefaultHttpDataSource.Factory())
-            .createMediaSource(mediaItem ?: MediaItem.EMPTY)
-    }
-    val exoPlayer = remember {
-        ExoPlayer.Builder(context).build().apply {
-            setMediaSource(mediaSource)
-            playWhenReady = true
-            prepare()
-        }
-    }
 
     Column(
         modifier = Modifier
@@ -81,6 +64,19 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
             contentAlignment = Alignment.Center
         ) {
             if (imageUrl.contains(".mp4")) {
+                val mediaItem: MediaItem = imageUrl.let { MediaItem.fromUri(it) }
+
+                val mediaSource: MediaSource = remember {
+                    ProgressiveMediaSource.Factory(DefaultHttpDataSource.Factory())
+                        .createMediaSource(mediaItem ?: MediaItem.EMPTY)
+                }
+                val exoPlayer = remember {
+                    ExoPlayer.Builder(context).build().apply {
+                        setMediaSource(mediaSource)
+                        playWhenReady = true
+                        prepare()
+                    }
+                }
                 Player(exoPlayer = exoPlayer)
             } else {
                 Image(

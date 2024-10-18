@@ -1,4 +1,5 @@
 import android.content.Context
+import android.graphics.Bitmap
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -13,12 +14,14 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.filled.Star
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.Icon
@@ -26,6 +29,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -38,6 +42,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.ImageLoader
@@ -46,6 +51,8 @@ import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.utils.chatBubbleModifier
 import com.bekircaglar.bluchat.utils.getVideoThumbnail
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -226,6 +233,7 @@ fun ChatBubble(
         }
     }
 }
+
 @Composable
 fun MessageDropdownMenu(
     expanded: Boolean,
@@ -235,8 +243,8 @@ fun MessageDropdownMenu(
     onDeleteClick: () -> Unit,
     onPinMessageClick: () -> Unit,
     onUnPinMessageClick: () -> Unit,
-    onStarMessage : () -> Unit,
-    onUnStarMessage : () -> Unit
+    onStarMessage: () -> Unit,
+    onUnStarMessage: () -> Unit
 ) {
 
     DropdownMenu(
@@ -278,9 +286,9 @@ fun MessageDropdownMenu(
                 .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
                 .background(color = MaterialTheme.colorScheme.background),
             onClick = {
-                if (message.pinned == true){
+                if (message.pinned == true) {
                     onUnPinMessageClick()
-                }else{
+                } else {
                     onPinMessageClick()
                 }
                 onDismissRequest()
@@ -306,9 +314,9 @@ fun MessageDropdownMenu(
                 .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
                 .background(color = MaterialTheme.colorScheme.background),
             onClick = {
-                if (message.starred == true){
+                if (message.starred == true) {
                     onUnStarMessage()
-                }else{
+                } else {
                     onStarMessage()
                 }
                 onDismissRequest()
@@ -332,8 +340,7 @@ fun MessageDropdownMenu(
             modifier = Modifier
                 .padding(vertical = 4.dp)
                 .shadow(elevation = 5.dp, shape = MaterialTheme.shapes.medium)
-                .background(color = MaterialTheme.colorScheme.background)
-            ,
+                .background(color = MaterialTheme.colorScheme.background),
             onClick = {
                 onDeleteClick()
                 onDismissRequest()
@@ -357,31 +364,40 @@ fun MessageDropdownMenu(
     }
 
 }
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun VideoThumbnailComposable(context:Context, videoUrl: String, onVideoClick: (String) -> Unit, isShapeShouldSquare:Boolean = true) {
-
+fun VideoThumbnailComposable(
+    context: Context,
+    videoUrl: String,
+    onVideoClick: (String) -> Unit,
+    size: Dp = 200.dp,
+    isShapeShouldSquare: Boolean = true
+) {
     val imageLoader = remember { ImageLoader(context) }
-    val videoThumbnail by remember {
-        mutableStateOf(imageLoader.getVideoThumbnail(context, videoUrl))
+    var videoThumbnail by remember { mutableStateOf<Bitmap?>(null) }
+
+    LaunchedEffect(videoUrl) {
+        videoThumbnail = withContext(Dispatchers.IO) {
+            imageLoader.getVideoThumbnail(context, videoUrl)
+        }
     }
 
     videoThumbnail?.let { bitmap ->
-        Box(){
+        Box {
             Image(
                 painter = rememberImagePainter(bitmap),
                 contentDescription = "Video Thumbnail",
-                modifier = if (isShapeShouldSquare){
+                modifier = if (isShapeShouldSquare) {
                     Modifier
-                        .size(200.dp)
+                        .size(size)
                         .clip(shape = RoundedCornerShape(12.dp))
                         .combinedClickable(
                             enabled = true,
                             onClick = {
                                 onVideoClick(videoUrl)
                             },
-                            onLongClick = {
-                            }
+                            onLongClick = {}
                         )
                 } else {
                     Modifier
@@ -389,13 +405,27 @@ fun VideoThumbnailComposable(context:Context, videoUrl: String, onVideoClick: (S
                 },
                 contentScale = ContentScale.Crop
             )
+
             Icon(
                 imageVector = Icons.Default.PlayArrow,
                 contentDescription = "play button",
                 modifier = Modifier
-                    .size(60.dp)
+                    .background(color = Color.Black.copy(alpha = 0.3f), shape = CircleShape)
+                    .size((size/3))
                     .align(alignment = Alignment.Center)
             )
+
+
+        }
+    } ?: run {
+        Box(
+            contentAlignment = Alignment.Center,
+            modifier = Modifier
+                .size(size)
+                .background(Color.Black, shape = RoundedCornerShape(12.dp))
+        ) {
+            CircularProgressIndicator(modifier = Modifier.size(size/4))
+
         }
     }
 }

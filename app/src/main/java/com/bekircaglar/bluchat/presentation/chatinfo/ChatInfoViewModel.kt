@@ -23,6 +23,7 @@ import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -67,11 +68,8 @@ class ChatInfoViewModel @Inject constructor(
     private val _otherUser = MutableStateFlow<Users>(Users())
     val otherUser = _otherUser.asStateFlow()
 
-    private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
-    val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    private val _selectedImageUri = MutableStateFlow<Uri?>(null)
+    val selectedImageUri: StateFlow<Uri?> = _selectedImageUri
 
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
@@ -79,11 +77,14 @@ class ChatInfoViewModel @Inject constructor(
     private val _ChatImages = MutableStateFlow<List<String>>(emptyList())
     val ChatImages: StateFlow<List<String>> = _ChatImages
 
-    private val _stateOfUserListState = MutableStateFlow(UiState.Loading)
+    private val _stateOfUserListState =MutableStateFlow<UiState>(UiState.Idle)
     val stateOfUserListState = _stateOfUserListState.asStateFlow()
 
-    private val _chatImagesState = MutableStateFlow(UiState.Loading)
+    private val _chatImagesState = MutableStateFlow<UiState>(UiState.Idle)
     val chatImagesState = _chatImagesState.asStateFlow()
+
+    private val _uploadImageState = MutableStateFlow<UiState>(UiState.Idle)
+    val uploadImageState = _uploadImageState.asStateFlow()
 
 
     init {
@@ -111,6 +112,10 @@ class ChatInfoViewModel @Inject constructor(
 
     }
 
+    fun setChatImagesState(uiState: UiState){
+        _chatImagesState.value = uiState
+    }
+
     fun getChatImages(chatId: String) = viewModelScope.launch {
         getChatImagesUseCase(chatId).collect { response ->
             when (response) {
@@ -121,11 +126,13 @@ class ChatInfoViewModel @Inject constructor(
                 is Response.Success -> {
                     val imageUrlList = response.data
                     _ChatImages.value = imageUrlList
-                    _chatImagesState.value = UiState.Success
                 }
 
                 is Response.Error -> {
-                    _chatImagesState.value = UiState.Error
+                    _chatImagesState.value = UiState.Error(response.message)
+                }
+                else -> {
+                    _chatImagesState.value = UiState.Idle
                 }
             }
         }
@@ -133,7 +140,6 @@ class ChatInfoViewModel @Inject constructor(
 
     fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String) =
         viewModelScope.launch {
-
             updateChatInfoUseCase(chatId, chatName, chatImageUrl)
         }
 
@@ -150,6 +156,10 @@ class ChatInfoViewModel @Inject constructor(
                 }
 
                 is Response.Error -> {
+                    _stateOfUserListState.value = UiState.Error(response.message)
+                }
+                else -> {
+
                 }
             }
         }
@@ -162,19 +172,25 @@ class ChatInfoViewModel @Inject constructor(
 
     private fun uploadImage(uri: Uri) {
         viewModelScope.launch {
-            _isLoading.value = true
+            _uploadImageState.value = UiState.Loading
             uploadImageUseCase.invoke(uri).collect {
                 when (it) {
                     is Response.Success -> {
                         _uploadedImageUri.value = it.data.toUri()
-                        _isLoading.value = false
-
+                        _uploadImageState.value = UiState.Success()
                     }
 
                     is Response.Error -> {
+                        _stateOfUserListState.value = UiState.Error(it.message)
+
+                    }
+
+                    is Response.Loading -> {
+                        _uploadImageState.value = UiState.Loading
                     }
 
                     else -> {
+                        _stateOfUserListState.value = UiState.Idle
                     }
                 }
             }
@@ -197,6 +213,10 @@ class ChatInfoViewModel @Inject constructor(
                 }
 
                 is Response.Error -> {
+                    _stateOfUserListState.value = UiState.Error(response.message)
+                }
+                else -> {
+                    _stateOfUserListState.value = UiState.Idle
                 }
             }
         }
@@ -204,31 +224,33 @@ class ChatInfoViewModel @Inject constructor(
 
     private fun getUsersFromUserId(userIdList: List<String?>) = viewModelScope.launch {
         val userList = mutableListOf<Users>()
+        _stateOfUserListState.value = UiState.Loading
         userIdList.forEach { userId ->
             launch {
                 getUserUseCase.getUserData(userId!!).collect { response ->
                     when (response) {
                         is Response.Loading -> {
                             _stateOfUserListState.value = UiState.Loading
-
                         }
 
                         is Response.Success -> {
                             userList.add(response.data)
                             _chatUserList.value = userList
                             _otherUser.value = userList.first { it.uid != currentUser.uid }
-                            _stateOfUserListState.value = UiState.Success
 
                         }
 
                         is Response.Error -> {
-                            _stateOfUserListState.value = UiState.Error
-
+                            _stateOfUserListState.value = UiState.Error(response.message)
+                        }
+                        else -> {
+                            _stateOfUserListState.value = UiState.Idle
                         }
                     }
                 }
             }
         }
+        _stateOfUserListState.value = UiState.Success()
     }
 
 

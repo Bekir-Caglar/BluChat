@@ -13,18 +13,13 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -37,30 +32,26 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.UiEvent
 import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
-import com.bekircaglar.bluchat.utils.placeholder
-import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
@@ -70,6 +61,7 @@ import com.bekircaglar.bluchat.presentation.chat.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
+import kotlinx.coroutines.delay
 
 @Composable
 fun ChatListScreen(navController: NavController) {
@@ -87,6 +79,8 @@ fun ChatListScreen(navController: NavController) {
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
+    val chatPPImageState by viewModel.chatPPImageState.collectAsStateWithLifecycle()
+
     val selectedImageUri by viewModel.selectedImageUri.collectAsStateWithLifecycle()
 
     val searchResults by viewModel.searchResults.collectAsStateWithLifecycle()
@@ -96,16 +90,12 @@ fun ChatListScreen(navController: NavController) {
 
     val uploadedImageUri by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
 
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle()
+    val uploadImageState by viewModel.UploadImageState.collectAsStateWithLifecycle()
 
-    val error by viewModel.error.collectAsStateWithLifecycle()
-    val success by viewModel.success.collectAsStateWithLifecycle()
 
     var groupMembers by remember { mutableStateOf(emptyList<String>()) }
 
-    if (error != null) {
-        ShowToastMessage(context = context, message = error!!)
-    }
+
     val galleryLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.GetContent()
     ) { uri: Uri? ->
@@ -169,140 +159,138 @@ fun ChatListScreen(navController: NavController) {
             ChatAppBottomAppBar(navController = navController)
         }
     ) {
-        when (uiState) {
-            UiState.Loading -> {
+
+        if (uiState is UiState.Loading) {
+
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(it)
+                    .background(MaterialTheme.colorScheme.background),
+            ) {
+                repeat(10) {
+                    item {
+                        ShimmerItem()
+                    }
+                }
+            }
+        } else if (uiState == UiState.Success() ) {
+            if (selectGroupUserDialog) {
+                SelectGroupMemberDialog(
+                    searchResults = searchResults,
+                    textFieldValue = textFieldValue,
+                    onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                    onDismiss = {
+                        selectGroupUserDialog = false
+                    },
+                    onNext = {
+                        groupMembers = it
+                        createGroupChatDialog = true
+                        selectGroupUserDialog = false
+                    },
+                )
+            }
+
+            if (addChatActive) {
+                OpenChatDialog(
+                    searchResults = searchResults,
+                    textFieldValue = textFieldValue,
+                    onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
+                    onDismiss = {
+                        addChatActive = false
+                    },
+                    navController = navController,
+                    onItemClick = {
+                        viewModel.createChatRoom(it.uid, navController)
+                        addChatActive = false
+                    }
+                )
+            }
+
+            if (isBottomSheetVisible) {
+                BottomSheet(
+                    onDismiss = { isBottomSheetVisible = false },
+                    onClicked = {
+                        when (it) {
+                            "New Chat" -> addChatActive = true
+                            "Create Group Chat" -> selectGroupUserDialog = true
+                        }
+                    }
+                )
+            }
+            if (createGroupChatDialog) {
+                GroupChatDialog(
+                    selectedUri = selectedImageUri,
+                    onDismissRequest = { createGroupChatDialog = false },
+                    onCreateGroupChat = { groupChatName ->
+                        viewModel.createGroupChatRoom(
+                            groupMembers,
+                            groupChatName,
+                            uploadedImageUri.toString()
+                        )
+                        createGroupChatDialog = false
+                    },
+                    isImageLoading = uploadImageState == UiState.Loading,
+                    onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
+                )
+            }
+
+            Spacer(modifier = Modifier.padding(top = 16.dp))
+
+            if (chatList.isNotEmpty()) {
                 LazyColumn(
                     modifier = Modifier
                         .fillMaxSize()
                         .padding(it)
                         .background(MaterialTheme.colorScheme.background),
                 ) {
-                    repeat(10) {
-                        item {
-                            ShimmerItem()
-                        }
-                    }
-
-                }
-
-            }
-
-
-            UiState.Success -> {
-                if (selectGroupUserDialog) {
-                    SelectGroupMemberDialog(
-                        searchResults = searchResults,
-                        textFieldValue = textFieldValue,
-                        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-                        onDismiss = {
-                            selectGroupUserDialog = false
+                    items(chatList) { chat ->
+                        val myChat = Chats(
+                            chatRoomId = chat.chatRoomId,
+                            imageUrl = chat.imageUrl,
+                            name = chat.name,
+                            surname = chat.surname,
+                            lastMessage = chat.lastMessage,
+                            messageTime = chat.messageTime,
+                            isOnline = chat.isOnline
+                        )
+                        Chats(chat = myChat, onClick = {
+                            navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
                         },
-                        onNext = {
-                            groupMembers = it
-                            createGroupChatDialog = true
-                            selectGroupUserDialog = false
-                        },
-                    )
-                }
-
-                if (addChatActive) {
-                    OpenChatDialog(
-                        searchResults = searchResults,
-                        textFieldValue = textFieldValue,
-                        onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
-                        onDismiss = {
-                            addChatActive = false
-                        },
-                        navController = navController,
-                        onItemClick = {
-                            viewModel.createChatRoom(it.uid, navController)
-                            addChatActive = false
-                        }
-                    )
-                }
-
-                if (isBottomSheetVisible) {
-                    BottomSheet(
-                        onDismiss = { isBottomSheetVisible = false },
-                        onClicked = {
-                            when (it) {
-                                "New Chat" -> addChatActive = true
-                                "Create Group Chat" -> selectGroupUserDialog = true
+                            onImageLoaded = {
+                                viewModel.changeImageState()
                             }
-                        }
-                    )
-                }
-                if (createGroupChatDialog) {
-                    GroupChatDialog(
-                        selectedUri = selectedImageUri,
-                        onDismissRequest = { createGroupChatDialog = false },
-                        onCreateGroupChat = { groupChatName ->
-                            viewModel.createGroupChatRoom(
-                                groupMembers,
-                                groupChatName,
-                                uploadedImageUri.toString()
-                            )
-                            createGroupChatDialog = false
-                        },
-                        isImageLoading = isLoading,
-                        onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
-                    )
-                }
-
-                Spacer(modifier = Modifier.padding(top = 16.dp))
-
-                if (chatList.isNotEmpty()) {
-                    LazyColumn(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .padding(it)
-                            .background(MaterialTheme.colorScheme.background),
-                    ) {
-//                      itemsIndexed() kullanarak divider kullanımını düzelt indexin 1 eksiğinie göre düzelt
-                        items(chatList) { chat ->
-                            val myChat = Chats(
-                                chatRoomId = chat.chatRoomId,
-                                imageUrl = chat.imageUrl,
-                                name = chat.name,
-                                surname = chat.surname,
-                                lastMessage = chat.lastMessage,
-                                messageTime = chat.messageTime,
-                                isOnline = chat.isOnline
-                            )
-                            Chats(chat = myChat, onClick = {
-                                navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
-                            }
-                            )
-                            HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                        }
+                        )
+                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                     }
-                } else {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
+                }
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
                     ) {
-                        Column(
-                            horizontalAlignment = Alignment.CenterHorizontally,
-                            verticalArrangement = Arrangement.Center
-                        ) {
-                            Image(
-                                painter = painterResource(id = R.drawable.sticker_shake_hand),
-                                contentDescription = "Chat",
-                                modifier = Modifier.size(200.dp)
-                            )
-                            Spacer(modifier = Modifier.height(64.dp))
-                            Text(
-                                text = "No chats yet!",
-                                style = MaterialTheme.typography.titleLarge
-                            )
-                        }
+                        Image(
+                            painter = painterResource(id = R.drawable.sticker_shake_hand),
+                            contentDescription = "Chat",
+                            modifier = Modifier.size(200.dp)
+                        )
+                        Spacer(modifier = Modifier.height(64.dp))
+                        Text(
+                            text = "No chats yet!",
+                            style = MaterialTheme.typography.titleLarge
+                        )
                     }
                 }
             }
-
-            UiState.Error -> {
-                // Handle error state if needed
-            }
+        } else if (uiState is UiState.Error) {
+            val errorMessage = (uiState as UiState.Error).message
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+        } else {
+            // Handle other states if necessary
         }
     }
 }

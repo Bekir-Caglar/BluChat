@@ -8,6 +8,7 @@ import androidx.lifecycle.viewModelScope
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.domain.model.Users
 
 import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
@@ -30,6 +31,8 @@ import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
@@ -44,16 +47,23 @@ class SignInViewModel @Inject constructor(
     private val checkIsUserAlreadyExistUseCase: CheckIsUserAlreadyExistUseCase,
     private val signOutUseCase: SignOutUseCase
 ) : ViewModel() {
-    private lateinit var googleSignInClient: GoogleSignInClient
 
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState: StateFlow<UiState> = _uiState
+
+    private lateinit var googleSignInClient: GoogleSignInClient
 
     fun signOut(context: Context, onSuccess: () -> Unit, onError: (String) -> Unit) =
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             try {
                 signOutUseCase(context = context)
+                _uiState.value = UiState.Success("Signed out successfully")
                 onSuccess()
             } catch (e: Exception) {
-                onError(exceptionHandlerUseCase.invoke(e))
+                val errorMessage = exceptionHandlerUseCase.invoke(e)
+                _uiState.value = UiState.Error(errorMessage)
+                onError(errorMessage)
             }
         }
 
@@ -75,36 +85,45 @@ class SignInViewModel @Inject constructor(
         onError: (String) -> Unit,
         onPhoneNumberNotExist: () -> Unit
     ) = viewModelScope.launch {
+        _uiState.value = UiState.Loading
         val token = result.accessToken.token
         val credential = FacebookAuthProvider.getCredential(token)
         val authResult = Firebase.auth.signInWithCredential(credential).await()
 
         val user = authResult.user ?: return@launch onError("User is null")
 
-        val email = user.email?: return@launch onError("Email is null")
+        val email = user.email ?: return@launch onError("Email is null")
 
         checkIsUserAlreadyExistUseCase(email).collect { response ->
             when (response) {
                 is Response.Success -> {
                     if (response.data) {
+                        _uiState.value = UiState.Success("User exists")
                         onSuccess()
                     } else {
                         if (user.phoneNumber.isNullOrBlank()) {
+                            _uiState.value = UiState.Error("Phone number not exist")
                             onPhoneNumberNotExist()
-
                         } else {
                             saveUserToDatabase(user, onSuccess, onError)
+                            _uiState.value = UiState.Success("User saved to database")
                             onSuccess()
                         }
                     }
                 }
 
                 is Response.Error -> {
-                    onError(response.message)
+                    val errorMessage = response.message
+                    _uiState.value = UiState.Error(errorMessage)
+                    onError(errorMessage)
                 }
 
                 is Response.Loading -> {
+                    _uiState.value = UiState.Loading
+                }
 
+                is Response.Idle -> {
+                    _uiState.value = UiState.Idle
                 }
             }
         }
@@ -116,6 +135,7 @@ class SignInViewModel @Inject constructor(
         onPhoneNumberNotExist: () -> Unit,
         onError: (String) -> Unit,
     ) {
+        _uiState.value = UiState.Loading
         try {
             val account = task.getResult(ApiException::class.java)
             val idToken = account?.idToken ?: return onError("ID token is null")
@@ -131,34 +151,47 @@ class SignInViewModel @Inject constructor(
                         when (response) {
                             is Response.Success -> {
                                 if (response.data) {
+                                    _uiState.value = UiState.Success("User exists")
                                     onSuccess()
                                 } else {
                                     if (user.phoneNumber.isNullOrBlank()) {
+                                        _uiState.value = UiState.Error("Phone number not exist")
                                         onPhoneNumberNotExist()
                                     } else {
                                         saveUserToDatabase(user, onSuccess, onError)
+                                        _uiState.value = UiState.Success("User saved to database")
                                         onSuccess()
                                     }
                                 }
                             }
 
                             is Response.Error -> {
-                                onError(response.message)
+                                val errorMessage = response.message
+                                _uiState.value = UiState.Error(errorMessage)
+                                onError(errorMessage)
                             }
 
                             is Response.Loading -> {
-                                // Handle loading state if needed
+                                _uiState.value = UiState.Loading
+                            }
+
+                            is Response.Idle -> {
+                                _uiState.value = UiState.Idle
                             }
                         }
                     }
                 } catch (e: CancellationException) {
-
+                    _uiState.value = UiState.Idle
                 } catch (e: Exception) {
-                    onError(e.message ?: "Authentication failed")
+                    val errorMessage = e.message ?: "Authentication failed"
+                    _uiState.value = UiState.Error(errorMessage)
+                    onError(errorMessage)
                 }
             }
         } catch (e: ApiException) {
-            onError(exceptionHandlerUseCase.invoke(e))
+            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            _uiState.value = UiState.Error(errorMessage)
+            onError(errorMessage)
         }
     }
 
@@ -167,28 +200,30 @@ class SignInViewModel @Inject constructor(
     ) {
         val googleUser = Users(
             uid = user?.id ?: "",
-            name = user?.displayName ?: "",
+            name = user?.givenName ?: "",
+            surname = user?.familyName ?: "",
             email = user?.email ?: "",
             profileImageUrl = user?.photoUrl.toString(),
             phoneNumber = phoneNumber
         )
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             try {
                 createUserUseCase.createUser(
                     name = googleUser.name,
-                    surname = " ",
+                    surname = googleUser.surname,
                     phoneNumber = googleUser.phoneNumber,
                     email = googleUser.email,
                     userImageUrl = googleUser.profileImageUrl
                 )
+                _uiState.value = UiState.Success("User saved to database")
                 onSuccess()
-
             } catch (e: Exception) {
-                Log.e("SaveUser", "Error creating user: ${e.message}")
+                val errorMessage = e.message ?: "Error creating user"
+                _uiState.value = UiState.Error(errorMessage)
+                Log.e("SaveUser", errorMessage)
             }
         }
-
-
     }
 
     private fun saveUserToDatabase(
@@ -203,6 +238,7 @@ class SignInViewModel @Inject constructor(
         )
 
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             try {
                 createUserUseCase.createUser(
                     name = googleUser.name,
@@ -211,34 +247,40 @@ class SignInViewModel @Inject constructor(
                     email = googleUser.email,
                     userImageUrl = googleUser.profileImageUrl
                 )
+                _uiState.value = UiState.Success("User saved to database")
                 onSuccess()
             } catch (e: Exception) {
-                onError(e.message ?: "User creation failed")
+                val errorMessage = e.message ?: "User creation failed"
+                _uiState.value = UiState.Error(errorMessage)
+                onError(errorMessage)
             }
         }
     }
 
     fun signIn(email: String, password: String, onSuccess: () -> Unit, onError: (String) -> Unit) =
         viewModelScope.launch {
+            _uiState.value = UiState.Loading
             try {
-
                 when (val result = authUseCase.signInUseCase.invoke(email, password)) {
                     is Response.Success -> {
+                        _uiState.value = UiState.Success("Signed in successfully")
                         onSuccess()
                     }
 
                     is Response.Error -> {
-                        onError(
-                            exceptionHandlerUseCase.invoke(Exception(result.message))
-                        )
+                        val errorMessage = exceptionHandlerUseCase.invoke(Exception(result.message))
+                        _uiState.value = UiState.Error(errorMessage)
+                        onError(errorMessage)
                     }
 
                     else -> {
-
+                        _uiState.value = UiState.Idle
                     }
                 }
             } catch (e: Exception) {
-                onError(exceptionHandlerUseCase.invoke(e))
+                val errorMessage = exceptionHandlerUseCase.invoke(e)
+                _uiState.value = UiState.Error(errorMessage)
+                onError(errorMessage)
             }
         }
 }
