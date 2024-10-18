@@ -110,6 +110,9 @@ class MessageRepositoryImp @Inject constructor(
                 is Response.Loading -> {
 
                 }
+                is Response.Idle -> {
+
+                }
             }
         }
     }
@@ -126,6 +129,10 @@ class MessageRepositoryImp @Inject constructor(
                     }
 
                     is Response.Loading -> {
+
+                    }
+
+                    is Response.Idle -> {
 
                     }
                 }
@@ -293,42 +300,43 @@ class MessageRepositoryImp @Inject constructor(
         }
 
     override suspend fun getPinnedMessages(chatId: String): Flow<Response<List<Message>>> =
-        callbackFlow {
-            val dbRef =
-                databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("pinnedMessages")
+    callbackFlow {
+        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("pinnedMessages")
 
-            val listener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val pinnedMessageIds =
-                        snapshot.getValue(object : GenericTypeIndicator<List<String>>() {})
-                            ?: listOf()
+        val listener = object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val pinnedMessageIds = snapshot.getValue(object : GenericTypeIndicator<List<String>>() {}) ?: listOf()
 
-                    val messageList = mutableListOf<Message>()
-                    for (messageId in pinnedMessageIds) {
-                        val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
-                            .child(STORED_MESSAGES).child(messageId)
-                        messageRef.get().addOnSuccessListener { messageSnapshot ->
-                            val message = messageSnapshot.getValue(Message::class.java)
-                            if (message != null) {
-                                messageList.add(message)
-                            }
-                            if (messageList.size == pinnedMessageIds.size) {
-                                trySend(Response.Success(messageList))
-                            }
-                        }.addOnFailureListener { exception ->
-                            trySend(Response.Error(exception.message.toString()))
-                        }
-                    }
+                if (pinnedMessageIds.isEmpty()) {
+                    trySend(Response.Success(emptyList()))
+                    return
                 }
 
-                override fun onCancelled(error: DatabaseError) {
-                    trySend(Response.Error(error.message))
+                val messageList = mutableListOf<Message>()
+                for (messageId in pinnedMessageIds) {
+                    val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+                    messageRef.get().addOnSuccessListener { messageSnapshot ->
+                        val message = messageSnapshot.getValue(Message::class.java)
+                        if (message != null) {
+                            messageList.add(message)
+                        }
+                        if (messageList.size == pinnedMessageIds.size) {
+                            trySend(Response.Success(messageList))
+                        }
+                    }.addOnFailureListener { exception ->
+                        trySend(Response.Error(exception.message.toString()))
+                    }
                 }
             }
 
-            dbRef.addValueEventListener(listener)
-            awaitClose { dbRef.removeEventListener(listener) }
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Response.Error(error.message))
+            }
         }
+
+        dbRef.addValueEventListener(listener)
+        awaitClose { dbRef.removeEventListener(listener) }
+    }
 
     override suspend fun starMessage(messageId: String, chatId: String): Flow<Response<String>> =
         callbackFlow {

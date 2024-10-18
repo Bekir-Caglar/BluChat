@@ -36,6 +36,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
@@ -47,7 +49,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransforma
 fun AccountDialog(
     onDismissRequest: () -> Unit,
     onSave: () -> Unit,
-    profileImage1: Any?,
+    profileImage: Any?,
     isImageLoading: Boolean,
     currentUsers: Users,
     onImageSelected: (Uri) -> Unit,
@@ -89,16 +91,33 @@ fun AccountDialog(
                         }
                     }
                 ) {
-                    Image(
-                        painter = rememberImagePainter(data = profileImage1),
-                        contentDescription = "Profile Image",
-                        contentScale = ContentScale.Crop,
+                    val painter = rememberAsyncImagePainter(model = profileImage)
+                    val painterState = painter.state
+                    Box(
                         modifier = Modifier
-                            .size(100.dp)
+                            .size(120.dp)
                             .shadow(elevation = 5.dp, shape = CircleShape)
                             .clip(CircleShape)
-                            .background(Color.White)
-                    )
+                            .background(color = Color.White),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (painterState is AsyncImagePainter.State.Success) {
+
+                        } else {
+                            CircularProgressIndicator(
+                                modifier = Modifier
+                                    .background(color = Color.White, shape = CircleShape)
+                                    .size(80.dp)
+                            )
+                        }
+                        Image(
+                            painter = painter,
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier.size(120.dp)
+                        )
+
+                    }
                     Icon(
                         imageVector = Icons.Default.Create,
                         contentDescription = null,
@@ -111,7 +130,10 @@ fun AccountDialog(
                             .padding(4.dp)
                     )
                     if (isImageLoading) {
-                        CircularProgressIndicator()
+                        CircularProgressIndicator(
+                            modifier = Modifier
+                                .size(80.dp)
+                        )
                     }
                 }
 
@@ -153,7 +175,7 @@ fun AccountDialog(
                                 name,
                                 surname,
                                 phoneNumber,
-                                profileImage1.toString(),
+                                profileImage.toString(),
                                 {
                                     onDismissRequest()
                                     onSave()

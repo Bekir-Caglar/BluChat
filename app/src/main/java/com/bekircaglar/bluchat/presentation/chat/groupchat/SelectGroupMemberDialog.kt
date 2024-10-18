@@ -129,7 +129,10 @@ fun SelectGroupMemberDialog(
                                     selectedUsers.toMutableList().apply { add(contact) }
                                 }
                             },
-                            isSelected = selectedUsers.contains(contact)
+                            isSelected = selectedUsers.contains(contact),
+                            onImageLoaded = {
+
+                            }
                         )
                     }
                 }

@@ -26,6 +26,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material3.Button
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -61,6 +62,7 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.UiState
 import com.bekircaglar.bluchat.presentation.auth.component.LoginFacebookButton
 import com.facebook.CallbackManager
 import com.facebook.FacebookCallback
@@ -102,7 +104,6 @@ fun SignInScreen(navController: NavController) {
                 },
                 onPhoneNumberNotExist = {
                     phoneNumberDialogState = true
-
                 },
             )
         } else {
@@ -125,17 +126,14 @@ fun SignInScreen(navController: NavController) {
             onDismiss = {
                 phoneNumberDialogState = false
                 viewModel.signOut(context,
-                    onSuccess = {
-
-                    },
-                    onError = {
-
-                    }
+                    onSuccess = {},
+                    onError = {}
                 )
             }
         )
     }
 
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
     Scaffold(
         topBar = {
@@ -152,7 +150,6 @@ fun SignInScreen(navController: NavController) {
                             fontWeight = FontWeight.Bold,
                             style = MaterialTheme.typography.headlineMedium,
                             modifier = Modifier.padding(end = 30.dp)
-
                         )
                     }
                 },
@@ -167,8 +164,6 @@ fun SignInScreen(navController: NavController) {
                 .background(color = MaterialTheme.colorScheme.background),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-
-
             Box(
                 contentAlignment = Alignment.TopStart,
                 modifier = Modifier
@@ -178,7 +173,7 @@ fun SignInScreen(navController: NavController) {
                     .background(color = MaterialTheme.colorScheme.background)
             ) {
                 AuthTextField(
-                    hint = { Text(text = stringResource(R.string.enter_your_email)) },
+                    hint = stringResource(R.string.enter_your_email),
                     value = email,
                     onValueChange = { email = it },
                     leadingIcon = Icons.Default.Email,
@@ -187,9 +182,7 @@ fun SignInScreen(navController: NavController) {
                 )
             }
 
-
             Spacer(modifier = Modifier.padding(top = 16.dp))
-
 
             Box(
                 contentAlignment = Alignment.Center,
@@ -200,7 +193,7 @@ fun SignInScreen(navController: NavController) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AuthTextField(
-                        hint = { Text(text = stringResource(R.string.enter_your_password)) },
+                        hint = stringResource(R.string.enter_your_password),
                         value = password,
                         onValueChange = { password = it },
                         leadingIcon = Icons.Default.Lock,
@@ -239,20 +232,17 @@ fun SignInScreen(navController: NavController) {
 
                     Spacer(modifier = Modifier.padding(top = 16.dp))
 
-
                     Row(
                         modifier = Modifier
                             .fillMaxWidth(),
                         horizontalArrangement = Arrangement.Center
-
                     ) {
                         Text(
                             text = stringResource(R.string.dont_have_account),
                             color = MaterialTheme.colorScheme.onSurface,
-                            modifier = Modifier
-                                .clickable {
-                                    navController.navigate(Screens.SingUpScreen.route)
-                                },
+                            modifier = Modifier.clickable {
+                                navController.navigate(Screens.SingUpScreen.route)
+                            },
                             textAlign = TextAlign.Center
                         )
                     }
@@ -270,7 +260,6 @@ fun SignInScreen(navController: NavController) {
                     AuthButton(
                         onClick = {
                             googleSignInLauncher.launch(viewModel.getGoogleSignInIntent())
-
                         },
                         buttonIcon = painterResource(id = R.drawable.ic_google),
                         buttonText = stringResource(R.string.google_login),
@@ -286,7 +275,7 @@ fun SignInScreen(navController: NavController) {
                         buttonText = stringResource(R.string.facebook_login),
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(16.dp),
+                            .padding(vertical = 16.dp),
                         handleFacebookSignInResult = {
                             viewModel.handleFacebookSignInResult(
                                 result = it,
@@ -300,19 +289,27 @@ fun SignInScreen(navController: NavController) {
                                 },
                                 onPhoneNumberNotExist = {
                                     phoneNumberDialogState = true
-
                                 },
                             )
                         }
                     )
-
-
                 }
-
             }
         }
-
     }
-
-
+    if (uiState is UiState.Error){
+        (uiState as UiState.Error).message?.let { ShowToastMessage(context, it) }
+    }
+    if (uiState is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(modifier = Modifier
+                .size(50.dp)
+                .align(Alignment.Center))
+        }
+    }
 }

@@ -64,7 +64,11 @@ fun OpenChatDialog(
                         )
                         Chats(myChat, onClick = {
                             onItemClick(contact)
-                        })
+                        },
+                            onImageLoaded = {
+
+                            }
+                        )
                     }
                 }
             }

@@ -9,6 +9,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
@@ -16,6 +17,7 @@ import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Lock
 import androidx.compose.material.icons.filled.Person
 import androidx.compose.material.icons.filled.Phone
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
@@ -33,9 +35,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
@@ -43,6 +47,9 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.data.repository.PasswordValidatorImpl
+import com.bekircaglar.bluchat.domain.repository.PasswordValidator
 import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransformation
 import com.bekircaglar.bluchat.utils.passwordBorder
 
@@ -58,10 +65,11 @@ fun SignUpScreen(navController: NavController) {
     var passwordError by remember { mutableStateOf<String?>(null) }
     val context = LocalContext.current
 
-    // burayı extention olarak yap (interface)
+    val uiState by viewModel.uiState.collectAsStateWithLifecycle()
+
+    val passwordValidator = remember { PasswordValidatorImpl() }
     fun isPasswordValid(password: String): Boolean {
-        val passwordRegex = "^(?=.*[A-Z])(?=.*[a-z])(?=.*\\d).{8,}$".toRegex()
-        return passwordRegex.matches(password)
+        return passwordValidator.isPasswordValid(password)
     }
 
     Scaffold(
@@ -107,7 +115,7 @@ fun SignUpScreen(navController: NavController) {
                     modifier = Modifier.weight(1f)
                 ) {
                     AuthTextField(
-                        hint = { Text(text = "Name") },
+                        hint = "Name",
                         value = name,
                         onValueChange = { name = it.replaceFirstChar { char -> char.uppercase() } },
                         leadingIcon = Icons.Default.Person,
@@ -123,7 +131,7 @@ fun SignUpScreen(navController: NavController) {
                     modifier = Modifier.weight(1f)
                 ) {
                     AuthTextField(
-                        hint = { Text(text = "Surname") },
+                        hint = "Surname",
                         value = surname,
                         onValueChange = { surname = it.replaceFirstChar { char -> char.uppercase() } },
                         leadingIcon = Icons.Default.Person,
@@ -142,14 +150,13 @@ fun SignUpScreen(navController: NavController) {
                     .padding(horizontal = 32.dp)
             ) {
                 AuthTextField(
-                    hint = { Text(text = stringResource(R.string.enter_your_phone_number)) },
+                    hint = stringResource(R.string.enter_your_phone_number),
                     value = phoneNumber,
                     onValueChange = { phoneNumber = it },
                     leadingIcon = Icons.Default.Phone,
                     keyboardType = KeyboardType.Phone,
                     title = stringResource(R.string.phone_number),
                     visualTransformation = PhoneVisualTransformation()
-
                 )
             }
 
@@ -162,7 +169,7 @@ fun SignUpScreen(navController: NavController) {
                     .padding(horizontal = 32.dp)
             ) {
                 AuthTextField(
-                    hint = { Text(text = stringResource(R.string.enter_your_email)) },
+                    hint = stringResource(R.string.enter_your_email),
                     value = emailRegister,
                     onValueChange = { emailRegister = it },
                     leadingIcon = Icons.Default.Email,
@@ -181,11 +188,10 @@ fun SignUpScreen(navController: NavController) {
             ) {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     AuthTextField(
-                        hint = { Text(text = stringResource(R.string.enter_your_password)) },
+                        hint = stringResource(R.string.enter_your_password),
                         value = passwordRegister,
                         onValueChange = { passwordRegister = it },
                         leadingIcon = Icons.Default.Lock,
-
                         keyboardType = KeyboardType.Password,
                         title = stringResource(R.string.password),
                         supportedTextList = listOf(
@@ -198,14 +204,13 @@ fun SignUpScreen(navController: NavController) {
                     Spacer(modifier = Modifier.padding(top = 8.dp))
 
                     AuthTextField(
-                        hint = { Text(text = "Confirm password") },
+                        hint = "Confirm password",
                         value = confirmPassword,
                         onValueChange = { confirmPassword = it },
                         leadingIcon = Icons.Default.Lock,
                         keyboardType = KeyboardType.Password,
                         title = "Confirm password",
                         modifier = Modifier.passwordBorder(passwordRegister == confirmPassword),
-
                     )
 
                     Spacer(modifier = Modifier.padding(top = 32.dp))
@@ -248,7 +253,6 @@ fun SignUpScreen(navController: NavController) {
                             textAlign = TextAlign.Center
                         )
                     }
-
                     Text(
                         stringResource(R.string.policy),
                         color = MaterialTheme.colorScheme.primary,
@@ -260,7 +264,20 @@ fun SignUpScreen(navController: NavController) {
                     HorizontalDivider(modifier = Modifier)
                     Spacer(modifier = Modifier.padding(vertical = 16.dp))
                 }
+
             }
+        }
+    }
+    if (uiState is UiState.Loading) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color.Black.copy(alpha = 0.5f)),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(modifier = Modifier
+                .size(50.dp)
+                .align(Alignment.Center))
         }
     }
 }

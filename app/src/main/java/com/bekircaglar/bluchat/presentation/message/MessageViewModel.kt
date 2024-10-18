@@ -5,7 +5,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.Response
@@ -37,7 +36,6 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -80,8 +78,8 @@ class MessageViewModel @Inject constructor(
 
     private var lastKey: String? = null
 
-    private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
-    val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
+    private val _selectedImageUri = MutableStateFlow<Uri?>(null)
+    val selectedImageUri: StateFlow<Uri?> = _selectedImageUri
 
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
@@ -89,8 +87,11 @@ class MessageViewModel @Inject constructor(
     private val _uploadedVideoUri = MutableStateFlow<Uri?>(null)
     val uploadedVideoUri: StateFlow<Uri?> = _uploadedVideoUri
 
-    private val _state = MutableStateFlow(UiState.Loading)
-    val state = _state.asStateFlow()
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
+    val uiState = _uiState.asStateFlow()
+
+    private val _moreMessageState = MutableStateFlow<UiState>(UiState.Idle)
+    val moreMessageState = _moreMessageState.asStateFlow()
 
     private val _pinnedMessages = MutableStateFlow<List<Message>>(emptyList())
     val pinnedMessages: StateFlow<List<Message>> = _pinnedMessages
@@ -103,19 +104,24 @@ class MessageViewModel @Inject constructor(
     val isKickedOrGroupDeleted: StateFlow<Boolean> = _isKickedOrGroupDeleted
 
 
+    init {
+        _uiState.value = UiState.Loading
+    }
+
     fun markMessageAsRead(messageId: String, chatId: String){
         viewModelScope.launch {
             markMessageAsReadUseCase(messageId, chatId).collect{
                 when(it) {
                     is Response.Success -> {
-
                     }
 
                     is Response.Error -> {
-
                     }
 
                     is Response.Loading -> {
+                    }
+
+                    else -> {
                     }
 
                 }
@@ -134,6 +140,9 @@ class MessageViewModel @Inject constructor(
                 }
 
                 is Response.Loading -> {}
+                else -> {
+
+                }
             }
         }
     }
@@ -146,6 +155,9 @@ class MessageViewModel @Inject constructor(
                 is Response.Error -> {
                 }
                 is Response.Loading -> {
+                }
+                else -> {
+
                 }
             }
         }
@@ -163,6 +175,9 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Loading -> {
                 }
+                else -> {
+
+                }
             }
         }
     }
@@ -177,6 +192,9 @@ class MessageViewModel @Inject constructor(
 
                 }
                 is Response.Loading -> {
+
+                }
+                else -> {
 
                 }
             }
@@ -223,6 +241,10 @@ class MessageViewModel @Inject constructor(
                     is Response.Loading -> {
 
                     }
+
+                    else -> {
+
+                    }
                 }
             }
 
@@ -261,6 +283,10 @@ class MessageViewModel @Inject constructor(
                 is Response.Loading -> {
 
                 }
+
+                else -> {
+
+                }
             }
         }
     }
@@ -279,6 +305,10 @@ class MessageViewModel @Inject constructor(
 
                 }
 
+                else -> {
+
+                }
+
             }
 
         }
@@ -292,15 +322,20 @@ class MessageViewModel @Inject constructor(
                     is Response.Success -> {
                         _messages.value = messages.data.reversed()
                         lastKey = messages.data.lastOrNull()?.messageId
-                        _state.value = UiState.Success
+                        _uiState.value = UiState.Success()
                     }
 
                     is Response.Error -> {
-                        _state.value = UiState.Error
+                        _uiState.value = UiState.Error()
                     }
 
                     is Response.Loading -> {
-                        _state.value = UiState.Loading
+                        _uiState.value = UiState.Loading
+                    }
+
+                    else -> {
+                        _uiState.value = UiState.Idle
+
                     }
                 }
             }
@@ -308,6 +343,7 @@ class MessageViewModel @Inject constructor(
     }
 
     fun loadMoreMessages(moreLastKey:String?, chatId: String) {
+        _moreMessageState.value = UiState.Loading
         moreLastKey?.let { moreLastKey ->
             viewModelScope.launch {
                 loadMoreMessagesUseCase(chatId, moreLastKey).collect { moreMessages ->
@@ -315,17 +351,20 @@ class MessageViewModel @Inject constructor(
                         is Response.Success -> {
                             _messages.value += moreMessages.data.reversed()
                                 .distinctBy { it.messageId }
-                            _state.value = UiState.Success
+                            _moreMessageState.value = UiState.Success()
 
                         }
 
                         is Response.Error -> {
-                            _state.value = UiState.Error
+                            _moreMessageState.value = UiState.Error(moreMessages.message)
                         }
 
                         is Response.Loading -> {
-                            _state.value = UiState.Loading
+                            _moreMessageState.value = UiState.Loading
 
+                        }
+                        else -> {
+                            _moreMessageState.value = UiState.Idle
                         }
                     }
                 }
@@ -367,6 +406,10 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+
+                else -> {
+
+                }
             }
         }
     }
@@ -382,6 +425,9 @@ class MessageViewModel @Inject constructor(
                 }
 
                 is Response.Error -> {
+                }
+                else -> {
+
                 }
             }
         }
@@ -407,6 +453,9 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+                else -> {
+
+                }
             }
         }
     }
@@ -429,6 +478,9 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+                else -> {
+
+                }
             }
         }
 
@@ -445,6 +497,9 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+                else -> {
+
+                }
             }
         }
     }
@@ -459,6 +514,9 @@ class MessageViewModel @Inject constructor(
                 }
 
                 is Response.Error -> {
+                }
+                else -> {
+
                 }
             }
         }
@@ -477,6 +535,9 @@ class MessageViewModel @Inject constructor(
                     }
 
                     is Response.Error -> {
+                    }
+                    else -> {
+
                     }
                 }
             }

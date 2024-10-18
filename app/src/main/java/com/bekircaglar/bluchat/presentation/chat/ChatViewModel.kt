@@ -49,25 +49,22 @@ class ChatViewModel @Inject constructor(
     private val _chatUserList = MutableStateFlow<List<Chats>>(emptyList())
     val chatUserList = _chatUserList.asStateFlow()
 
-    private val _error = MutableStateFlow<String?>(null)
-    val error: StateFlow<String?> get() = _error
-
-    private val _success = MutableStateFlow<String?>(null)
-    val success: StateFlow<String?> get() = _success
-
     private val currentUserId = auth.currentUser?.uid.toString()
 
-    private val _selectedImageUri = MutableStateFlow<android.net.Uri?>(null)
-    val selectedImageUri: StateFlow<android.net.Uri?> = _selectedImageUri
-
-    private val _isLoading = MutableStateFlow(false)
-    val isLoading: StateFlow<Boolean> = _isLoading
+    private val _selectedImageUri = MutableStateFlow<Uri?>(null)
+    val selectedImageUri: StateFlow<Uri?> = _selectedImageUri
 
     private val _uploadedImageUri = MutableStateFlow<Uri?>(null)
     val uploadedImageUri: StateFlow<Uri?> = _uploadedImageUri
 
-    private val _uiState = MutableStateFlow<UiState>(UiState.Loading)
+    private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState
+
+    private val _UploadImageState = MutableStateFlow<UiState>(UiState.Idle)
+    val UploadImageState: StateFlow<UiState> = _UploadImageState
+
+    private val _chatPPImageState = MutableStateFlow<UiState>(UiState.Idle)
+    val chatPPImageState: StateFlow<UiState> = _chatPPImageState
 
 
     init {
@@ -80,19 +77,25 @@ class ChatViewModel @Inject constructor(
                             _searchResults.value = result.data.let {
                                 it.filter { user -> user.uid != auth.currentUser?.uid }
                             }
+                            _uiState.value = UiState.Success()
                         }
 
                         is Response.Error -> {
-
+                            _uiState.value = UiState.Error(result.message)
                         }
 
                         else -> {
-
+                            _uiState.value = UiState.Idle
                         }
                     }
                 }
         }
         getUsersChatList()
+    }
+
+    fun changeImageState(){
+        _chatPPImageState.value = UiState.Success()
+
     }
 
     fun onImageSelected(uri: Uri) {
@@ -102,39 +105,36 @@ class ChatViewModel @Inject constructor(
 
     private fun uploadImage(uri: Uri) {
         viewModelScope.launch {
-            _isLoading.value = true
+            _UploadImageState.value = UiState.Loading
             uploadImageUseCase.invoke(uri).collect {
                 when (it) {
                     is Response.Success -> {
                         _uploadedImageUri.value = it.data.toUri()
-                        _isLoading.value = false
-                        _uiState.value = UiState.Success
-
+                        _UploadImageState.value = UiState.Success()
                     }
 
                     is Response.Error -> {
-                        _error.value = it.message
-                        _uiState.value = UiState.Error
+                        _UploadImageState.value = UiState.Error(it.message)
                     }
 
                     is Response.Loading -> {
-                        _uiState.value = UiState.Loading
+                        _UploadImageState.value = UiState.Loading
+                    }
+
+                    else -> {
+                        _UploadImageState.value = UiState.Idle
                     }
                 }
             }
         }
-
     }
-
 
     fun createGroupChatRoom(
         groupMembers: List<String>,
         groupName: String,
         firebaseImageUrl: String
     ) = viewModelScope.launch {
-
         val randomUUID = java.util.UUID.randomUUID().toString()
-
         createGroupChatRoomUseCase.invoke(
             currentUserId,
             groupMembers,
@@ -144,21 +144,22 @@ class ChatViewModel @Inject constructor(
         ).collect {
             when (it) {
                 is Response.Success -> {
-                    _success.value = it.data
-                    _uiState.value = UiState.Success
+                    _uiState.value = UiState.Success()
                 }
 
                 is Response.Error -> {
-                    _error.value = it.message
-                    _uiState.value = UiState.Error
+                    _uiState.value = UiState.Error(it.message)
                 }
 
                 is Response.Loading -> {
                     _uiState.value = UiState.Loading
                 }
+
+                else -> {
+                    _uiState.value = UiState.Idle
+                }
             }
         }
-
     }
 
     fun createChatRoom(user: String, navigation: NavController) = viewModelScope.launch {
@@ -167,24 +168,28 @@ class ChatViewModel @Inject constructor(
             when (it) {
                 is Response.Success -> {
                     navigation.navigate(Screens.MessageScreen.createRoute(it.data))
-                    _uiState.value = UiState.Success
+                    _uiState.value = UiState.Success()
                 }
 
                 is Response.Error -> {
                     navigation.navigate(Screens.MessageScreen.createRoute(it.message))
-                    _uiState.value = UiState.Error
+                    _uiState.value = UiState.Error(it.message)
                 }
 
                 is Response.Loading -> {
                     _uiState.value = UiState.Loading
                 }
+
+                else -> {
+                    _uiState.value = UiState.Idle
+                }
             }
         }
     }
 
-    fun getUsersChatList() = viewModelScope.launch {
+    private fun getUsersChatList() = viewModelScope.launch {
+        _uiState.value = UiState.Loading
         getUserChatListUseCase.invoke().collect { response ->
-            _chatUserList.value = emptyList()
             when (response) {
                 is Response.Success -> {
 
@@ -200,16 +205,19 @@ class ChatViewModel @Inject constructor(
                             )
                         }
                     }
-                    _uiState.value = UiState.Success
+                    _uiState.value = UiState.Success()
                 }
 
                 is Response.Error -> {
-                    _error.value = response.message
-                    _uiState.value = UiState.Error
+                    _uiState.value = UiState.Error(response.message)
                 }
 
                 is Response.Loading -> {
                     _uiState.value = UiState.Loading
+                }
+
+                else -> {
+                    _uiState.value = UiState.Idle
                 }
             }
         }
@@ -238,16 +246,18 @@ class ChatViewModel @Inject constructor(
                                 if (it.chatRoomId == chatItem.chatRoomId) chatItem else it
                             }
                         }
-                        _uiState.value = UiState.Success
+                        _uiState.value = UiState.Success()
                     }
 
                     is Response.Error -> {
-                        _error.value = it.message
-                        _uiState.value = UiState.Error
+                        _uiState.value = UiState.Error()
                     }
 
                     is Response.Loading -> {
                         _uiState.value = UiState.Loading
+                    }
+                    else -> {
+                        _uiState.value = UiState.Idle
                     }
                 }
             }
@@ -257,5 +267,4 @@ class ChatViewModel @Inject constructor(
     fun onSearchQueryChange(newQuery: String) {
         _searchQuery.value = newQuery
     }
-
 }

@@ -17,6 +17,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -29,6 +30,8 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import coil.compose.AsyncImagePainter
+import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
@@ -40,6 +43,7 @@ fun Chats(
     chatRoom: ChatRoom? = null,
     onClick: () -> Unit,
     isSelected: Boolean = false,
+    onImageLoaded : () -> Unit
 ) {
     val profileImage = chat.imageUrl
     val name = chat.name
@@ -59,9 +63,22 @@ fun Chats(
                 onClick()
             },
     ) {
+
         Box {
+            val painter = rememberAsyncImagePainter(model = profileImage)
+            val painterState = painter.state
+
+            if (painterState is AsyncImagePainter.State.Loading){
+                Box(modifier = Modifier.size(50.dp), contentAlignment = Alignment.Center){
+                    CircularProgressIndicator()
+                }
+            }
+            if (painterState is AsyncImagePainter.State.Success){
+                onImageLoaded()
+            }
+
             Image(
-                painter = rememberImagePainter(data = profileImage),
+                painter = painter,
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = if (chat.surname.isBlank()) Modifier
@@ -71,7 +88,8 @@ fun Chats(
                     .size(50.dp)
                     .clip(CircleShape)
 
-                )
+            )
+
 
 
             if (isOnline) {

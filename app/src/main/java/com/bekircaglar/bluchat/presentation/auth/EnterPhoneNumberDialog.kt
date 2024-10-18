@@ -81,13 +81,13 @@ fun EnterPhoneNumberDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
                     for (i in 0 until maxLength) {
                         Box(
                             modifier = Modifier
+                                .weight(1f) // Eşit genişlik için weight kullanıyoruz
                                 .border(
                                     1.dp,
                                     color = Color.LightGray,
                                     shape = MaterialTheme.shapes.medium
                                 )
                                 .height(50.dp)
-                                .width(35.dp)
                                 .background(
                                     MaterialTheme.colorScheme.surface,
                                     shape = MaterialTheme.shapes.medium
@@ -104,7 +104,7 @@ fun EnterPhoneNumberDialog(onConfirm: (String) -> Unit, onDismiss: () -> Unit) {
                                 textAlign = TextAlign.Center
                             )
                         }
-                        Spacer(modifier = Modifier.width(4.dp))
+                        Spacer(modifier = Modifier.width(4.dp)) 
                     }
                 }
                 Spacer(modifier = Modifier.height(16.dp))

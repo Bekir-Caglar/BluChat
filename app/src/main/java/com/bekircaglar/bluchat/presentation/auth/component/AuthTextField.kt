@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Email
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ShapeDefaults
 import androidx.compose.material3.Text
@@ -30,25 +31,32 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.input.PasswordVisualTransformation
 import androidx.compose.ui.text.input.VisualTransformation
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import coil.compose.AsyncImagePainter.State.Empty.painter
 import com.bekircaglar.bluchat.R
 
 @Composable
 fun AuthTextField(
-    hint: @Composable () -> Unit,
+    hint: String,
     value: String,
     onValueChange: (String) -> Unit,
     leadingIcon: ImageVector? = null,
     keyboardType: KeyboardType = KeyboardType.Text,
     title: String? = null,
+    singleLine: Boolean = true,
     modifier: Modifier = Modifier,
     visualTransformation: VisualTransformation = VisualTransformation.None,
-    supportedTextList: List<Pair<String, Boolean>> = emptyList()
-) {
+    supportedTextList: List<Pair<String, Boolean>> = emptyList(),
+    ) {
     var passwordVisible by remember { mutableStateOf(false) }
 
     Column {
@@ -72,17 +80,20 @@ fun AuthTextField(
             trailingIcon = {
                 if (keyboardType == KeyboardType.Password) {
                     val image = if (passwordVisible) painterResource(R.drawable.ic_visible) else painterResource(R.drawable.ic_invisible)
-                    Icon(
-                        painter = image,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .clickable { passwordVisible = !passwordVisible }
-                            .size(24.dp)
-                    )
+                    IconButton(
+                        onClick = { passwordVisible = !passwordVisible },
+                    ){
+                        Icon(
+                            painter = image,
+                            contentDescription = null,
+                            modifier = Modifier
+                                .size(24.dp)
+                        )
+                    }
                 }
             },
             maxLines = 1,
-            singleLine = true,
+            singleLine = singleLine,
             keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
             visualTransformation = if (keyboardType == KeyboardType.Password && !passwordVisible) PasswordVisualTransformation() else visualTransformation,
             colors = TextFieldDefaults.colors(
@@ -91,7 +102,9 @@ fun AuthTextField(
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
-            placeholder = { hint() },
+            placeholder = {
+                Text(text = hint, fontSize = 14.sp)
+            },
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
@@ -112,7 +125,7 @@ fun AuthTextField(
 @Composable
 fun AuthTextFieldPreview() {
     AuthTextField(
-        hint = { Text(text = "Email") },
+        hint = "Email",
         value = "",
         onValueChange = {},
         leadingIcon = Icons.Default.Email,
