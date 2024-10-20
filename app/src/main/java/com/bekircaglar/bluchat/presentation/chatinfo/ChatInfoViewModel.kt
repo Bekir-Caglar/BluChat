@@ -4,12 +4,10 @@ import android.net.Uri
 import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.Response
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.ChatRoom
-import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.domain.model.Users
-import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.AddParticipantUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.DeleteGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.chatinfo.GetChatImagesUseCase
@@ -23,7 +21,6 @@ import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow

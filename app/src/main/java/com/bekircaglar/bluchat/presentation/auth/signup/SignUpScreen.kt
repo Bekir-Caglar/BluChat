@@ -1,7 +1,6 @@
 package com.bekircaglar.bluchat.presentation.auth.signup
 
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,7 +34,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -47,9 +45,8 @@ import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
 import com.bekircaglar.bluchat.presentation.auth.component.AuthTextField
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.data.repository.PasswordValidatorImpl
-import com.bekircaglar.bluchat.domain.repository.PasswordValidator
 import com.bekircaglar.bluchat.presentation.auth.component.PhoneVisualTransformation
 import com.bekircaglar.bluchat.utils.passwordBorder
 
@@ -133,7 +130,9 @@ fun SignUpScreen(navController: NavController) {
                     AuthTextField(
                         hint = "Surname",
                         value = surname,
-                        onValueChange = { surname = it.replaceFirstChar { char -> char.uppercase() } },
+                        onValueChange = {
+                            surname = it.replaceFirstChar { char -> char.uppercase() }
+                        },
                         leadingIcon = Icons.Default.Person,
                         keyboardType = KeyboardType.Text,
                         title = "Surname"
@@ -218,13 +217,17 @@ fun SignUpScreen(navController: NavController) {
                     AuthButton(
                         onClick = {
                             if (!isPasswordValid(passwordRegister)) {
-                                passwordError = "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
+                                passwordError =
+                                    "Password must be at least 8 characters long and contain at least one uppercase letter, one lowercase letter, and one number."
                             } else if (passwordRegister != confirmPassword) {
                                 passwordError = "Passwords do not match."
                             } else {
                                 passwordError = null
                                 if (emailRegister.isEmpty() || passwordRegister.isEmpty() || name.isEmpty() || surname.isEmpty() || phoneNumber.isEmpty()) {
-                                    ShowToastMessage(context = context, message = "Please fill in all fields.")
+                                    ShowToastMessage(
+                                        context = context,
+                                        message = "Please fill in all fields."
+                                    )
                                     return@AuthButton
                                 }
                                 viewModel.checkPassword(
@@ -234,9 +237,6 @@ fun SignUpScreen(navController: NavController) {
                                     surname = surname,
                                     phoneNumber = phoneNumber,
                                     navController = navController,
-                                    onError = { errorMessage ->
-                                        ShowToastMessage(context = context, message = errorMessage)
-                                    }
                                 )
                             }
                         },
@@ -275,9 +275,15 @@ fun SignUpScreen(navController: NavController) {
                 .background(Color.Black.copy(alpha = 0.5f)),
             contentAlignment = Alignment.Center
         ) {
-            CircularProgressIndicator(modifier = Modifier
-                .size(50.dp)
-                .align(Alignment.Center))
+            CircularProgressIndicator(
+                modifier = Modifier
+                    .size(50.dp)
+                    .align(Alignment.Center)
+            )
         }
     }
+    if (uiState is UiState.Error) {
+        (uiState as UiState.Error).message?.let { ShowToastMessage(context, it) }
+    }
+
 }

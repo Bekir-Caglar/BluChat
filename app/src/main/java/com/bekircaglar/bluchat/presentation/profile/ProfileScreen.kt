@@ -6,7 +6,6 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -24,7 +23,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -43,7 +41,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
-import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.MenuItem
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
@@ -51,9 +48,8 @@ import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.profile.account.AccountDialog
 import com.bekircaglar.bluchat.presentation.profile.appearance.AppearanceDialog
-import com.bekircaglar.bluchat.saveThemePreference
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.loadThemePreference
 
 @Composable
@@ -193,6 +189,11 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                         modifier = Modifier.size(80.dp),
                     )
                 }
+            }
+            if (uiState is UiState.Error) {
+                (uiState as UiState.Error).message?.let {
+                    ShowToastMessage(context, it)
+                }
             } else {
                 Column(
                     modifier = Modifier
@@ -212,9 +213,9 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                             .background(color = Color.White),
                         contentAlignment = Alignment.Center
                     ) {
-                        if (painterState is AsyncImagePainter.State.Success){
+                        if (painterState is AsyncImagePainter.State.Success) {
 
-                        }else {
+                        } else {
                             CircularProgressIndicator(
                                 modifier = Modifier
                                     .background(color = Color.White, shape = CircleShape)
@@ -263,7 +264,5 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
 
             }
         }
-
-
     }
 }

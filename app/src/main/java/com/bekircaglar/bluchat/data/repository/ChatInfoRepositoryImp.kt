@@ -3,7 +3,7 @@ package com.bekircaglar.bluchat.data.repository
 import android.util.Log
 import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
 import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.STORED_MESSAGES
 import com.bekircaglar.bluchat.utils.STORED_USERS
 import com.bekircaglar.bluchat.domain.repository.ChatInfoRepository

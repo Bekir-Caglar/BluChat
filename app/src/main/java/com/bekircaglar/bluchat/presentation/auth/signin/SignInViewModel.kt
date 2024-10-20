@@ -5,10 +5,9 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.Response
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Users
 
 import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
@@ -16,7 +15,6 @@ import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CheckIsUserAlreadyExistUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CreateUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.SignOutUseCase
-import com.facebook.AccessToken
 import com.facebook.login.LoginResult
 import com.google.android.gms.auth.api.signin.GoogleSignIn
 import com.google.android.gms.auth.api.signin.GoogleSignInAccount
@@ -41,7 +39,6 @@ import kotlin.coroutines.cancellation.CancellationException
 @HiltViewModel
 class SignInViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
-    private val exceptionHandlerUseCase: ExceptionHandlerUseCase,
     private val auth: FirebaseAuth,
     private val createUserUseCase: CreateUserUseCase,
     private val checkIsUserAlreadyExistUseCase: CheckIsUserAlreadyExistUseCase,
@@ -53,17 +50,15 @@ class SignInViewModel @Inject constructor(
 
     private lateinit var googleSignInClient: GoogleSignInClient
 
-    fun signOut(context: Context, onSuccess: () -> Unit, onError: (String) -> Unit) =
+    fun signOut(context: Context) =
         viewModelScope.launch {
             _uiState.value = UiState.Loading
             try {
                 signOutUseCase(context = context)
                 _uiState.value = UiState.Success("Signed out successfully")
-                onSuccess()
             } catch (e: Exception) {
-                val errorMessage = exceptionHandlerUseCase.invoke(e)
+                val errorMessage = e.message
                 _uiState.value = UiState.Error(errorMessage)
-                onError(errorMessage)
             }
         }
 
@@ -82,7 +77,6 @@ class SignInViewModel @Inject constructor(
     fun handleFacebookSignInResult(
         result: LoginResult,
         onSuccess: () -> Unit,
-        onError: (String) -> Unit,
         onPhoneNumberNotExist: () -> Unit
     ) = viewModelScope.launch {
         _uiState.value = UiState.Loading
@@ -90,9 +84,19 @@ class SignInViewModel @Inject constructor(
         val credential = FacebookAuthProvider.getCredential(token)
         val authResult = Firebase.auth.signInWithCredential(credential).await()
 
-        val user = authResult.user ?: return@launch onError("User is null")
+        val user = authResult.user
+        if (user == null) {
+            val errorMessage = "User is null"
+            _uiState.value = UiState.Error(errorMessage)
+            return@launch
+        }
 
-        val email = user.email ?: return@launch onError("Email is null")
+        val email = user.email
+        if (email.isNullOrBlank()) {
+            val errorMessage = "Email is null or blank"
+            _uiState.value = UiState.Error(errorMessage)
+            return@launch
+        }
 
         checkIsUserAlreadyExistUseCase(email).collect { response ->
             when (response) {
@@ -102,10 +106,10 @@ class SignInViewModel @Inject constructor(
                         onSuccess()
                     } else {
                         if (user.phoneNumber.isNullOrBlank()) {
-                            _uiState.value = UiState.Error("Phone number not exist")
+                            _uiState.value = UiState.Error()
                             onPhoneNumberNotExist()
                         } else {
-                            saveUserToDatabase(user, onSuccess, onError)
+                            saveUserToDatabase(user, onSuccess)
                             _uiState.value = UiState.Success("User saved to database")
                             onSuccess()
                         }
@@ -115,7 +119,6 @@ class SignInViewModel @Inject constructor(
                 is Response.Error -> {
                     val errorMessage = response.message
                     _uiState.value = UiState.Error(errorMessage)
-                    onError(errorMessage)
                 }
 
                 is Response.Loading -> {
@@ -143,7 +146,8 @@ class SignInViewModel @Inject constructor(
             val credential = GoogleAuthProvider.getCredential(idToken, null)
             viewModelScope.launch {
                 try {
-                    val authResult = FirebaseAuth.getInstance().signInWithCredential(credential).await()
+                    val authResult =
+                        FirebaseAuth.getInstance().signInWithCredential(credential).await()
                     val user = authResult.user ?: return@launch onError("User is null")
 
                     val email = authResult.user?.email ?: return@launch onError("Email is null")
@@ -155,10 +159,10 @@ class SignInViewModel @Inject constructor(
                                     onSuccess()
                                 } else {
                                     if (user.phoneNumber.isNullOrBlank()) {
-                                        _uiState.value = UiState.Error("Phone number not exist")
+                                        _uiState.value = UiState.Error()
                                         onPhoneNumberNotExist()
                                     } else {
-                                        saveUserToDatabase(user, onSuccess, onError)
+                                        saveUserToDatabase(user, onSuccess)
                                         _uiState.value = UiState.Success("User saved to database")
                                         onSuccess()
                                     }
@@ -189,9 +193,8 @@ class SignInViewModel @Inject constructor(
                 }
             }
         } catch (e: ApiException) {
-            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            val errorMessage = e.message
             _uiState.value = UiState.Error(errorMessage)
-            onError(errorMessage)
         }
     }
 
@@ -227,7 +230,7 @@ class SignInViewModel @Inject constructor(
     }
 
     private fun saveUserToDatabase(
-        user: FirebaseUser, onSuccess: () -> Unit, onError: (String) -> Unit
+        user: FirebaseUser, onSuccess: () -> Unit
     ) {
         val googleUser = Users(
             uid = user.uid,
@@ -252,7 +255,6 @@ class SignInViewModel @Inject constructor(
             } catch (e: Exception) {
                 val errorMessage = e.message ?: "User creation failed"
                 _uiState.value = UiState.Error(errorMessage)
-                onError(errorMessage)
             }
         }
     }
@@ -268,7 +270,7 @@ class SignInViewModel @Inject constructor(
                     }
 
                     is Response.Error -> {
-                        val errorMessage = exceptionHandlerUseCase.invoke(Exception(result.message))
+                        val errorMessage = result.message
                         _uiState.value = UiState.Error(errorMessage)
                         onError(errorMessage)
                     }
@@ -278,9 +280,8 @@ class SignInViewModel @Inject constructor(
                     }
                 }
             } catch (e: Exception) {
-                val errorMessage = exceptionHandlerUseCase.invoke(e)
+                val errorMessage = e.message
                 _uiState.value = UiState.Error(errorMessage)
-                onError(errorMessage)
             }
         }
 }

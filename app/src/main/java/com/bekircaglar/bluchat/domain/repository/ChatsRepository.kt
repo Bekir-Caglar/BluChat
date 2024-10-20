@@ -1,6 +1,6 @@
 package com.bekircaglar.bluchat.domain.repository
 
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Users
 import kotlinx.coroutines.flow.Flow

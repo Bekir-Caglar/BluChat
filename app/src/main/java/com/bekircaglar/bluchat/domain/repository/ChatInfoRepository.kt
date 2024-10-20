@@ -1,10 +1,7 @@
 package com.bekircaglar.bluchat.domain.repository
 
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.domain.model.ChatRoom
-import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.utils.Response
 import kotlinx.coroutines.flow.Flow
-import javax.inject.Inject
 
 interface ChatInfoRepository {
 

@@ -7,8 +7,8 @@ import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.Response
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.data.repository.ChatRepositoryImp
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats

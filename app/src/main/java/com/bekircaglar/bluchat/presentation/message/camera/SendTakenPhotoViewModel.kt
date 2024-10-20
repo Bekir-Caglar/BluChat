@@ -2,11 +2,9 @@ package com.bekircaglar.bluchat.presentation.message.camera
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.navigation.NavController
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
-import com.bekircaglar.bluchat.navigation.Screens
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch

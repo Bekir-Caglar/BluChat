@@ -5,21 +5,17 @@ import androidx.core.net.toUri
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
 import com.bekircaglar.bluchat.navigation.Screens
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
-import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.launch
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
-import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel

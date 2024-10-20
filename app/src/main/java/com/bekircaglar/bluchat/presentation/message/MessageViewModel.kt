@@ -7,8 +7,8 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.Response
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
