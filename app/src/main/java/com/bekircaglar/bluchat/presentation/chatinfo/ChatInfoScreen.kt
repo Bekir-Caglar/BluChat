@@ -42,7 +42,6 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberBottomSheetScaffoldState
 import androidx.compose.runtime.Composable
@@ -70,7 +69,7 @@ import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.VideoPlayerActivity
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
@@ -247,26 +246,82 @@ fun ChatInfoScreen(
 
                     ) {
                         if (chatType == PRIVATE) {
-                            Image(
-                                painter = rememberImagePainter(data = otherUser.profileImageUrl),
-                                contentDescription = "User Image",
-                                contentScale = ContentScale.Crop,
+                            val painter = rememberAsyncImagePainter(model = otherUser.profileImageUrl)
+                            val painterState = painter.state
+                            Box(
                                 modifier = Modifier
                                     .size(120.dp)
-                                    .shadow(elevation = 5.dp, shape = CircleShape)
-                                    .clip(CircleShape)
-                                    .background(MaterialTheme.colorScheme.secondaryContainer)
-                            )
-                        } else Image(
-                            painter = rememberImagePainter(data = chatRoom.chatImage),
-                            contentDescription = "Group Image",
-                            contentScale = ContentScale.Crop,
-                            modifier = Modifier
-                                .size(120.dp)
-                                .shadow(elevation = 5.dp, shape = CircleShape)
-                                .clip(CircleShape)
-                                .background(MaterialTheme.colorScheme.secondaryContainer)
-                        )
+                                    .shadow(
+                                        elevation = 5.dp,
+                                        shape = CircleShape
+                                    )
+                                    .background(color = Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (painterState is AsyncImagePainter.State.Success) {
+
+                                } else {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .background(
+                                                color = Color.White,
+                                                shape = CircleShape
+                                            )
+                                            .size((100 / 3).dp)
+                                    )
+                                }
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "User Image",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .shadow(elevation = 5.dp, shape = CircleShape)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                )
+
+                            }
+
+                        } else {
+                            val painter = rememberAsyncImagePainter(model = chatRoom.chatImage)
+                            val painterState = painter.state
+                            Box(
+                                modifier = Modifier
+                                    .size(120.dp)
+                                    .shadow(
+                                        elevation = 5.dp,
+                                        shape = CircleShape
+                                    )
+                                    .background(color = Color.White),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                if (painterState is AsyncImagePainter.State.Success) {
+
+                                } else {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier
+                                            .background(
+                                                color = Color.White,
+                                                shape = CircleShape
+                                            )
+                                            .size((100 / 3).dp)
+                                    )
+                                }
+                                Image(
+                                    painter = painter,
+                                    contentDescription = "Group Image",
+                                    contentScale = ContentScale.Crop,
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .shadow(elevation = 5.dp, shape = CircleShape)
+                                        .clip(CircleShape)
+                                        .background(MaterialTheme.colorScheme.secondaryContainer)
+                                )
+
+                            }
+
+                        }
 
                         if (isCurrentUserAdmin) {
                             Icon(
@@ -498,7 +553,8 @@ fun ChatInfoScreen(
                                         .fillMaxWidth()
                                         .fillMaxHeight(0.5f)
                                 ) {
-                                    items(userList, key = { it.uid }) { member ->
+
+                                    items(userList.distinctBy { it.uid }, key = { it.uid }) { member ->
                                         MemberItem(member, isCurrentUserAdmin, onUserKicked = {
                                             viewModel.kickUser(chatId = chatId!!, userId = member.uid)
                                             viewModel.getChatRoom(chatId)
@@ -560,6 +616,11 @@ fun ChatInfoScreen(
                 }
 
             }
+        }
+    }
+    if (chatListState is UiState.Error){
+        (chatListState as UiState.Error).message?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }
     }
 }

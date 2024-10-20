@@ -3,8 +3,8 @@ package com.bekircaglar.bluchat.presentation.auth.signup
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
-import com.bekircaglar.bluchat.Response
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.Response
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.usecase.CheckPhoneNumberUseCase
 import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
@@ -20,7 +20,6 @@ import javax.inject.Inject
 class SignUpViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
     private val createUserUseCase: CreateUserUseCase,
-    private val exceptionHandlerUseCase: ExceptionHandlerUseCase,
     private val checkPhoneNumberUseCase: CheckPhoneNumberUseCase,
 ) : ViewModel() {
 
@@ -33,7 +32,6 @@ class SignUpViewModel @Inject constructor(
         name: String,
         surname: String,
         phoneNumber: String,
-        onError: (String) -> Unit,
         navController: NavController,
     ) = viewModelScope.launch {
         _uiState.value = UiState.Loading
@@ -48,17 +46,12 @@ class SignUpViewModel @Inject constructor(
                             email = email,
                             password = password,
                             navController = navController,
-                            onError = {
-                                _uiState.value = UiState.Error(it)
-                                onError(it)
-                            }
                         )
                     }
 
                     is Response.Error -> {
-                        val errorMessage = exceptionHandlerUseCase.invoke(Exception(it.message))
+                        val errorMessage = it.message
                         _uiState.value = UiState.Error(errorMessage)
-                        onError(errorMessage)
                     }
 
                     else -> {
@@ -67,9 +60,8 @@ class SignUpViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            val errorMessage = e.message
             _uiState.value = UiState.Error(errorMessage)
-            onError(errorMessage)
         }
     }
 
@@ -80,7 +72,6 @@ class SignUpViewModel @Inject constructor(
         email: String,
         navController: NavController,
         password: String,
-        onError: (String) -> Unit
     ) = viewModelScope.launch {
         _uiState.value = UiState.Loading
         try {
@@ -92,15 +83,12 @@ class SignUpViewModel @Inject constructor(
                         phoneNumber = phoneNumber,
                         email = email,
                         navController = navController,
-                        onError = {
-                            onError(it)
-                        })
+                    )
                 }
 
                 is Response.Error -> {
-                    val errorMessage = exceptionHandlerUseCase.invoke(Exception(result.message))
+                    val errorMessage = result.message
                     _uiState.value = UiState.Error(errorMessage)
-                    onError(errorMessage)
                 }
 
                 else -> {
@@ -108,14 +96,12 @@ class SignUpViewModel @Inject constructor(
                 }
             }
         } catch (e: Exception) {
-            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            val errorMessage = e.message
             _uiState.value = UiState.Error(errorMessage)
-            onError(errorMessage)
         }
     }
 
     private fun createUser(
-        onError: (String) -> Unit,
         name: String,
         surname: String,
         phoneNumber: String,
@@ -137,21 +123,18 @@ class SignUpViewModel @Inject constructor(
                 }
 
                 is Response.Error -> {
-                    val errorMessage = exceptionHandlerUseCase.invoke(Exception(result.message))
+                    val errorMessage = result.message
                     _uiState.value = UiState.Error(errorMessage)
-                    onError(errorMessage)
                 }
 
                 else -> {
                     val errorMessage = "Unknown Error"
                     _uiState.value = UiState.Error(errorMessage)
-                    onError(errorMessage)
                 }
             }
         } catch (e: Exception) {
-            val errorMessage = exceptionHandlerUseCase.invoke(e)
+            val errorMessage = e.message
             _uiState.value = UiState.Error(errorMessage)
-            onError(errorMessage)
         }
     }
 }

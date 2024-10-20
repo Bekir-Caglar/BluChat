@@ -1,6 +1,6 @@
 package com.bekircaglar.bluchat.domain.usecase.profile
 
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
 import com.bekircaglar.bluchat.domain.repository.ProfileRepository

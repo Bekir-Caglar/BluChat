@@ -4,14 +4,12 @@ import android.util.Log
 import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.STORED_USERS
 import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
-import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
-import com.bekircaglar.bluchat.utils.STORED_MESSAGES
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError

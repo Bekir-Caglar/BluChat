@@ -1,7 +1,7 @@
 package com.bekircaglar.bluchat.data.repository
 
 import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.STORED_MESSAGES
 import com.bekircaglar.bluchat.domain.model.Message
 import com.google.firebase.database.DataSnapshot

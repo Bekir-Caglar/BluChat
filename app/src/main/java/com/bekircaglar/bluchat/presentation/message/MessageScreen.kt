@@ -9,7 +9,6 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.camera.core.ImageCapture
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -83,7 +82,7 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.CircularProgressIndicator
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.VideoPlayerActivity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)

@@ -32,7 +32,6 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -48,8 +47,7 @@ import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.UiEvent
-import com.bekircaglar.bluchat.UiState
+import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
@@ -61,7 +59,6 @@ import com.bekircaglar.bluchat.presentation.chat.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
-import kotlinx.coroutines.delay
 
 @Composable
 fun ChatListScreen(navController: NavController) {
@@ -286,11 +283,11 @@ fun ChatListScreen(navController: NavController) {
                     }
                 }
             }
-        } else if (uiState is UiState.Error) {
+        }
+
+        if (uiState is UiState.Error) {
             val errorMessage = (uiState as UiState.Error).message
             Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-        } else {
-            // Handle other states if necessary
         }
     }
 }

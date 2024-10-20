@@ -1,6 +1,6 @@
 package com.bekircaglar.bluchat.domain.usecase.chats
 
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
 import kotlinx.coroutines.flow.Flow
 import javax.inject.Inject

@@ -1,4 +1,4 @@
-package com.bekircaglar.bluchat
+package com.bekircaglar.bluchat.utils
 
 sealed class Response<out T> {
     object Loading : Response<Nothing>()

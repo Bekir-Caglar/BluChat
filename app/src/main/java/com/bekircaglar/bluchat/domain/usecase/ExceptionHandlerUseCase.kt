@@ -1,6 +1,6 @@
 package com.bekircaglar.bluchat.domain.usecase
 
-import com.bekircaglar.bluchat.Response
+import com.bekircaglar.bluchat.utils.Response
 import javax.inject.Inject
 
 class ExceptionHandlerUseCase @Inject constructor() {
