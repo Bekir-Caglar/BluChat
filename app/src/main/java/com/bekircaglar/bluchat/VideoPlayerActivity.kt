@@ -33,10 +33,13 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.exoplayer.source.MediaSource
 import androidx.media3.exoplayer.source.ProgressiveMediaSource
 import androidx.media3.ui.PlayerView
+import androidx.activity.viewModels
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.media3.common.util.Log
 
 class VideoPlayerActivity : ComponentActivity() {
-    private var playbackPosition: Long = 0
 
+    private val videoPlayerViewModel: VideoPlayerViewModel by viewModels()
 
     @OptIn(UnstableApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,26 +47,17 @@ class VideoPlayerActivity : ComponentActivity() {
         enableEdgeToEdge()
 
         val videoUri = intent.getStringExtra("videoUri")
-        playbackPosition = savedInstanceState?.getLong("playback_position") ?: 0
+        if (videoUri.isNullOrEmpty()) {
+            Log.e("VideoPlayer", "Geçersiz video URI")
+            return
+        }
 
         setContent {
             Surface {
-                val mediaItem = videoUri?.let { MediaItem.fromUri(it) }
+                videoPlayerViewModel.initializePlayer(this, videoUri)
 
-                val mediaSource: MediaSource = remember{
-                    ProgressiveMediaSource.Factory(DefaultHttpDataSource.Factory())
-                        .createMediaSource(mediaItem?:MediaItem.EMPTY)
-
-                }
-
-                val exoPlayer = remember{
-                    ExoPlayer.Builder(this).build().apply {
-                        setMediaSource(mediaSource)
-                        playWhenReady = true
-                        prepare()
-                    }
-                }
-                if (videoUri != null) {
+                val exoPlayer = videoPlayerViewModel.exoPlayer
+                if (exoPlayer != null) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -76,17 +70,8 @@ class VideoPlayerActivity : ComponentActivity() {
             }
         }
     }
-
-    override fun onRestoreInstanceState(savedInstanceState: Bundle) {
-        super.onRestoreInstanceState(savedInstanceState)
-        playbackPosition = savedInstanceState.getLong("playback_position")
-    }
-
-    override fun onSaveInstanceState(outState: Bundle) {
-        super.onSaveInstanceState(outState)
-        outState.putLong("playback_position", playbackPosition)
-    }
 }
+
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -95,17 +80,14 @@ fun Player(exoPlayer: ExoPlayer) {
         mutableStateOf(Lifecycle.Event.ON_CREATE)
     }
     val context = LocalContext.current
-
-
-
     val lifecycleOwner = LocalLifecycleOwner.current
+
     DisposableEffect(lifecycleOwner) {
         val observer = LifecycleEventObserver { _, event ->
             lifecycle = event
         }
         lifecycleOwner.lifecycle.addObserver(observer)
         onDispose {
-            exoPlayer.release()
             lifecycleOwner.lifecycle.removeObserver(observer)
         }
     }
@@ -127,6 +109,7 @@ fun Player(exoPlayer: ExoPlayer) {
                 }
                 Lifecycle.Event.ON_RESUME -> {
                     it.onResume()
+                    it.player?.playWhenReady = true
                 }
                 else -> Unit
             }
