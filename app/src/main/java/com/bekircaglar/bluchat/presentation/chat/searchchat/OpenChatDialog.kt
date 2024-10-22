@@ -67,7 +67,7 @@ fun OpenChatDialog(
                         },
                             onImageLoaded = {
 
-                            }
+                            },
                         )
                     }
                 }

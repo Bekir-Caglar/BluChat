@@ -3,9 +3,11 @@
 package com.bekircaglar.bluchat.presentation.chat
 
 import android.net.Uri
+import android.os.Build
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.foundation.Image
@@ -32,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -59,7 +62,9 @@ import com.bekircaglar.bluchat.presentation.chat.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
+import kotlinx.coroutines.CoroutineScope
 
+@RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
 fun ChatListScreen(navController: NavController) {
 
@@ -73,6 +78,7 @@ fun ChatListScreen(navController: NavController) {
     var selectGroupUserDialog by remember { mutableStateOf(false) }
     var createGroupChatDialog by remember { mutableStateOf(false) }
     var isBottomSheetVisible by remember { mutableStateOf(false) }
+    val selectedUser by viewModel.selectedUser.collectAsStateWithLifecycle()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -111,51 +117,41 @@ fun ChatListScreen(navController: NavController) {
         }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = {
-                    Text(text = "Chats", color = MaterialTheme.colorScheme.onPrimary)
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimary,
-                    actionIconContentColor = MaterialTheme.colorScheme.onPrimary
-                ),
-                actions = {
-                    AnimatedVisibility(
-                        visible = isSearchActive,
-                        enter = expandHorizontally(),
-                    ) {
-                        SearchTextField(
-                            searchText = searchText,
-                            height = 50,
-                            width = 300,
-                            onSearchTextChange = { searchText = it },
-                        )
-                    }
-                    IconButton(onClick = { isSearchActive = !isSearchActive }) {
-                        Icon(
-                            Icons.Default.Search, contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onPrimary,
-                        )
-                    }
-                }
-            )
-        },
-        floatingActionButton = {
-            ChatAppFAB(
-                contentColor = Color.White,
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                onClick = {
-                    isBottomSheetVisible = true
-                }
-            )
-        },
-        bottomBar = {
-            ChatAppBottomAppBar(navController = navController)
-        }
-    ) {
+    Scaffold(topBar = {
+        TopAppBar(title = {
+            Text(text = "Chats", color = MaterialTheme.colorScheme.onPrimary)
+        }, colors = TopAppBarDefaults.topAppBarColors(
+            containerColor = MaterialTheme.colorScheme.secondary,
+            titleContentColor = MaterialTheme.colorScheme.onPrimary,
+            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+        ), actions = {
+            AnimatedVisibility(
+                visible = isSearchActive,
+                enter = expandHorizontally(),
+            ) {
+                SearchTextField(
+                    searchText = searchText,
+                    height = 50,
+                    width = 300,
+                    onSearchTextChange = { searchText = it },
+                )
+            }
+            IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                Icon(
+                    Icons.Default.Search, contentDescription = "Search",
+                    tint = MaterialTheme.colorScheme.onPrimary,
+                )
+            }
+        })
+    }, floatingActionButton = {
+        ChatAppFAB(contentColor = Color.White,
+            backgroundColor = MaterialTheme.colorScheme.primary,
+            onClick = {
+                isBottomSheetVisible = true
+            })
+    }, bottomBar = {
+        ChatAppBottomAppBar(navController = navController)
+    }) {
 
         if (uiState is UiState.Loading) {
 
@@ -171,7 +167,7 @@ fun ChatListScreen(navController: NavController) {
                     }
                 }
             }
-        } else if (uiState == UiState.Success() ) {
+        } else if (uiState == UiState.Success()) {
             if (selectGroupUserDialog) {
                 SelectGroupMemberDialog(
                     searchResults = searchResults,
@@ -189,8 +185,7 @@ fun ChatListScreen(navController: NavController) {
             }
 
             if (addChatActive) {
-                OpenChatDialog(
-                    searchResults = searchResults,
+                OpenChatDialog(searchResults = searchResults,
                     textFieldValue = textFieldValue,
                     onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
                     onDismiss = {
@@ -200,36 +195,28 @@ fun ChatListScreen(navController: NavController) {
                     onItemClick = {
                         viewModel.createChatRoom(it.uid, navController)
                         addChatActive = false
-                    }
-                )
+                    })
             }
 
             if (isBottomSheetVisible) {
-                BottomSheet(
-                    onDismiss = { isBottomSheetVisible = false },
-                    onClicked = {
-                        when (it) {
-                            "New Chat" -> addChatActive = true
-                            "Create Group Chat" -> selectGroupUserDialog = true
-                        }
+                BottomSheet(onDismiss = { isBottomSheetVisible = false }, onClicked = {
+                    when (it) {
+                        "New Chat" -> addChatActive = true
+                        "Create Group Chat" -> selectGroupUserDialog = true
                     }
-                )
+                })
             }
             if (createGroupChatDialog) {
-                GroupChatDialog(
-                    selectedUri = selectedImageUri,
+                GroupChatDialog(selectedUri = selectedImageUri,
                     onDismissRequest = { createGroupChatDialog = false },
                     onCreateGroupChat = { groupChatName ->
                         viewModel.createGroupChatRoom(
-                            groupMembers,
-                            groupChatName,
-                            uploadedImageUri.toString()
+                            groupMembers, groupChatName, uploadedImageUri.toString()
                         )
                         createGroupChatDialog = false
                     },
                     isImageLoading = uploadImageState == UiState.Loading,
-                    onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) }
-                )
+                    onPermissionRequest = { permissionLauncher.launch(android.Manifest.permission.READ_MEDIA_IMAGES) })
             }
 
             Spacer(modifier = Modifier.padding(top = 16.dp))
@@ -248,47 +235,59 @@ fun ChatListScreen(navController: NavController) {
                             name = chat.name,
                             surname = chat.surname,
                             lastMessage = chat.lastMessage,
+                            lastMessageSenderId = chat.lastMessageSenderId,
                             messageTime = chat.messageTime,
                             isOnline = chat.isOnline
                         )
-                        Chats(chat = myChat, onClick = {
+
+                        var lastMessageSenderName by remember { mutableStateOf("") }
+                        LaunchedEffect(chat.lastMessageSenderId) {
+                            chat.lastMessageSenderId?.let { it1 ->
+                                viewModel.getUserNameFromUserId(it1) { name ->
+                                    lastMessageSenderName = name
+                                }
+
+                        }
+                    }
+                    Chats(
+                        chat = myChat,
+                        onClick = {
                             navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
                         },
-                            onImageLoaded = {
-                                viewModel.changeImageState()
-                            }
-                        )
-                        HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
-                    }
+                        onImageLoaded = {
+                            viewModel.changeImageState()
+                        },
+                        lastMessageSenderName = lastMessageSenderName
+                    )
+                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
-            } else {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
+            }
+        } else {
+            Box(
+                modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
+            ) {
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center
                 ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.Center
-                    ) {
-                        Image(
-                            painter = painterResource(id = R.drawable.sticker_shake_hand),
-                            contentDescription = "Chat",
-                            modifier = Modifier.size(200.dp)
-                        )
-                        Spacer(modifier = Modifier.height(64.dp))
-                        Text(
-                            text = "No chats yet!",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                    }
+                    Image(
+                        painter = painterResource(id = R.drawable.sticker_shake_hand),
+                        contentDescription = "Chat",
+                        modifier = Modifier.size(200.dp)
+                    )
+                    Spacer(modifier = Modifier.height(64.dp))
+                    Text(
+                        text = "No chats yet!", style = MaterialTheme.typography.titleLarge
+                    )
                 }
             }
         }
-
-        if (uiState is UiState.Error) {
-            val errorMessage = (uiState as UiState.Error).message
-            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
-        }
     }
+
+    if (uiState is UiState.Error) {
+        val errorMessage = (uiState as UiState.Error).message
+        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+    }
+}
 }
 

@@ -277,9 +277,6 @@ fun SignInScreen(navController: NavController) {
             }
         }
     }
-    if (uiState is UiState.Error){
-        (uiState as UiState.Error).message?.let { ShowToastMessage(context, it) }
-    }
     if (uiState is UiState.Loading) {
         Box(
             modifier = Modifier

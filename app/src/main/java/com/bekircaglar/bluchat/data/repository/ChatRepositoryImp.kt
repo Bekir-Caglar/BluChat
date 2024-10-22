@@ -19,6 +19,7 @@ import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlinx.coroutines.tasks.await
@@ -203,12 +204,15 @@ class ChatRepositoryImp @Inject constructor(
                 newGroupMembers.add(currentUser)
 
                 val chat = ChatRoom(
-                    newGroupMembers,
-                    chatId,
-                    groupName,
-                    groupImg,
-                    chatType,
-                    chatAdminId = currentUser
+                    users = newGroupMembers,
+                    chatId = chatId,
+                    chatName = groupName,
+                    chatImage = groupImg,
+                    chatType = chatType,
+                    chatAdminId = currentUser,
+                    chatLastMessage = "",
+                    chatLastMessageTime = "",
+                    chatLastMessageSenderId = "",
                 )
                 databaseRef.child(chatId).setValue(chat).addOnSuccessListener {
                     trySend(Response.Success(chatId)).isSuccess

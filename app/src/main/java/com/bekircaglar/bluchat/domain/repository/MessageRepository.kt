@@ -44,4 +44,6 @@ interface MessageRepository {
 
     suspend fun uploadVideo(uri: Uri): Flow<Response<String>>
 
+    suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>>
+
 }
