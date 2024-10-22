@@ -69,13 +69,17 @@ fun ShimmerItem() {
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Column(horizontalAlignment = Alignment.End) {
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.align(Alignment.CenterVertically)
+        ) {
             Text(
-                text = "12:34",
+                text = "12:00",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 modifier = Modifier.placeholder(true)
             )
+
         }
 
     }

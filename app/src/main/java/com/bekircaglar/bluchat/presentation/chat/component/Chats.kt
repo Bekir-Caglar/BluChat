@@ -5,6 +5,7 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -22,6 +23,11 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -30,20 +36,28 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Chats
+import com.bekircaglar.bluchat.presentation.chat.ChatViewModel
+import com.bekircaglar.bluchat.presentation.message.MessageViewModel
+import com.bekircaglar.bluchat.utils.GROUP
+import com.bekircaglar.bluchat.utils.placeholder
+import java.text.SimpleDateFormat
+import java.util.Date
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun Chats(
     chat: Chats,
-    chatRoom: ChatRoom? = null,
+    lastMessageSenderName: String? = "",
     onClick: () -> Unit,
     isSelected: Boolean = false,
-    onImageLoaded : () -> Unit
+    onImageLoaded: () -> Unit,
 ) {
     val profileImage = chat.imageUrl
     val name = chat.name
@@ -68,12 +82,12 @@ fun Chats(
             val painter = rememberAsyncImagePainter(model = profileImage)
             val painterState = painter.state
 
-            if (painterState is AsyncImagePainter.State.Loading){
-                Box(modifier = Modifier.size(50.dp), contentAlignment = Alignment.Center){
+            if (painterState is AsyncImagePainter.State.Loading) {
+                Box(modifier = Modifier.size(50.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
-            if (painterState is AsyncImagePainter.State.Success){
+            if (painterState is AsyncImagePainter.State.Success) {
                 onImageLoaded()
             }
 
@@ -110,13 +124,12 @@ fun Chats(
                 text = "$name $surname",
                 fontWeight = FontWeight.Bold,
                 style = MaterialTheme.typography.titleMedium,
-                modifier = Modifier
-                    .padding(top = 4.dp)
+                modifier = Modifier.padding(bottom = 3.dp)
             )
-            Spacer(modifier = Modifier.height(4.dp))
             if (lastMessage != null)
                 Text(
-                    text = lastMessage,
+                    text = if (chat.surname == "") "$lastMessageSenderName: $lastMessage"
+                    else "$lastMessage",
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
@@ -125,13 +138,17 @@ fun Chats(
 
         Spacer(modifier = Modifier.width(8.dp))
 
-        Column(horizontalAlignment = Alignment.End) {
-            if (messageTime != null)
+        Column(
+            horizontalAlignment = Alignment.End,
+            modifier = Modifier.align(Alignment.CenterVertically)
+        ) {
+            if (messageTime != null) {
                 Text(
                     text = messageTime,
                     style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 )
+            }
         }
 
         if (isSelected)
@@ -143,3 +160,8 @@ fun Chats(
     }
 }
 
+fun formatDate(timestamp: Long): String {
+    val sdf = SimpleDateFormat("HH:mm")
+    val date = Date(timestamp)
+    return sdf.format(date)
+}

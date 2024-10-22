@@ -496,5 +496,18 @@ override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Mess
         emit(Response.Success(downloadUrl.toString()))
 
     }
-}
+    override suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>> = flow{
 
+        val formattedTime = message.timestamp?.let { timeFormat(it) }
+
+        val dbRef = databaseReference.child(CHAT_COLLECTION).child(chatId)
+        dbRef.child("chatLastMessage").setValue(message.message)
+        dbRef.child("chatLastMessageTime").setValue(formattedTime)
+        dbRef.child("chatLastMessageSenderId").setValue(message.senderId)
+    }
+    private fun timeFormat(timestamp: Long): String {
+        val date = java.util.Date(timestamp)
+        val format = java.text.SimpleDateFormat("hh:mm")
+        return format.format(date)
+    }
+}

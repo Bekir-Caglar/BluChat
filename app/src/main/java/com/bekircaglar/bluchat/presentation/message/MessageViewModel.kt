@@ -25,6 +25,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.ObserveGroupStatusUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.ObserveUserStatusInGroupUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.PinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.SetLastMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.StarMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnPinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnStarMessageUseCase
@@ -63,9 +64,8 @@ class MessageViewModel @Inject constructor(
     private val unStarMessageUseCase: UnStarMessageUseCase,
     private val markMessageAsReadUseCase: MarkMessageAsReadUseCase,
     private val uploadVideoUseCase: UploadVideoUseCase,
-
-    ) :
-    ViewModel() {
+    private val setLastMessageUseCase: SetLastMessageUseCase
+) : ViewModel() {
 
     val currentUser = auth.currentUser!!
 
@@ -108,10 +108,10 @@ class MessageViewModel @Inject constructor(
         _uiState.value = UiState.Loading
     }
 
-    fun markMessageAsRead(messageId: String, chatId: String){
+    fun markMessageAsRead(messageId: String, chatId: String) {
         viewModelScope.launch {
-            markMessageAsReadUseCase(messageId, chatId).collect{
-                when(it) {
+            markMessageAsReadUseCase(messageId, chatId).collect {
+                when (it) {
                     is Response.Success -> {
                     }
 
@@ -152,10 +152,13 @@ class MessageViewModel @Inject constructor(
             when (it) {
                 is Response.Success -> {
                 }
+
                 is Response.Error -> {
                 }
+
                 is Response.Loading -> {
                 }
+
                 else -> {
 
                 }
@@ -175,6 +178,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Loading -> {
                 }
+
                 else -> {
 
                 }
@@ -188,12 +192,15 @@ class MessageViewModel @Inject constructor(
                 is Response.Success -> {
 
                 }
+
                 is Response.Error -> {
 
                 }
+
                 is Response.Loading -> {
 
                 }
+
                 else -> {
 
                 }
@@ -223,21 +230,24 @@ class MessageViewModel @Inject constructor(
         _selectedImageUri.value = uri
         uploadImage(uri)
     }
+
     fun onVideoSelected(uri: Uri) {
         _selectedImageUri.value = uri
         uploadVideo(uri)
     }
 
-    private fun uploadVideo(uri: Uri){
+    private fun uploadVideo(uri: Uri) {
         viewModelScope.launch {
-            uploadVideoUseCase(uri).collect{
-                when(it){
+            uploadVideoUseCase(uri).collect {
+                when (it) {
                     is Response.Success -> {
                         _uploadedVideoUri.value = it.data.toUri()
                     }
+
                     is Response.Error -> {
 
                     }
+
                     is Response.Loading -> {
 
                     }
@@ -271,15 +281,17 @@ class MessageViewModel @Inject constructor(
 
     }
 
-    fun getPinnedMessages(chatId: String) = viewModelScope.launch{
+    fun getPinnedMessages(chatId: String) = viewModelScope.launch {
         getPinnedMessagesUseCase(chatId).collect { pinnedMessages ->
-            when(pinnedMessages){
+            when (pinnedMessages) {
                 is Response.Success -> {
                     _pinnedMessages.value = pinnedMessages.data
                 }
+
                 is Response.Error -> {
 
                 }
+
                 is Response.Loading -> {
 
                 }
@@ -291,16 +303,18 @@ class MessageViewModel @Inject constructor(
         }
     }
 
-    fun getStarredMessages(chatId: String) = viewModelScope.launch{
+    fun getStarredMessages(chatId: String) = viewModelScope.launch {
         getStarredMessagesUseCase(chatId).collect { starredMessages ->
 
-            when(starredMessages){
+            when (starredMessages) {
                 is Response.Success -> {
                     _starredMessages.value = starredMessages.data
                 }
+
                 is Response.Error -> {
 
                 }
+
                 is Response.Loading -> {
 
                 }
@@ -342,7 +356,7 @@ class MessageViewModel @Inject constructor(
         }
     }
 
-    fun loadMoreMessages(moreLastKey:String?, chatId: String) {
+    fun loadMoreMessages(moreLastKey: String?, chatId: String) {
         _moreMessageState.value = UiState.Loading
         moreLastKey?.let { moreLastKey ->
             viewModelScope.launch {
@@ -363,6 +377,7 @@ class MessageViewModel @Inject constructor(
                             _moreMessageState.value = UiState.Loading
 
                         }
+
                         else -> {
                             _moreMessageState.value = UiState.Idle
                         }
@@ -384,7 +399,6 @@ class MessageViewModel @Inject constructor(
         val randomId = "$timestamp-${UUID.randomUUID()}"
 
 
-
         val myMessage = Message(
             messageId = randomId,
             senderId = currentUser.uid,
@@ -401,7 +415,7 @@ class MessageViewModel @Inject constructor(
                 }
 
                 is Response.Success -> {
-
+                    setLastMessage(myMessage, chatId)
                 }
 
                 is Response.Error -> {
@@ -409,6 +423,21 @@ class MessageViewModel @Inject constructor(
 
                 else -> {
 
+                }
+            }
+        }
+    }
+
+    private fun setLastMessage(message: Message, chatId: String) = viewModelScope.launch {
+        setLastMessageUseCase(chatId,message).collect {
+            when (it) {
+                is Response.Success -> {
+                }
+                is Response.Error -> {
+                }
+                is Response.Loading -> {
+                }
+                else -> {
                 }
             }
         }
@@ -426,6 +455,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+
                 else -> {
 
                 }
@@ -453,6 +483,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+
                 else -> {
 
                 }
@@ -478,6 +509,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+
                 else -> {
 
                 }
@@ -497,6 +529,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+
                 else -> {
 
                 }
@@ -515,6 +548,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Error -> {
                 }
+
                 else -> {
 
                 }
@@ -536,6 +570,7 @@ class MessageViewModel @Inject constructor(
 
                     is Response.Error -> {
                     }
+
                     else -> {
 
                     }
