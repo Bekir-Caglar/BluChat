@@ -78,6 +78,7 @@ fun ChatListScreen(navController: NavController) {
     var selectGroupUserDialog by remember { mutableStateOf(false) }
     var createGroupChatDialog by remember { mutableStateOf(false) }
     var isBottomSheetVisible by remember { mutableStateOf(false) }
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val selectedUser by viewModel.selectedUser.collectAsStateWithLifecycle()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
@@ -257,7 +258,8 @@ fun ChatListScreen(navController: NavController) {
                         onImageLoaded = {
                             viewModel.changeImageState()
                         },
-                        lastMessageSenderName = lastMessageSenderName
+                        lastMessageSenderName = lastMessageSenderName,
+                        currentUserId = currentUser
                     )
                     HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
