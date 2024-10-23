@@ -72,8 +72,12 @@ class ChatViewModel @Inject constructor(
     private val _selectedUser = MutableStateFlow<Users?>(null)
     val selectedUser: StateFlow<Users?> = _selectedUser
 
+    private val _currentUser = MutableStateFlow<String?>(null)
+    val currentUser: StateFlow<String?> = _currentUser
+
 
     init {
+        _currentUser.value = auth.currentUser?.uid
         viewModelScope.launch {
             _searchQuery
                 .debounce(300)

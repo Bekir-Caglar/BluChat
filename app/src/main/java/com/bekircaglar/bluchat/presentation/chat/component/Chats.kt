@@ -18,6 +18,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
+import androidx.compose.material3.Badge
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -58,6 +59,7 @@ fun Chats(
     onClick: () -> Unit,
     isSelected: Boolean = false,
     onImageLoaded: () -> Unit,
+    currentUserId: String? = "",
 ) {
     val profileImage = chat.imageUrl
     val name = chat.name
@@ -65,6 +67,7 @@ fun Chats(
     val lastMessage = chat.lastMessage
     val messageTime = chat.messageTime
     val isOnline = chat.isOnline
+    val lastMessageSender = chat.lastMessageSenderId
 
 
 
@@ -126,14 +129,23 @@ fun Chats(
                 style = MaterialTheme.typography.titleMedium,
                 modifier = Modifier.padding(bottom = 3.dp)
             )
-            if (lastMessage != null)
+            var myMessage = ""
+            if (lastMessage != null) {
+                if (chat.surname == "" && currentUserId == lastMessageSender) {
+                    myMessage = "You: $lastMessage"
+                }else if (chat.surname == ""){
+                    myMessage = "$lastMessageSenderName: $lastMessage"
+                }
+                else myMessage = "$lastMessage"
+
                 Text(
-                    text = if (chat.surname == "") "$lastMessageSenderName: $lastMessage"
-                    else "$lastMessage",
+                    text = myMessage,
                     style = MaterialTheme.typography.bodyMedium,
                     maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
                 )
+            }
+
         }
 
         Spacer(modifier = Modifier.width(8.dp))
@@ -158,10 +170,4 @@ fun Chats(
                 modifier = Modifier.size(24.dp)
             )
     }
-}
-
-fun formatDate(timestamp: Long): String {
-    val sdf = SimpleDateFormat("HH:mm")
-    val date = Date(timestamp)
-    return sdf.format(date)
 }
