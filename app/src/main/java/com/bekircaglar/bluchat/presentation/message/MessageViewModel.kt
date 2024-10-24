@@ -10,11 +10,13 @@ import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.domain.model.Messages
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.DeleteMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.EditMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetChatRoomUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.GetMessageByIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetPinnedMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetStarredMessagesUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
@@ -64,7 +66,8 @@ class MessageViewModel @Inject constructor(
     private val unStarMessageUseCase: UnStarMessageUseCase,
     private val markMessageAsReadUseCase: MarkMessageAsReadUseCase,
     private val uploadVideoUseCase: UploadVideoUseCase,
-    private val setLastMessageUseCase: SetLastMessageUseCase
+    private val setLastMessageUseCase: SetLastMessageUseCase,
+    private val getMessageByIdUseCase: GetMessageByIdUseCase
 ) : ViewModel() {
 
     val currentUser = auth.currentUser!!
@@ -387,12 +390,36 @@ class MessageViewModel @Inject constructor(
         }
     }
 
+     fun getMessageById(messageId: String, chatId: String,onResult: (Message) -> Unit) = viewModelScope.launch {
+
+        getMessageByIdUseCase(messageId, chatId).collect {
+            when (it) {
+                is Response.Success -> {
+                    onResult(it.data)
+                }
+
+                is Response.Error -> {
+
+                }
+
+                is Response.Loading -> {
+
+                }
+
+                else -> {
+                }
+
+            }
+        }
+     }
+
 
     fun sendMessage(
         imageUrl: String? = "",
         message: String,
         chatId: String,
-        messageType: String
+        messageType: String,
+        replyTo: String? = ""
     ) = viewModelScope.launch {
 
         val timestamp = System.currentTimeMillis()
@@ -407,6 +434,7 @@ class MessageViewModel @Inject constructor(
             read = false,
             messageType = messageType,
             imageUrl = imageUrl,
+            replyTo = replyTo
         )
 
         sendMessageUseCase(myMessage, chatId).collect { response ->
@@ -429,14 +457,17 @@ class MessageViewModel @Inject constructor(
     }
 
     private fun setLastMessage(message: Message, chatId: String) = viewModelScope.launch {
-        setLastMessageUseCase(chatId,message).collect {
+        setLastMessageUseCase(chatId, message).collect {
             when (it) {
                 is Response.Success -> {
                 }
+
                 is Response.Error -> {
                 }
+
                 is Response.Loading -> {
                 }
+
                 else -> {
                 }
             }

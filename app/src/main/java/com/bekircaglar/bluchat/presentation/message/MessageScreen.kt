@@ -16,10 +16,14 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imeNestedScroll
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -28,6 +32,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Add
@@ -82,11 +87,15 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.lifecycle.viewmodel.compose.viewModel
 import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.VideoPlayerActivity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
-@OptIn(ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class)
+@OptIn(
+    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
+    ExperimentalLayoutApi::class
+)
 @Composable
 fun MessageScreen(navController: NavController, chatId: String) {
 
@@ -110,9 +119,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForPin by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForEdit by remember { mutableStateOf<Message?>(null) }
+    var selectedMessageForReply by remember { mutableStateOf<Message?>(null) }
 
     var videoUploadState by remember { mutableStateOf(false) }
     var imageUploadState by remember { mutableStateOf(false) }
+    var replyState by remember { mutableStateOf(false) }
 
 
     val pinnedMessages by viewModel.pinnedMessages.collectAsStateWithLifecycle()
@@ -223,7 +234,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             navController.navigate(Screens.ChatInfoScreen.createRoute(chatId))
                         }
                         .padding(start = 8.dp)
-
                 ) {
                     Image(
                         painter = rememberImagePainter(data = userInfo?.profileImageUrl),
@@ -266,55 +276,87 @@ fun MessageScreen(navController: NavController, chatId: String) {
             )
         },
         bottomBar = {
-            BottomAppBar(
-                containerColor = MaterialTheme.colorScheme.background,
-            ) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
-                    IconButton(
-                        onClick = {
-                            bottomSheetState = true
-                        },
-                        modifier = Modifier.padding(end = 8.dp)
-                    ) {
-                        PlusIcon()
+            Column {
+                if (replyState) {
+
+                    var senderName by remember { mutableStateOf("") }
+                    selectedMessageForReply!!.senderId?.let {
+                        viewModel.getUserNameFromUserId(
+                            it, onResult = {
+                                senderName = it
+                            })
                     }
-                    MessageTextField(
-                        searchText = chatMessage,
-                        onSearchTextChange = { newText ->
-                            chatMessage =
-                                newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                        },
-                        onSend = {
-                            viewModel.sendMessage(
-                                message = chatMessage,
-                                chatId = chatId,
-                                messageType = TEXT
-                            )
-                            chatMessage = ""
-                        },
-                        placeholderText = "Type a message",
-                        modifier = Modifier.width(300.dp)
-                    )
 
-                    Spacer(modifier = Modifier.weight(1f))
+                    Reply(
+                        messageSenderName = senderName,
+                        message = selectedMessageForReply!!,
+                        onDismiss = {
+                            replyState = false
+                            selectedMessageForReply = null
+                        })
+                }
 
-                    IconButton(
-                        onClick = {
-                            if (chatMessage.isNotEmpty()) {
-                                viewModel.sendMessage(
-                                    message = chatMessage,
-                                    chatId = chatId,
-                                    messageType = TEXT
-                                )
-                                chatMessage = ""
+                BottomAppBar(
+                    containerColor = MaterialTheme.colorScheme.background,
+                ) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.padding(8.dp)
+                        ) {
+                            IconButton(
+                                onClick = {
+                                    bottomSheetState = true
+                                },
+                                modifier = Modifier.padding(end = 8.dp)
+                            ) {
+                                PlusIcon()
                             }
-                        }, modifier = Modifier.padding(end = 16.dp)
-                    ) {
-                        SendIcon()
+                            MessageTextField(
+                                searchText = chatMessage,
+                                onSearchTextChange = { newText ->
+                                    chatMessage =
+                                        newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                                },
+                                onSend = {
+                                    viewModel.sendMessage(
+                                        message = chatMessage,
+                                        chatId = chatId,
+                                        messageType = TEXT,
+                                        replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
+                                    )
+                                    chatMessage = ""
+                                    replyState = false
+                                    selectedMessageForReply = null
+                                },
+                                placeholderText = "Type a message",
+                                modifier = Modifier.weight(1f)
+                            )
+
+                            IconButton(
+                                onClick = {
+                                    if (chatMessage.isNotEmpty()) {
+                                        viewModel.sendMessage(
+                                            message = chatMessage,
+                                            chatId = chatId,
+                                            messageType = TEXT,
+                                            replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
+                                        )
+                                        chatMessage = ""
+                                        replyState = false
+                                        selectedMessageForReply = null
+                                    }
+                                }, modifier = Modifier.padding(start = 8.dp)
+                            ) {
+                                SendIcon()
+                            }
+                        }
                     }
                 }
             }
-        },
+
+        }
+
     ) {
         if (screenState is UiState.Loading) {
             Box(
@@ -530,6 +572,25 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             senderName = name
                                         }
                                     }
+                                    var replyedMessage by remember { mutableStateOf<Message?>(null) }
+                                    if (message.replyTo != "") {
+                                        LaunchedEffect(replyedMessage) {
+                                            viewModel.getMessageById(message.replyTo.toString(),chatId, onResult = {
+                                                replyedMessage = it
+                                            })
+
+                                        }
+                                    }
+
+                                    var senderReplyName by remember { mutableStateOf("") }
+                                    LaunchedEffect(replyedMessage) {
+                                        replyedMessage?.senderId?.let { it1 ->
+                                            viewModel.getUserNameFromUserId(it1) { name ->
+                                                senderReplyName = name
+                                            }
+                                        }
+                                    }
+
 
                                     val senderNameColor = viewModel.getUserColor(senderId!!)
                                     message.messageType?.let { messageType ->
@@ -580,7 +641,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             },
                                             onUnStarMessage = {
                                                 viewModel.unStarMessage(message, chatId)
-                                            }
+                                            },
+                                            onSwipeRight = {
+                                                selectedMessageForReply = it
+                                                replyState = true
+                                            },
+                                            replyMessage = replyedMessage,
+                                            replyMessageName = senderReplyName
                                         )
 
                                     }
@@ -694,6 +761,51 @@ fun MessageScreen(navController: NavController, chatId: String) {
             contentAlignment = Alignment.Center
         ) {
             CircularProgressIndicator()
+        }
+    }
+}
+
+@Composable
+private fun Reply(messageSenderName: String, message: Message, onDismiss: () -> Unit) {
+
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .background(MaterialTheme.colorScheme.secondary.copy(0.15f))
+            .padding(8.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Box(
+            modifier = Modifier
+                .width(4.dp)
+                .height(50.dp)
+                .background(MaterialTheme.colorScheme.primary)
+                .padding(end = 8.dp)
+        )
+
+        Column(
+            modifier = Modifier
+                .weight(1f)
+                .padding(start = 8.dp)
+        ) {
+            Text(
+                text = messageSenderName,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
+            Text(
+                text = message.message!!,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurface
+            )
+        }
+
+        IconButton(onClick = { onDismiss() }) {
+            Icon(
+                imageVector = Icons.Default.Close,
+                contentDescription = "Remove quoted message",
+                tint = MaterialTheme.colorScheme.onSurface
+            )
         }
     }
 }

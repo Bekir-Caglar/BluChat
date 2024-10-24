@@ -46,4 +46,6 @@ interface MessageRepository {
 
     suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>>
 
+    suspend fun getMessageById(messageId: String, chatId: String): Flow<Response<Message>>
+
 }
