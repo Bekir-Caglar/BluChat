@@ -11,5 +11,5 @@ data class Message(
     val edited : Boolean? = false,
     val pinned : Boolean? = false,
     val starred : Boolean? = false,
-
+    val replyTo : String? = "",
     )

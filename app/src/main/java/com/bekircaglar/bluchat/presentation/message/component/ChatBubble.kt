@@ -54,6 +54,11 @@ import com.bekircaglar.bluchat.utils.getVideoThumbnail
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
+import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.height
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.text.style.TextOverflow
+
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatBubble(
@@ -71,7 +76,10 @@ fun ChatBubble(
     onPinMessageClick: () -> Unit = {},
     onUnPinMessageClick: () -> Unit = {},
     onStarMessage: () -> Unit = {},
-    onUnStarMessage: () -> Unit = {}
+    onUnStarMessage: () -> Unit = {},
+    onSwipeRight: (Message) -> Unit = {},
+    replyMessage: Message? = null,
+    replyMessageName: String? = null
 ) {
     val bubbleColor =
         if (isSentByMe) MaterialTheme.colorScheme.tertiary else Color(0xF7FFFFFF).copy(alpha = 0.6f)
@@ -87,31 +95,27 @@ fun ChatBubble(
     MessageDropdownMenu(
         expanded = expanded,
         onDismissRequest = { expanded = false },
-        onEditClick = {
-            onEditClick()
-        },
-        onDeleteClick = {
-            onDeleteClick()
-        },
-        onPinMessageClick = {
-            onPinMessageClick()
-        },
+        onEditClick = { onEditClick() },
+        onDeleteClick = { onDeleteClick() },
+        onPinMessageClick = { onPinMessageClick() },
         message = message,
-        onUnPinMessageClick = {
-            onUnPinMessageClick()
-        },
-        onStarMessage = {
-            onStarMessage()
-        },
-        onUnStarMessage = {
-            onUnStarMessage()
-        }
+        onUnPinMessageClick = { onUnPinMessageClick() },
+        onStarMessage = { onStarMessage() },
+        onUnStarMessage = { onUnStarMessage() }
     )
 
     Row(
-        modifier = Modifier.chatBubbleModifier(isSentByMe) {
-            expanded = true
-        },
+        modifier = Modifier
+            .chatBubbleModifier(isSentByMe) {
+                expanded = true
+            }
+            .pointerInput(Unit) {
+                detectHorizontalDragGestures { change, dragAmount ->
+                    if (dragAmount > 50 && !isSentByMe) {
+                        onSwipeRight(message)
+                    }
+                }
+            },
         horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
     ) {
         Row(
@@ -126,9 +130,43 @@ fun ChatBubble(
                 shape = shape,
                 color = bubbleColor
             ) {
-                Column(
-                    modifier = Modifier.padding(12.dp)
-                ) {
+                Column(modifier = Modifier.padding(12.dp)) {
+
+                    if (replyMessage != null) {
+
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(0.5f)
+                                .background(
+                                    color = MaterialTheme.colorScheme.secondary,
+                                    shape = RoundedCornerShape(12.dp))
+                                .padding(8.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .width(4.dp)
+                                    .height(40.dp)
+                                    .background(MaterialTheme.colorScheme.primary)
+                                    .padding(end = 8.dp)
+                            )
+                            Column(modifier = Modifier.padding(start = 8.dp)) {
+                                Text(
+                                    text = replyMessageName ?: "Anonymous",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.primary
+                                )
+                                Text(
+                                    text = replyMessage.message ?: "",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.size(8.dp))
+                    }
+
                     if (!isSentByMe) {
                         Text(
                             text = senderName,
@@ -137,6 +175,7 @@ fun ChatBubble(
                             textAlign = TextAlign.Start
                         )
                     }
+
                     Spacer(modifier = Modifier.size(8.dp))
 
                     if (messageType == "text") {
@@ -159,15 +198,11 @@ fun ChatBubble(
                                 contentDescription = "Image Message",
                                 modifier = Modifier
                                     .size(200.dp)
-                                    .clip(shape = RoundedCornerShape(12.dp))
+                                    .clip(RoundedCornerShape(12.dp))
                                     .combinedClickable(
                                         enabled = true,
-                                        onClick = {
-                                            onImageClick(message.imageUrl!!)
-                                        },
-                                        onLongClick = {
-                                            expanded = true
-                                        }
+                                        onClick = { onImageClick(message.imageUrl!!) },
+                                        onLongClick = { expanded = true }
                                     )
                                     .align(Alignment.CenterHorizontally),
                                 contentScale = ContentScale.Crop
@@ -226,13 +261,13 @@ fun ChatBubble(
                                 )
                             }
                         }
-
                     }
                 }
             }
         }
     }
 }
+
 
 @Composable
 fun MessageDropdownMenu(
@@ -411,7 +446,7 @@ fun VideoThumbnailComposable(
                 contentDescription = "play button",
                 modifier = Modifier
                     .background(color = Color.Black.copy(alpha = 0.3f), shape = CircleShape)
-                    .size((size/3))
+                    .size((size / 3))
                     .align(alignment = Alignment.Center)
             )
 
@@ -424,7 +459,7 @@ fun VideoThumbnailComposable(
                 .size(size)
                 .background(Color.Black, shape = RoundedCornerShape(12.dp))
         ) {
-            CircularProgressIndicator(modifier = Modifier.size(size/4))
+            CircularProgressIndicator(modifier = Modifier.size(size / 4))
 
         }
     }
