@@ -33,6 +33,7 @@ import com.bekircaglar.bluchat.ui.theme.ChatAppBordoTheme
 fun ChatAppBottomAppBar(navController: NavController? = null) {
     val items = remember {
         listOf(
+            Screens.ContactScreen,
             Screens.ChatListScreen,
             Screens.ProfileScreen,
         )

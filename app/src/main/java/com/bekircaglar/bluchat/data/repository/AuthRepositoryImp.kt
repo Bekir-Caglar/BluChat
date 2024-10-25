@@ -70,7 +70,8 @@ class AuthRepositoryImp @Inject constructor(
                 profileImageUrl = if (userImageUrl.isNullOrEmpty()) "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/def_user.png?alt=media&token=54d55dc5-4fad-415a-8b6f-d0f3b0619f31"
                 else userImageUrl,
                 status = false,
-                lastSeen = "12:19"
+                lastSeen = "12:19",
+                contactsIdList = listOf("123","123123")
             )
             databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString()).setValue(user)
                 .await()

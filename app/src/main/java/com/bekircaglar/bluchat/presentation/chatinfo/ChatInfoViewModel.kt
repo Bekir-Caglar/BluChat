@@ -74,7 +74,7 @@ class ChatInfoViewModel @Inject constructor(
     private val _ChatImages = MutableStateFlow<List<String>>(emptyList())
     val ChatImages: StateFlow<List<String>> = _ChatImages
 
-    private val _stateOfUserListState =MutableStateFlow<UiState>(UiState.Idle)
+    private val _stateOfUserListState = MutableStateFlow<UiState>(UiState.Idle)
     val stateOfUserListState = _stateOfUserListState.asStateFlow()
 
     private val _chatImagesState = MutableStateFlow<UiState>(UiState.Idle)
@@ -89,27 +89,36 @@ class ChatInfoViewModel @Inject constructor(
             _searchQuery
                 .debounce(300)
                 .collect { query ->
-                    when (val result = searchPhoneNumberUseCase(query)) {
-                        is Response.Success -> {
-                            _searchResults.value = result.data.let {
-                                it.filter { user -> user.uid != authUseCase.currentUser?.uid }
+                    searchPhoneNumberUseCase(query).collect {
+                        when (it) {
+                            is Response.Success -> {
+                                _searchResults.value = it.data.let {
+                                    it.filter { user -> user.uid != authUseCase.currentUser?.uid }
+                                }
+                                _stateOfUserListState.value = UiState.Success()
+                            }
+
+                            is Response.Error -> {
+                                _stateOfUserListState.value = UiState.Error(it.message)
+                            }
+
+                            is Response.Loading -> {
+                                _stateOfUserListState.value = UiState.Loading
+                            }
+
+                            else -> {
+                                _stateOfUserListState.value = UiState.Idle
                             }
                         }
 
-                        is Response.Error -> {
-
-                        }
-
-                        else -> {
-
-                        }
                     }
+
                 }
         }
 
     }
 
-    fun setChatImagesState(uiState: UiState){
+    fun setChatImagesState(uiState: UiState) {
         _chatImagesState.value = uiState
     }
 
@@ -128,6 +137,7 @@ class ChatInfoViewModel @Inject constructor(
                 is Response.Error -> {
                     _chatImagesState.value = UiState.Error(response.message)
                 }
+
                 else -> {
                     _chatImagesState.value = UiState.Idle
                 }
@@ -155,6 +165,7 @@ class ChatInfoViewModel @Inject constructor(
                 is Response.Error -> {
                     _stateOfUserListState.value = UiState.Error(response.message)
                 }
+
                 else -> {
 
                 }
@@ -212,6 +223,7 @@ class ChatInfoViewModel @Inject constructor(
                 is Response.Error -> {
                     _stateOfUserListState.value = UiState.Error(response.message)
                 }
+
                 else -> {
                     _stateOfUserListState.value = UiState.Idle
                 }
@@ -240,6 +252,7 @@ class ChatInfoViewModel @Inject constructor(
                         is Response.Error -> {
                             _stateOfUserListState.value = UiState.Error(response.message)
                         }
+
                         else -> {
                             _stateOfUserListState.value = UiState.Idle
                         }

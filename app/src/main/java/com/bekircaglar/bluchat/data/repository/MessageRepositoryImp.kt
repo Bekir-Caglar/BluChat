@@ -10,6 +10,7 @@ import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.Messages
 import com.bekircaglar.bluchat.domain.repository.MessageRepository
+import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -110,6 +111,7 @@ class MessageRepositoryImp @Inject constructor(
                 is Response.Loading -> {
 
                 }
+
                 is Response.Idle -> {
 
                 }
@@ -300,43 +302,47 @@ class MessageRepositoryImp @Inject constructor(
         }
 
     override suspend fun getPinnedMessages(chatId: String): Flow<Response<List<Message>>> =
-    callbackFlow {
-        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("pinnedMessages")
+        callbackFlow {
+            val dbRef =
+                databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("pinnedMessages")
 
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val pinnedMessageIds = snapshot.getValue(object : GenericTypeIndicator<List<String>>() {}) ?: listOf()
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val pinnedMessageIds =
+                        snapshot.getValue(object : GenericTypeIndicator<List<String>>() {})
+                            ?: listOf()
 
-                if (pinnedMessageIds.isEmpty()) {
-                    trySend(Response.Success(emptyList()))
-                    return
-                }
+                    if (pinnedMessageIds.isEmpty()) {
+                        trySend(Response.Success(emptyList()))
+                        return
+                    }
 
-                val messageList = mutableListOf<Message>()
-                for (messageId in pinnedMessageIds) {
-                    val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
-                    messageRef.get().addOnSuccessListener { messageSnapshot ->
-                        val message = messageSnapshot.getValue(Message::class.java)
-                        if (message != null) {
-                            messageList.add(message)
+                    val messageList = mutableListOf<Message>()
+                    for (messageId in pinnedMessageIds) {
+                        val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
+                            .child(STORED_MESSAGES).child(messageId)
+                        messageRef.get().addOnSuccessListener { messageSnapshot ->
+                            val message = messageSnapshot.getValue(Message::class.java)
+                            if (message != null) {
+                                messageList.add(message)
+                            }
+                            if (messageList.size == pinnedMessageIds.size) {
+                                trySend(Response.Success(messageList))
+                            }
+                        }.addOnFailureListener { exception ->
+                            trySend(Response.Error(exception.message.toString()))
                         }
-                        if (messageList.size == pinnedMessageIds.size) {
-                            trySend(Response.Success(messageList))
-                        }
-                    }.addOnFailureListener { exception ->
-                        trySend(Response.Error(exception.message.toString()))
                     }
                 }
+
+                override fun onCancelled(error: DatabaseError) {
+                    trySend(Response.Error(error.message))
+                }
             }
 
-            override fun onCancelled(error: DatabaseError) {
-                trySend(Response.Error(error.message))
-            }
+            dbRef.addValueEventListener(listener)
+            awaitClose { dbRef.removeEventListener(listener) }
         }
-
-        dbRef.addValueEventListener(listener)
-        awaitClose { dbRef.removeEventListener(listener) }
-    }
 
     override suspend fun starMessage(messageId: String, chatId: String): Flow<Response<String>> =
         callbackFlow {
@@ -426,45 +432,51 @@ class MessageRepositoryImp @Inject constructor(
             awaitClose { starredRef.removeEventListener(listener) }
         }
 
-override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Message>>> = callbackFlow {
-    val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("starredMessages")
+    override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Message>>> =
+        callbackFlow {
+            val dbRef =
+                databaseReference.child(MESSAGE_COLLECTION).child(chatId).child("starredMessages")
 
-    val listener = object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val starredMessageIds = snapshot.getValue(object : GenericTypeIndicator<List<String>>() {}) ?: listOf()
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val starredMessageIds =
+                        snapshot.getValue(object : GenericTypeIndicator<List<String>>() {})
+                            ?: listOf()
 
-            val messageList = mutableListOf<Message>()
-            for (messageId in starredMessageIds) {
-                val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
-                messageRef.get().addOnSuccessListener { messageSnapshot ->
-                    val message = messageSnapshot.getValue(Message::class.java)
-                    if (message != null) {
-                        messageList.add(message)
+                    val messageList = mutableListOf<Message>()
+                    for (messageId in starredMessageIds) {
+                        val messageRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId)
+                            .child(STORED_MESSAGES).child(messageId)
+                        messageRef.get().addOnSuccessListener { messageSnapshot ->
+                            val message = messageSnapshot.getValue(Message::class.java)
+                            if (message != null) {
+                                messageList.add(message)
+                            }
+                            if (messageList.size == starredMessageIds.size) {
+                                trySend(Response.Success(messageList))
+                            }
+                        }.addOnFailureListener { exception ->
+                            trySend(Response.Error(exception.message.toString()))
+                        }
                     }
-                    if (messageList.size == starredMessageIds.size) {
-                        trySend(Response.Success(messageList))
-                    }
-                }.addOnFailureListener { exception ->
-                    trySend(Response.Error(exception.message.toString()))
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    trySend(Response.Error(error.message))
                 }
             }
-        }
 
-        override fun onCancelled(error: DatabaseError) {
-            trySend(Response.Error(error.message))
+            dbRef.addValueEventListener(listener)
+            awaitClose { dbRef.removeEventListener(listener) }
         }
-    }
-
-    dbRef.addValueEventListener(listener)
-    awaitClose { dbRef.removeEventListener(listener) }
-}
 
     override suspend fun markMessageAsRead(
         messageId: String,
         chatId: String
     ): Flow<Response<String>> = flow {
 
-        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+            .child(messageId)
 
         dbRef.get().addOnSuccessListener {
 
@@ -485,7 +497,7 @@ override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Mess
         val uploadTask = storageReference.putFile(uri)
 
         val downloadUrl = uploadTask.continueWithTask { task ->
-            if (!task.isSuccessful){
+            if (!task.isSuccessful) {
                 task.exception?.let {
                     throw it
                 }
@@ -496,22 +508,25 @@ override suspend fun getStarredMessages(chatId: String): Flow<Response<List<Mess
         emit(Response.Success(downloadUrl.toString()))
 
     }
-    override suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>> = flow{
 
-        val formattedTime = message.timestamp?.let { timeFormat(it) }
+    override suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>> =
+        flow {
 
-        val dbRef = databaseReference.child(CHAT_COLLECTION).child(chatId)
-        dbRef.child("chatLastMessage").setValue(message.message)
-        dbRef.child("chatLastMessageTime").setValue(formattedTime)
-        dbRef.child("chatLastMessageSenderId").setValue(message.senderId)
-    }
+            val formattedTime = message.timestamp?.let { timeFormat(it) }
+
+            val dbRef = databaseReference.child(CHAT_COLLECTION).child(chatId)
+            dbRef.child("chatLastMessage").setValue(message.message)
+            dbRef.child("chatLastMessageTime").setValue(formattedTime)
+            dbRef.child("chatLastMessageSenderId").setValue(message.senderId)
+        }
 
     override suspend fun getMessageById(
         messageId: String,
         chatId: String
-    ): Flow<Response<Message>> = flow{
+    ): Flow<Response<Message>> = flow {
 
-        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES).child(messageId)
+        val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
+            .child(messageId)
         val snapshot = dbRef.get().await()
         val message = snapshot.getValue(Message::class.java)
         emit(Response.Success(message!!))

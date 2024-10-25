@@ -9,4 +9,5 @@ data class Users(
     var profileImageUrl: String= "",
     var status: Boolean = false,
     var lastSeen: String = "",
+    var contactsIdList: List<String> = emptyList(),
 )
