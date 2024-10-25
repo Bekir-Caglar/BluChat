@@ -10,6 +10,7 @@ import androidx.navigation.navArgument
 import androidx.navigation.navigation
 import com.bekircaglar.bluchat.presentation.chat.ChatListScreen
 import com.bekircaglar.bluchat.presentation.chatinfo.ChatInfoScreen
+import com.bekircaglar.bluchat.presentation.contacts.ContactsScreen
 import com.bekircaglar.bluchat.presentation.message.MessageScreen
 import com.bekircaglar.bluchat.presentation.message.camera.CameraScreen
 import com.bekircaglar.bluchat.presentation.message.camera.SendTakenPhotoScreen
@@ -94,6 +95,11 @@ fun NavGraphBuilder.MainNavGraph(navController: NavController, onThemeChange: ()
                 }
             }
 
+        }
+        composable(
+            Screens.ContactScreen.route,
+        ){
+            ContactsScreen(navController)
         }
     }
 }

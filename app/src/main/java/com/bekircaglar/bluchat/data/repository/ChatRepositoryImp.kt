@@ -35,57 +35,53 @@ class ChatRepositoryImp @Inject constructor(
     }
 
 
-    override suspend fun searchContacts(query: String): Response<List<Users>> {
-        return suspendCancellableCoroutine { continuation ->
-            val database = databaseReference.database.getReference(USER_COLLECTION)
-            var isResumed = false
+override suspend fun searchContacts(query: String): Flow<Response<List<Users>>> = callbackFlow {
+    val database = databaseReference.child(USER_COLLECTION)
+    val currentUserRef = databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString())
+
+    val listener = object : ValueEventListener {
+        override fun onDataChange(contactListSnapshot: DataSnapshot) {
+            val contactIdList = contactListSnapshot.children.map { it.value as String }
 
             if (query.isEmpty() || query.isBlank()) {
-                GlobalScope.launch {
+                database.get().addOnSuccessListener { allUsersSnapshot ->
                     val matchedUsers = mutableListOf<Users>()
-                    val result = database.get().await()
-                    for (snapshot in result.children) {
-                        val user = snapshot.getValue(Users::class.java)
-                        if (user != null) {
-                            matchedUsers.add(user)
-                        }
-                    }
-                    if (!isResumed) {
-                        isResumed = true
-                        continuation.resume(Response.Success(matchedUsers)) { }
-                    }
-                }
-                return@suspendCancellableCoroutine
-            }
-
-            val listener = object : ValueEventListener {
-                override fun onDataChange(snapshot: DataSnapshot) {
-                    val matchedUsers = mutableListOf<Users>()
-                    for (userSnapshot in snapshot.children) {
+                    for (userSnapshot in allUsersSnapshot.children) {
                         val user = userSnapshot.getValue(Users::class.java)
-                        if (user?.phoneNumber?.contains(query) == true) {
+                        if (user != null && userSnapshot.key in contactIdList) {
                             matchedUsers.add(user)
                         }
                     }
-                    if (!isResumed) {
-                        isResumed = true
-                        continuation.resume(Response.Success(matchedUsers)) { }
-                        database.removeEventListener(this)
-                    }
+                    trySend(Response.Success(matchedUsers))
+                }.addOnFailureListener { error ->
+                    trySend(Response.Error(error.message.toString()))
                 }
-
-                override fun onCancelled(error: DatabaseError) {
-                    if (!isResumed) {
-                        isResumed = true
-                        continuation.resume(Response.Error(error.message)) { }
-                        database.removeEventListener(this)
+            } else {
+                database.get().addOnSuccessListener { allUsersSnapshot ->
+                    val matchedUsers = mutableListOf<Users>()
+                    for (userSnapshot in allUsersSnapshot.children) {
+                        val user = userSnapshot.getValue(Users::class.java)
+                        val phoneNumber = user?.phoneNumber
+                        if (phoneNumber?.contains(query) == true && userSnapshot.key in contactIdList) {
+                            matchedUsers.add(user)
+                        }
                     }
+                    trySend(Response.Success(matchedUsers))
+                }.addOnFailureListener { error ->
+                    trySend(Response.Error(error.message.toString()))
                 }
             }
+        }
 
-            database.addValueEventListener(listener)
+        override fun onCancelled(error: DatabaseError) {
+            trySend(Response.Error(error.message.toString()))
         }
     }
+
+    currentUserRef.child("contactsIdList").addValueEventListener(listener)
+    awaitClose { currentUserRef.child("contactsIdList").removeEventListener(listener) }
+}
+
     override suspend fun createChatRoom(
         user1: String, user2: String, chatRoomId: String
     ): Flow<Response<String>> = callbackFlow {

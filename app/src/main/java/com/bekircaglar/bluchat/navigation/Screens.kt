@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.navigation
 
+import androidx.compose.material.icons.Icons
 import com.bekircaglar.bluchat.R
 
 
@@ -26,6 +27,7 @@ sealed class Screens(val route:String,val icon:Int? = null,val badgeCount:Int = 
     data object StarredMessagesScreen:Screens("starred_messages_screen/{chatId}"){
         fun createRoute(chatId:String):String = "starred_messages_screen/$chatId"
     }
+    data object ContactScreen:Screens("contact_screen", icon = R.drawable.ic_contacts)
 
 
     data object AuthNav : Screens("AUTH_NAV_GRAPH")

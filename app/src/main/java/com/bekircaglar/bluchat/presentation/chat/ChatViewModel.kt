@@ -27,6 +27,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
@@ -39,7 +40,8 @@ class ChatViewModel @Inject constructor(
     private val createGroupChatRoomUseCase: CreateGroupChatRoomUseCase,
     private val auth: FirebaseAuth,
     private val uploadImageUseCase: UploadImageUseCase,
-) : ViewModel() {
+
+    ) : ViewModel() {
     private val _searchQuery = MutableStateFlow("")
     val searchQuery = _searchQuery.asStateFlow()
 
@@ -78,34 +80,45 @@ class ChatViewModel @Inject constructor(
 
     init {
         _currentUser.value = auth.currentUser?.uid
-        viewModelScope.launch {
-            _searchQuery
-                .debounce(300)
-                .collect { query ->
-                    when (val result = searchPhoneNumberUseCase(query)) {
-                        is Response.Success -> {
-                            _searchResults.value = result.data.let {
-                                it.filter { user -> user.uid != auth.currentUser?.uid }
-                            }
-                            _uiState.value = UiState.Success()
-                        }
-
-                        is Response.Error -> {
-                            _uiState.value = UiState.Error(result.message)
-                        }
-
-                        else -> {
-                            _uiState.value = UiState.Idle
-                        }
-                    }
-                }
-        }
-
+        observeSearchQuery()
         if (stateOfPrivate.value == UiState.Success() && stateOfGroup.value == UiState.Success()) {
             _uiState.value = UiState.Success()
         }
 
         getUsersChatList()
+    }
+    private fun observeSearchQuery() {
+        viewModelScope.launch {
+            _searchQuery.debounce(300)
+                .collect { query ->
+                    searchPhoneNumberUseCase(query).collect {
+                        when (it) {
+                            is Response.Success -> { _searchResults.value = it.data.let {
+                                    it.filter { user -> user.uid != auth.currentUser?.uid }
+                                }
+                                _uiState.value = UiState.Success()
+                            }
+
+                            is Response.Error -> {
+                                _uiState.value = UiState.Error(it.message)
+                            }
+
+                            is Response.Loading -> {
+                                _uiState.value = UiState.Loading
+                            }
+
+                            else -> {
+                                _uiState.value = UiState.Idle
+                            }
+                        }
+                    }
+                }
+        }
+    }
+
+    fun onSearchQueryChange(newQuery: String) = viewModelScope.launch {
+        _searchQuery.value = newQuery
+        observeSearchQuery()
     }
 
     fun changeImageState() {
@@ -285,11 +298,6 @@ class ChatViewModel @Inject constructor(
             }
         }
     }
-
-    fun onSearchQueryChange(newQuery: String) {
-        _searchQuery.value = newQuery
-    }
-
     private val userNameCache = mutableMapOf<String, String>()
 
     fun getUserNameFromUserId(userId: String, onResult: (String) -> Unit) {

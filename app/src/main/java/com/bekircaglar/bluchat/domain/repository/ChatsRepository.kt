@@ -7,7 +7,7 @@ import kotlinx.coroutines.flow.Flow
 
 interface ChatsRepository {
 
-    suspend fun searchContacts(query: String): Response<List<Users>>
+    suspend fun searchContacts(query: String):Flow<Response<List<Users>>>
 
     suspend fun createChatRoom(user1: String, user2: String, chatRoomId: String): Flow<Response<String>>
 

@@ -29,7 +29,7 @@
       <SelectionState runConfigName="EnterPhoneNumberDialogPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
-      <SelectionState runConfigName="VideoPlayerActivity">
+      <SelectionState runConfigName="ContactsScreenPreview">
         <option name="selectionMode" value="DROPDOWN" />
       </SelectionState>
     </selectionStates>
