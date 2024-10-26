@@ -73,8 +73,8 @@ import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.VideoPlayerActivity
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.navigation.Screens
-import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
-import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
+import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatBottomSheet
+import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberBottomSheet
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import kotlinx.coroutines.launch
 
@@ -185,7 +185,7 @@ fun ChatInfoScreen(
             val filteredSearchResults = searchResults.filter { user ->
                 user.uid !in chatUserIdList
             }
-            SelectGroupMemberDialog(
+            SelectGroupMemberBottomSheet(
                 searchResults = filteredSearchResults,
                 textFieldValue = textFieldValue,
                 onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -201,7 +201,7 @@ fun ChatInfoScreen(
             )
         }
         if (updateGroupInfoDialog) {
-            GroupChatDialog(defaultImageUrl = chatRoom.chatImage,
+            GroupChatBottomSheet(defaultImageUrl = chatRoom.chatImage,
                 defaultGroupName = chatRoom.chatName!!,
                 selectedUri = uploadedImageUri,
                 onDismissRequest = { updateGroupInfoDialog = false },

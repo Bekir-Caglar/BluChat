@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.bottomappbar
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBarsPadding
@@ -42,6 +43,7 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
 
     BottomAppBar(
         modifier = Modifier
+            .background(Color.Transparent)
             .navigationBarsPadding()
             .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
             .clip(shape = MaterialTheme.shapes.medium),
