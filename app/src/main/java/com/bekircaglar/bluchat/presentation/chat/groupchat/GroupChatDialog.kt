@@ -6,162 +6,120 @@ import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.combinedClickable
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.AbsoluteRoundedCornerShape
+import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Create
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.material3.*
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.window.Dialog
-import coil.compose.rememberImagePainter
-import com.bekircaglar.bluchat.domain.model.Users
+import coil.compose.rememberAsyncImagePainter
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
+import kotlinx.coroutines.launch
 
-
-@OptIn(ExperimentalFoundationApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun GroupChatDialog(
+fun GroupChatBottomSheet(
     onDismissRequest: () -> Unit,
     onPermissionRequest: () -> Unit,
     onCreateGroupChat: (groupName: String) -> Unit,
     selectedUri: Uri? = null,
-    defaultImageUrl : String? = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6",
-    defaultGroupName : String = "Group name",
-    isImageLoading : Boolean = false,
+    defaultImageUrl: String? = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/def_user.png?alt=media&token=54d55dc5-4fad-415a-8b6f-d0f3b0619f31",
+    defaultGroupName: String = "Group name",
+    isImageLoading: Boolean = false,
     buttonText: String = "Create group chat",
     buttonColor: Color = MaterialTheme.colorScheme.primary
-
 ) {
+    val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+    val coroutineScope = rememberCoroutineScope()
     val context = LocalContext.current
     var groupChatName by remember { mutableStateOf("") }
 
-
-    Dialog(onDismissRequest = { onDismissRequest() }) {
-        Surface(
-            shape = MaterialTheme.shapes.medium,
-            color = MaterialTheme.colorScheme.background
+    ModalBottomSheet(
+        onDismissRequest = { onDismissRequest() },
+        sheetState = bottomSheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Column(
-                modifier = Modifier
-                    .padding(16.dp)
-                    .fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally
+            // Profil Resmi Kutusu
+            Box(
+                contentAlignment = Alignment.Center,
+                modifier = if (isImageLoading) Modifier else Modifier.clickable { onPermissionRequest() }
             ) {
-                Box(
-                    contentAlignment = Alignment.Center,
-                    modifier = if (isImageLoading) {
-                        Modifier
-                    } else {
-                        Modifier.clickable {
-                            onPermissionRequest()
-                        }
-                    }
-
-                ) {
-                    Image(
-                        painter = rememberImagePainter(
-                            data = selectedUri ?: defaultImageUrl
-                        ),
-                        contentDescription = "Profile Image",
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .size(100.dp)
-                            .shadow(elevation = 5.dp, shape = CircleShape)
-                            .clip(CircleShape)
-                            .background(MaterialTheme.colorScheme.secondaryContainer)
-                    )
-
-                    Icon(
-                        imageVector = Icons.Default.Create,
-                        contentDescription = null,
-                        modifier = Modifier
-                            .size(30.dp)
-                            .clip(CircleShape)
-                            .background(Color.LightGray)
-                            .align(Alignment.BottomEnd)
-                            .border(2.dp, Color.White, CircleShape)
-                            .padding(4.dp)
-                    )
-                    if (isImageLoading){
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(100.dp),
-                            color = MaterialTheme.colorScheme.primary
-                        )
-                    }
-
-                }
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = groupChatName,
-                    onValueChange = { groupChatName = it },
-                    label = { Text(text = defaultGroupName) },
-                    modifier = Modifier.fillMaxWidth()
+                Image(
+                    painter = rememberAsyncImagePainter(model = selectedUri ?: defaultImageUrl),
+                    contentDescription = "Profile Image",
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier
+                        .size(100.dp)
+                        .clip(CircleShape)
+                        .background(MaterialTheme.colorScheme.secondaryContainer)
                 )
 
-
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                Column(
+                Icon(
+                    imageVector = Icons.Default.Create,
+                    contentDescription = null,
                     modifier = Modifier
+                        .size(30.dp)
+                        .clip(CircleShape)
+                        .background(Color.LightGray)
+                        .align(Alignment.BottomEnd)
+                        .border(2.dp, Color.White, CircleShape)
+                        .padding(4.dp)
+                )
 
-                        .padding(horizontal = 32.dp)
-                ) {
-                    AuthButton(
-                        enabled = !isImageLoading,
-                        onClick = {
-                            if (groupChatName.isEmpty()) {
-                                if (defaultGroupName != "Group name") {
-                                    groupChatName = defaultGroupName
-                                    onCreateGroupChat(
-                                        groupChatName,
-                                    )
-                                }
-                                else {
-                                    ShowToastMessage(context, "Please enter a group name")
-                                }
-                            } else {
-                                onCreateGroupChat(
-                                    groupChatName,
-                                )
-                            }
-                        },
-                        containerColor = buttonColor,
-                        contentColor = Color.White,
-                        buttonText = buttonText
+                if (isImageLoading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(100.dp),
+                        color = MaterialTheme.colorScheme.primary
                     )
                 }
             }
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Grup İsmi Giriş Alanı
+            OutlinedTextField(
+                value = groupChatName,
+                onValueChange = { groupChatName = it },
+                label = { Text(text = defaultGroupName) },
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            // Oluştur Butonu
+            AuthButton(
+                enabled = !isImageLoading,
+                onClick = {
+                    if (groupChatName.isEmpty()) {
+                        if (defaultGroupName != "Group name") {
+                            groupChatName = defaultGroupName
+                            onCreateGroupChat(groupChatName)
+                            coroutineScope.launch { bottomSheetState.hide() }
+                        } else {
+                            ShowToastMessage(context, "Please enter a group name")
+                        }
+                    } else {
+                        onCreateGroupChat(groupChatName)
+                        coroutineScope.launch { bottomSheetState.hide() }
+                    }
+                },
+                containerColor = buttonColor,
+                contentColor = Color.White,
+                buttonText = buttonText
+            )
         }
     }
 }

@@ -39,7 +39,7 @@ fun ShimmerItem() {
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = Modifier
-                    .size(50.dp)
+                    .size(64.dp)
                     .clip(CircleShape)
                     .placeholder(true),
 

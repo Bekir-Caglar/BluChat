@@ -97,12 +97,12 @@ fun LoginFacebookButton(
             Image(
                 painter = painterResource(id = iconRes),
                 contentDescription = null,
-                modifier = Modifier.size(24.dp),
+                modifier = Modifier.size(ButtonDefaults.IconSize),
                 colorFilter = ColorFilter.tint(Color.White)
             )
             Text(
-                modifier = Modifier
-                    .padding(start = 10.dp),
+                modifier = Modifier,
+                fontSize = 16.sp,
                 text = buttonText,
                 color = Color.White,
             )

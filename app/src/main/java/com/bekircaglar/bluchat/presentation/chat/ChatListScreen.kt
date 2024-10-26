@@ -59,9 +59,9 @@ import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
 import com.bekircaglar.bluchat.presentation.chat.component.Chats
 import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
 import com.bekircaglar.bluchat.presentation.chat.component.ShimmerItem
-import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatDialog
-import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberDialog
-import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatDialog
+import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatBottomSheet
+import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberBottomSheet
+import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatBottomSheet
 import kotlinx.coroutines.CoroutineScope
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
@@ -170,7 +170,7 @@ fun ChatListScreen(navController: NavController) {
             }
         } else if (uiState == UiState.Success()) {
             if (selectGroupUserDialog) {
-                SelectGroupMemberDialog(
+                SelectGroupMemberBottomSheet(
                     searchResults = searchResults,
                     textFieldValue = textFieldValue,
                     onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
@@ -186,7 +186,7 @@ fun ChatListScreen(navController: NavController) {
             }
 
             if (addChatActive) {
-                OpenChatDialog(searchResults = searchResults,
+                OpenChatBottomSheet(searchResults = searchResults,
                     textFieldValue = textFieldValue,
                     onSearchQueryChange = { viewModel.onSearchQueryChange(it) },
                     onDismiss = {
@@ -208,7 +208,7 @@ fun ChatListScreen(navController: NavController) {
                 })
             }
             if (createGroupChatDialog) {
-                GroupChatDialog(selectedUri = selectedImageUri,
+                GroupChatBottomSheet(selectedUri = selectedImageUri,
                     onDismissRequest = { createGroupChatDialog = false },
                     onCreateGroupChat = { groupChatName ->
                         viewModel.createGroupChatRoom(
@@ -247,7 +247,6 @@ fun ChatListScreen(navController: NavController) {
                                 viewModel.getUserNameFromUserId(it1) { name ->
                                     lastMessageSenderName = name
                                 }
-
                         }
                     }
                     Chats(

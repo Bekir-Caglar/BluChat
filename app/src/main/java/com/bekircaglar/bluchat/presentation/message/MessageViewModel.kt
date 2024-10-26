@@ -44,6 +44,7 @@ import java.util.UUID
 import javax.inject.Inject
 
 @HiltViewModel
+
 class MessageViewModel @Inject constructor(
     private val auth: FirebaseAuth,
     private val getUserFromChatIdUseCase: GetUserFromChatIdUseCase,

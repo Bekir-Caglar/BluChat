@@ -86,7 +86,7 @@ fun Chats(
             val painterState = painter.state
 
             if (painterState is AsyncImagePainter.State.Loading) {
-                Box(modifier = Modifier.size(50.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
@@ -99,11 +99,13 @@ fun Chats(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = if (chat.surname.isBlank()) Modifier
-                    .size(50.dp)
-                    .clip(shape = MaterialTheme.shapes.medium)
+                    .size(64.dp)
+                    .clip(shape = MaterialTheme.shapes.large)
+                    .border(2.dp, Color.Gray, MaterialTheme.shapes.large)
                 else Modifier
-                    .size(50.dp)
+                    .size(64.dp)
                     .clip(CircleShape)
+                    .border(2.dp, Color.Gray, CircleShape)
 
             )
 

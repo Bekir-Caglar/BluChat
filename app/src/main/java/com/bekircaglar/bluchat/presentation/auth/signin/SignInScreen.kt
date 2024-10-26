@@ -257,7 +257,6 @@ fun SignInScreen(navController: NavController) {
                         iconRes = R.drawable.ic_facebook,
                         buttonText = stringResource(R.string.facebook_login),
                         modifier = Modifier
-                            .fillMaxWidth()
                             .padding(vertical = 16.dp),
                         handleFacebookSignInResult = {
                             viewModel.handleFacebookSignInResult(

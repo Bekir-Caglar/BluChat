@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.data.repository
 
+import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ContactsRepository
 import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
 import com.bekircaglar.bluchat.utils.Response
@@ -17,23 +18,23 @@ import javax.inject.Inject
 class ContactsRepositoryImp @Inject constructor(
     private val databaseReference: DatabaseReference,
 ) : ContactsRepository {
-override suspend fun getContacts(userId: String): Flow<Response<List<String?>>> = callbackFlow {
+    override suspend fun getContacts(userId: String): Flow<Response<List<String?>>> = callbackFlow {
 
-    val dbRef = databaseReference.child(USER_COLLECTION).child(userId).child("contactsIdList")
+        val dbRef = databaseReference.child(USER_COLLECTION).child(userId).child("contactsIdList")
 
-    val listener = dbRef.addValueEventListener(object : ValueEventListener {
-        override fun onDataChange(snapshot: DataSnapshot) {
-            val contactsList = snapshot.children.map { it.getValue(String::class.java) }
-            trySend(Response.Success(contactsList))
-        }
+        val listener = dbRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(snapshot: DataSnapshot) {
+                val contactsList = snapshot.children.map { it.getValue(String::class.java) }
+                trySend(Response.Success(contactsList))
+            }
 
-        override fun onCancelled(error: DatabaseError) {
-            trySend(Response.Error(error.message))
-        }
-    })
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Response.Error(error.message))
+            }
+        })
 
-    awaitClose()
-}
+        awaitClose()
+    }
 
     override suspend fun addContact(phoneNumber: String, userId: String): Flow<Response<Boolean>> =
         callbackFlow {
@@ -43,7 +44,8 @@ override suspend fun getContacts(userId: String): Flow<Response<List<String?>>> 
                 userRef.get().addOnSuccessListener { snapshot ->
                     var matchedUserId: String? = null
                     for (childSnapshot in snapshot.children) {
-                        val userPhone = childSnapshot.child("phoneNumber").getValue(String::class.java)
+                        val userPhone =
+                            childSnapshot.child("phoneNumber").getValue(String::class.java)
                         if (userPhone == phoneNumber) {
                             matchedUserId = childSnapshot.key
                             break
@@ -55,14 +57,15 @@ override suspend fun getContacts(userId: String): Flow<Response<List<String?>>> 
                         dbRef.get().addOnSuccessListener {
                             if (it.exists()) {
                                 val contactsList =
-                                    it.children.map { it.getValue(String::class.java) }.toMutableList()
+                                    it.children.map { it.getValue(String::class.java) }
+                                        .toMutableList()
                                 contactsList += matchedUserId
                                 dbRef.setValue(contactsList).addOnSuccessListener {
                                     trySend(Response.Success(true))
                                 }.addOnFailureListener { error ->
                                     trySend(Response.Error(error.message.toString()))
                                 }
-                            }else{
+                            } else {
                                 dbRef.setValue(listOf(matchedUserId)).addOnSuccessListener {
                                     trySend(Response.Success(true))
                                 }.addOnFailureListener { error ->
@@ -81,5 +84,60 @@ override suspend fun getContacts(userId: String): Flow<Response<List<String?>>> 
             }
             awaitClose()
         }
+
+
+    override suspend fun getAppUserContacts(
+        contacts: List<Users>,
+        userId: String
+    ): Flow<Response<List<Users>>> = callbackFlow {
+        val dbRef = databaseReference.child(USER_COLLECTION).child(userId).child("contactsIdList")
+        val userRef = databaseReference.child(USER_COLLECTION)
+
+        try {
+            // İlk adım: Kullanıcının contactIdList'ini al
+            dbRef.get().addOnSuccessListener { contactIdListSnapshot ->
+                val contactIdList =
+                    contactIdListSnapshot.children.mapNotNull { it.getValue(String::class.java) }
+
+                // İkinci adım: contactIdList'teki kullanıcıların bilgilerini al ve telefon numarası eşleştir
+                userRef.get().addOnSuccessListener { allUsersSnapshot ->
+                    val matchedUsers = mutableListOf<Users>()
+
+                    // contactIdList'teki kullanıcıları eşleştir
+                    for (contactId in contactIdList) {
+                        val userSnapshot = allUsersSnapshot.child(contactId)
+                        val user = userSnapshot.getValue(Users::class.java)
+
+                        if (user != null && contacts.any { it.phoneNumber == user.phoneNumber || it.phoneNumber == "+90${user.phoneNumber}" }) {
+                            matchedUsers.add(user)
+                        }
+                    }
+
+                    for (userSnapshot in allUsersSnapshot.children) {
+                        val user = userSnapshot.getValue(Users::class.java)
+
+                        if (user != null && contacts.any { it.phoneNumber == user.phoneNumber || it.phoneNumber == "+90${user.phoneNumber}" }) {
+                            matchedUsers.add(user)
+                        }
+                    }
+
+                    trySend(Response.Success(matchedUsers.distinctBy { it.uid }))
+                    close()
+                }.addOnFailureListener { error ->
+                    trySend(Response.Error(error.message.toString()))
+                    close()
+                }
+            }.addOnFailureListener { error ->
+                trySend(Response.Error(error.message.toString()))
+                close()
+            }
+        } catch (e: Exception) {
+            trySend(Response.Error(e.message.toString()))
+            close()
+        }
+
+        awaitClose { /* Kapatılma işlemleri */ }
+    }
+
 
 }

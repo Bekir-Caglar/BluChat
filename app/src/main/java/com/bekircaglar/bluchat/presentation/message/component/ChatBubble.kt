@@ -55,6 +55,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 import androidx.compose.foundation.gestures.detectHorizontalDragGestures
+import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
@@ -131,12 +132,11 @@ fun ChatBubble(
                 color = bubbleColor
             ) {
                 Column(modifier = Modifier.padding(12.dp)) {
-
                     if (replyMessage != null) {
 
                         Row(
                             modifier = Modifier
-                                .fillMaxWidth(0.5f)
+                                .width(intrinsicSize = IntrinsicSize.Max)
                                 .background(
                                     color = MaterialTheme.colorScheme.secondary,
                                     shape = RoundedCornerShape(12.dp))

@@ -74,7 +74,7 @@ override suspend fun searchContacts(query: String): Flow<Response<List<Users>>> 
         }
 
         override fun onCancelled(error: DatabaseError) {
-            trySend(Response.Error(error.message.toString()))
+            trySend(Response.Error(error.message))
         }
     }
 

@@ -6,6 +6,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.contact.AddContactUseCase
+import com.bekircaglar.bluchat.domain.usecase.contact.GetAppUserContactsUseCase
 import com.bekircaglar.bluchat.domain.usecase.contact.GetContactsUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.GetMessageByIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
@@ -24,6 +25,7 @@ class ContactsViewModel @Inject constructor(
     private val getContactsUseCase: GetContactsUseCase,
     private val getUserUseCase: GetUserUseCase,
     private val addContactUseCase: AddContactUseCase,
+    private val getAppUserContactsUseCase: GetAppUserContactsUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
@@ -52,6 +54,26 @@ class ContactsViewModel @Inject constructor(
         auth.removeAuthStateListener(authStateListener)
     }
 
+    fun getAppUserContacts(contactsList : List<Users>)= viewModelScope.launch{
+        getAppUserContactsUseCase(contactsList,auth.currentUser?.uid.toString()).collect{
+            when(it){
+                is Response.Success ->{
+                    _contacts.value = it.data
+                }
+                is Response.Error ->{
+                    _uiState.value = UiState.Error(it.message)
+                    }
+                is Response.Loading ->{
+                    _uiState.value = UiState.Loading
+                }
+                is Response.Idle ->{
+
+                }
+            }
+        }
+
+    }
+
     fun addContact(phoneNumber: String) = viewModelScope.launch {
         _uiState.value = UiState.Loading
 
@@ -76,7 +98,7 @@ class ContactsViewModel @Inject constructor(
         }
     }
 
-    fun getContacts(userId: String) = viewModelScope.launch {
+    private fun getContacts(userId: String) = viewModelScope.launch {
         _uiState.value = UiState.Loading
         getContactsUseCase(userId = userId).collect {
             when (it) {
