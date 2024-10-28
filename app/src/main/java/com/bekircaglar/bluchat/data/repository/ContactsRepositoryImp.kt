@@ -56,11 +56,11 @@ class ContactsRepositoryImp @Inject constructor(
                         val dbRef = userRef.child(userId).child("contactsIdList")
                         dbRef.get().addOnSuccessListener {
                             if (it.exists()) {
-                                val contactsList =
-                                    it.children.map { it.getValue(String::class.java) }
-                                        .toMutableList()
-                                contactsList += matchedUserId
-                                dbRef.setValue(contactsList).addOnSuccessListener {
+                                val contactsSet =
+                                    it.children.mapNotNull { it.getValue(String::class.java) }
+                                        .toMutableSet()
+                                contactsSet.add(matchedUserId)
+                                dbRef.setValue(contactsSet.toList()).addOnSuccessListener {
                                     trySend(Response.Success(true))
                                 }.addOnFailureListener { error ->
                                     trySend(Response.Error(error.message.toString()))
@@ -93,22 +93,18 @@ class ContactsRepositoryImp @Inject constructor(
         val dbRef = databaseReference.child(USER_COLLECTION).child(userId).child("contactsIdList")
         val userRef = databaseReference.child(USER_COLLECTION)
 
-        try {
-            // İlk adım: Kullanıcının contactIdList'ini al
-            dbRef.get().addOnSuccessListener { contactIdListSnapshot ->
+        val listener = dbRef.addValueEventListener(object : ValueEventListener {
+            override fun onDataChange(contactIdListSnapshot: DataSnapshot) {
                 val contactIdList =
                     contactIdListSnapshot.children.mapNotNull { it.getValue(String::class.java) }
 
-                // İkinci adım: contactIdList'teki kullanıcıların bilgilerini al ve telefon numarası eşleştir
                 userRef.get().addOnSuccessListener { allUsersSnapshot ->
                     val matchedUsers = mutableListOf<Users>()
 
-                    // contactIdList'teki kullanıcıları eşleştir
                     for (contactId in contactIdList) {
                         val userSnapshot = allUsersSnapshot.child(contactId)
                         val user = userSnapshot.getValue(Users::class.java)
-
-                        if (user != null && contacts.any { it.phoneNumber == user.phoneNumber || it.phoneNumber == "+90${user.phoneNumber}" }) {
+                        if (user != null) {
                             matchedUsers.add(user)
                         }
                     }
@@ -122,21 +118,17 @@ class ContactsRepositoryImp @Inject constructor(
                     }
 
                     trySend(Response.Success(matchedUsers.distinctBy { it.uid }))
-                    close()
                 }.addOnFailureListener { error ->
                     trySend(Response.Error(error.message.toString()))
-                    close()
                 }
-            }.addOnFailureListener { error ->
-                trySend(Response.Error(error.message.toString()))
-                close()
             }
-        } catch (e: Exception) {
-            trySend(Response.Error(e.message.toString()))
-            close()
-        }
 
-        awaitClose { /* Kapatılma işlemleri */ }
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Response.Error(error.message))
+            }
+        })
+
+        awaitClose { dbRef.removeEventListener(listener) }
     }
 
 

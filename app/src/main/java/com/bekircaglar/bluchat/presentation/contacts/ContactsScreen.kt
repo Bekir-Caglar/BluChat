@@ -145,10 +145,6 @@ fun ContactsScreen(navController: NavController) {
                 }
 
                 is UiState.Success -> {
-
-
-
-
                     val groupedContacts = contacts.sortedBy { it.name }.groupBy { contact ->
                         contact.name.first().uppercaseChar()
                     }
