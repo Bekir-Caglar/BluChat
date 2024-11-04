@@ -35,52 +35,54 @@ class ChatRepositoryImp @Inject constructor(
     }
 
 
-override suspend fun searchContacts(query: String): Flow<Response<List<Users>>> = callbackFlow {
-    val database = databaseReference.child(USER_COLLECTION)
-    val currentUserRef = databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString())
 
-    val listener = object : ValueEventListener {
-        override fun onDataChange(contactListSnapshot: DataSnapshot) {
-            val contactIdList = contactListSnapshot.children.map { it.value as String }
+    override suspend fun searchContacts(query: String): Flow<Response<List<Users>>> = callbackFlow {
+        val database = databaseReference.child(USER_COLLECTION)
+        val currentUserRef =
+            databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString())
 
-            if (query.isEmpty() || query.isBlank()) {
-                database.get().addOnSuccessListener { allUsersSnapshot ->
-                    val matchedUsers = mutableListOf<Users>()
-                    for (userSnapshot in allUsersSnapshot.children) {
-                        val user = userSnapshot.getValue(Users::class.java)
-                        if (user != null && userSnapshot.key in contactIdList) {
-                            matchedUsers.add(user)
+        val listener = object : ValueEventListener {
+            override fun onDataChange(contactListSnapshot: DataSnapshot) {
+                val contactIdList = contactListSnapshot.children.map { it.value as String }
+
+                if (query.isEmpty() || query.isBlank()) {
+                    database.get().addOnSuccessListener { allUsersSnapshot ->
+                        val matchedUsers = mutableListOf<Users>()
+                        for (userSnapshot in allUsersSnapshot.children) {
+                            val user = userSnapshot.getValue(Users::class.java)
+                            if (user != null && userSnapshot.key in contactIdList) {
+                                matchedUsers.add(user)
+                            }
                         }
+                        trySend(Response.Success(matchedUsers))
+                    }.addOnFailureListener { error ->
+                        trySend(Response.Error(error.message.toString()))
                     }
-                    trySend(Response.Success(matchedUsers))
-                }.addOnFailureListener { error ->
-                    trySend(Response.Error(error.message.toString()))
-                }
-            } else {
-                database.get().addOnSuccessListener { allUsersSnapshot ->
-                    val matchedUsers = mutableListOf<Users>()
-                    for (userSnapshot in allUsersSnapshot.children) {
-                        val user = userSnapshot.getValue(Users::class.java)
-                        val phoneNumber = user?.phoneNumber
-                        if (phoneNumber?.contains(query) == true && userSnapshot.key in contactIdList) {
-                            matchedUsers.add(user)
+                } else {
+                    database.get().addOnSuccessListener { allUsersSnapshot ->
+                        val matchedUsers = mutableListOf<Users>()
+                        for (userSnapshot in allUsersSnapshot.children) {
+                            val user = userSnapshot.getValue(Users::class.java)
+                            val phoneNumber = user?.phoneNumber
+                            if (phoneNumber?.contains(query) == true && userSnapshot.key in contactIdList) {
+                                matchedUsers.add(user)
+                            }
                         }
+                        trySend(Response.Success(matchedUsers))
+                    }.addOnFailureListener { error ->
+                        trySend(Response.Error(error.message.toString()))
                     }
-                    trySend(Response.Success(matchedUsers))
-                }.addOnFailureListener { error ->
-                    trySend(Response.Error(error.message.toString()))
                 }
+            }
+
+            override fun onCancelled(error: DatabaseError) {
+                trySend(Response.Error(error.message))
             }
         }
 
-        override fun onCancelled(error: DatabaseError) {
-            trySend(Response.Error(error.message))
-        }
+        currentUserRef.child("contactsIdList").addValueEventListener(listener)
+        awaitClose { currentUserRef.child("contactsIdList").removeEventListener(listener) }
     }
-
-    currentUserRef.child("contactsIdList").addValueEventListener(listener)
-    awaitClose { currentUserRef.child("contactsIdList").removeEventListener(listener) }
-}
 
     override suspend fun createChatRoom(
         user1: String, user2: String, chatRoomId: String
@@ -181,6 +183,11 @@ override suspend fun searchContacts(query: String): Flow<Response<List<Users>>> 
 
         awaitClose()
 
+    }
+
+    override suspend fun saveSubId(subId: String) {
+        val userSubIdRef = databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString()).child("onesignalId")
+        userSubIdRef.setValue(subId)
     }
 
 
