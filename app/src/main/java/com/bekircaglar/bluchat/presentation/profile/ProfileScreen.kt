@@ -51,6 +51,7 @@ import com.bekircaglar.bluchat.presentation.profile.appearance.AppearanceDialog
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.loadThemePreference
+import com.onesignal.OneSignal
 
 @Composable
 fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
@@ -112,9 +113,9 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
             showAppearanceDialog = true
         },
         MenuItem(painterResource(id = R.drawable.ic_privacy), "Privacy", {}),
-        MenuItem(painterResource(id = R.drawable.ic_notification), "Notification", {}),
         MenuItem(painterResource(id = R.drawable.ic_help), "Help", {}),
         MenuItem(painterResource(id = R.drawable.ic_logout), "Logout") {
+            OneSignal.logout()
             viewModel.signOut(
                 onSuccess = {
                     navController.navigate(Screens.AuthNav.route) {

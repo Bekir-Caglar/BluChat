@@ -10,7 +10,6 @@ import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Message
-import com.bekircaglar.bluchat.domain.model.Messages
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.DeleteMessageUseCase
@@ -34,6 +33,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.UnStarMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UploadVideoUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
+import com.bekircaglar.bluchat.sendNotificationToChannel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -438,6 +438,7 @@ class MessageViewModel @Inject constructor(
             replyTo = replyTo
         )
 
+
         sendMessageUseCase(myMessage, chatId).collect { response ->
             when (response) {
                 is Response.Loading -> {
@@ -445,6 +446,28 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Success -> {
                     setLastMessage(myMessage, chatId)
+                    viewModelScope.launch {
+                        getUserFromChatIdUseCase(chatId).collect{
+                            getUserFromChatIdUseCase(chatId).collect { response ->
+                                when (response) {
+                                    is Response.Loading -> {
+                                    }
+
+                                    is Response.Success -> {
+                                        sendNotificationToChannel(response.data,message)
+                                    }
+
+                                    is Response.Error -> {
+                                    }
+
+                                    else -> {
+
+                                    }
+                                }
+                            }
+
+                        }
+                    }
                 }
 
                 is Response.Error -> {
@@ -532,10 +555,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Success -> {
                     val userId = response.data[0]
-
-                    println("userId: $userId")
-
-                    getUserFromUserId(userId)
+                    getUserFromUserId(userId, chatId = chatId)
 
                 }
 
@@ -589,7 +609,7 @@ class MessageViewModel @Inject constructor(
     }
 
 
-    fun getUserFromUserId(userId: String?) {
+    private fun getUserFromUserId(userId: String?,chatId: String) {
         viewModelScope.launch {
             getUserUseCase.getUserData(userId!!).collect { response ->
                 when (response) {

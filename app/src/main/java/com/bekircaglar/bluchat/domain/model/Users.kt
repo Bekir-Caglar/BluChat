@@ -2,6 +2,7 @@ package com.bekircaglar.bluchat.domain.model
 
 data class Users(
     val uid: String= "",
+    val onesignalId: String= "",
     var name: String=  "",
     var surname : String= "",
     val email: String= "",

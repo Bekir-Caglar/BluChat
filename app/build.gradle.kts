@@ -25,6 +25,19 @@ android {
         vectorDrawables {
             useSupportLibrary = true
         }
+        buildConfigField(
+            "String",
+            "ONESIGNAL_APP_ID",
+            "\"${project.findProperty("ONESIGNAL_APP_ID")}\""
+        )
+        buildConfigField(
+            "String",
+            "REST_API_KEY",
+            "\"${project.findProperty("REST_API_KEY")}\""
+        )
+        buildFeatures {
+            buildConfig = true
+        }
     }
 
     buildTypes {
@@ -103,6 +116,8 @@ dependencies {
     implementation (libs.facebook.android.sdk)
 
     implementation(libs.compose.ui.util)
+
+    implementation(libs.onesignal)
 
 
     implementation(libs.androidx.camera.core)

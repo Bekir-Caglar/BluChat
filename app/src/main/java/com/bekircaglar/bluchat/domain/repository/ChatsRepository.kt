@@ -15,6 +15,8 @@ interface ChatsRepository {
 
     suspend fun getUsersChatList(): Flow<Response<List<ChatRoom>>>
 
+    suspend fun saveSubId(subId:String)
+
 
     suspend fun createGroupChatRoom(
         currentUser: String,

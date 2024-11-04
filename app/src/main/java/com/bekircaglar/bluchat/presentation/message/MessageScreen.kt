@@ -22,8 +22,6 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imeNestedScroll
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -38,6 +36,7 @@ import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.BottomAppBar
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -67,9 +66,8 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
-import com.bekircaglar.bluchat.utils.IMAGE
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.utils.TEXT
+import com.bekircaglar.bluchat.VideoPlayerActivity
 import com.bekircaglar.bluchat.domain.model.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.loadThemePreference
@@ -77,19 +75,17 @@ import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
-
 import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
+import com.bekircaglar.bluchat.utils.IMAGE
+import com.bekircaglar.bluchat.utils.TEXT
+import com.bekircaglar.bluchat.utils.UiState
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
-import androidx.compose.material3.CircularProgressIndicator
-import androidx.lifecycle.viewmodel.compose.viewModel
-import com.bekircaglar.bluchat.utils.UiState
-import com.bekircaglar.bluchat.VideoPlayerActivity
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(
@@ -383,7 +379,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
                 }
             }
-
 
             if (imageSendDialogState) {
                 ImageSendBottomSheet(
