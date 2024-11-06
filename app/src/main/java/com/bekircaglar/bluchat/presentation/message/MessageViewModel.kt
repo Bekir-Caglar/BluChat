@@ -391,28 +391,29 @@ class MessageViewModel @Inject constructor(
         }
     }
 
-     fun getMessageById(messageId: String, chatId: String,onResult: (Message) -> Unit) = viewModelScope.launch {
+    fun getMessageById(messageId: String, chatId: String, onResult: (Message) -> Unit) =
+        viewModelScope.launch {
 
-        getMessageByIdUseCase(messageId, chatId).collect {
-            when (it) {
-                is Response.Success -> {
-                    onResult(it.data)
+            getMessageByIdUseCase(messageId, chatId).collect {
+                when (it) {
+                    is Response.Success -> {
+                        onResult(it.data)
+                    }
+
+                    is Response.Error -> {
+
+                    }
+
+                    is Response.Loading -> {
+
+                    }
+
+                    else -> {
+                    }
+
                 }
-
-                is Response.Error -> {
-
-                }
-
-                is Response.Loading -> {
-
-                }
-
-                else -> {
-                }
-
             }
         }
-     }
 
 
     fun sendMessage(
@@ -447,14 +448,23 @@ class MessageViewModel @Inject constructor(
                 is Response.Success -> {
                     setLastMessage(myMessage, chatId)
                     viewModelScope.launch {
-                        getUserFromChatIdUseCase(chatId).collect{
+                        getUserFromChatIdUseCase(chatId).collect {
                             getUserFromChatIdUseCase(chatId).collect { response ->
                                 when (response) {
                                     is Response.Loading -> {
                                     }
 
                                     is Response.Success -> {
-                                        sendNotificationToChannel(response.data,message)
+
+
+                                        _userData.value?.let { user ->
+                                            if (user.status == false)
+                                                sendNotificationToChannel(
+                                                    title = user.name + " " + user.surname,
+                                                    ids = response.data,
+                                                    message = message
+                                                )
+                                            }
                                     }
 
                                     is Response.Error -> {
@@ -555,7 +565,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Success -> {
                     val userId = response.data[0]
-                    getUserFromUserId(userId, chatId = chatId)
+                    getUserFromUserId(userId!!)
 
                 }
 
@@ -609,9 +619,9 @@ class MessageViewModel @Inject constructor(
     }
 
 
-    private fun getUserFromUserId(userId: String?,chatId: String) {
+    private fun getUserFromUserId(userId: String) {
         viewModelScope.launch {
-            getUserUseCase.getUserData(userId!!).collect { response ->
+            getUserUseCase.getUserData(userId).collect { response ->
                 when (response) {
                     is Response.Loading -> {
                     }

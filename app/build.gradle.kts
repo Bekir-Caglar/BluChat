@@ -35,6 +35,12 @@ android {
             "REST_API_KEY",
             "\"${project.findProperty("REST_API_KEY")}\""
         )
+        buildConfigField(
+            "String",
+            "GOOGLE_MAPS_KEY",
+            "\"${project.findProperty("GOOGLE_MAPS_KEY")}\""
+        )
+
         buildFeatures {
             buildConfig = true
         }
@@ -73,6 +79,7 @@ android {
 
 
 dependencies {
+    implementation("com.google.maps.android:maps-compose:6.1.0")
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
