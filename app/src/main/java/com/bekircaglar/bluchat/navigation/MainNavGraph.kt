@@ -15,6 +15,7 @@ import com.bekircaglar.bluchat.presentation.message.MessageScreen
 import com.bekircaglar.bluchat.presentation.message.camera.CameraScreen
 import com.bekircaglar.bluchat.presentation.message.camera.SendTakenPhotoScreen
 import com.bekircaglar.bluchat.presentation.message.component.ImageScreen
+import com.bekircaglar.bluchat.presentation.message.map.MapScreen
 import com.bekircaglar.bluchat.presentation.message.starredmessages.StarredMessagesScreen
 import com.bekircaglar.bluchat.presentation.profile.ProfileScreen
 
@@ -100,6 +101,17 @@ fun NavGraphBuilder.MainNavGraph(navController: NavController, onThemeChange: ()
             Screens.ContactScreen.route,
         ){
             ContactsScreen(navController)
+        }
+        composable(
+            Screens.MapScreen.route,
+            arguments = listOf(
+                navArgument("chatId") { type = NavType.StringType }
+            )
+        ){
+            val chatId = it.arguments?.getString("chatId")
+            if (chatId != null) {
+                MapScreen(navController,chatId)
+            }
         }
     }
 }

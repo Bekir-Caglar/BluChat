@@ -437,6 +437,10 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             "Camera" -> {
                                 permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                             }
+
+                            "Location" -> {
+                                navController.navigate(Screens.MapScreen.createRoute(chatId))
+                            }
                         }
                     },
                     myList = listOf(
