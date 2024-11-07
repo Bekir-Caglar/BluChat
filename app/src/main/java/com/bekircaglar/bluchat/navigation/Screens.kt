@@ -29,6 +29,10 @@ sealed class Screens(val route:String,val icon:Int? = null,val badgeCount:Int = 
     }
     data object ContactScreen:Screens("contact_screen", icon = R.drawable.ic_contacts)
 
+    data object MapScreen:Screens("map_screen/{chatId}"){
+        fun createRoute(chatId:String):String = "map_screen/$chatId"
+    }
+
 
     data object AuthNav : Screens("AUTH_NAV_GRAPH")
 

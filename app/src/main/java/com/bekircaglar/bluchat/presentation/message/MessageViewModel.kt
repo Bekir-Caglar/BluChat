@@ -39,6 +39,7 @@ import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 import javax.inject.Inject
@@ -76,6 +77,9 @@ class MessageViewModel @Inject constructor(
 
     private val _userData = MutableStateFlow<Users?>(null)
     var userData = _userData.asStateFlow()
+
+    private val _notificationUsers = MutableStateFlow<Users?>(null)
+    var notificationUsers = _notificationUsers.asStateFlow()
 
     private val _messages = MutableStateFlow<List<Message>>(emptyList())
     val messages: StateFlow<List<Message>> = _messages
@@ -448,34 +452,25 @@ class MessageViewModel @Inject constructor(
                 is Response.Success -> {
                     setLastMessage(myMessage, chatId)
                     viewModelScope.launch {
-                        getUserFromChatIdUseCase(chatId).collect {
-                            getUserFromChatIdUseCase(chatId).collect { response ->
-                                when (response) {
-                                    is Response.Loading -> {
-                                    }
+                        val chatUsersIdResponse = getUserFromChatIdUseCase(chatId).first()
+                        if (chatUsersIdResponse is Response.Success) {
+                            val chatUsersId = chatUsersIdResponse.data
+                            val currentUserId = currentUser.uid
+                            val currentUserResponse = getUserUseCase.getUserData(currentUserId).first()
+                            if (currentUserResponse is Response.Success) {
+                                val currentUser = currentUserResponse.data
 
-                                    is Response.Success -> {
-
-
-                                        _userData.value?.let { user ->
-                                            if (user.status == false)
-                                                sendNotificationToChannel(
-                                                    title = user.name + " " + user.surname,
-                                                    ids = response.data,
-                                                    message = message
-                                                )
-                                            }
-                                    }
-
-                                    is Response.Error -> {
-                                    }
-
-                                    else -> {
-
+                                chatUsersId.filterNotNull().forEach { chatUserId ->
+                                    val userResponse = getUserUseCase.getUserData(chatUserId).first()
+                                    if (userResponse is Response.Success && !userResponse.data.status) {
+                                        sendNotificationToChannel(
+                                            title = "${currentUser.name} ${currentUser.surname}",
+                                            userId = userResponse.data.uid,
+                                            message = message
+                                        )
                                     }
                                 }
                             }
-
                         }
                     }
                 }
@@ -489,6 +484,7 @@ class MessageViewModel @Inject constructor(
             }
         }
     }
+
 
     private fun setLastMessage(message: Message, chatId: String) = viewModelScope.launch {
         setLastMessageUseCase(chatId, message).collect {

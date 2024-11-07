@@ -80,6 +80,8 @@ android {
 
 dependencies {
     implementation("com.google.maps.android:maps-compose:6.1.0")
+    implementation("com.google.accompanist:accompanist-permissions:0.28.0")
+
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -98,6 +100,7 @@ dependencies {
     implementation(libs.firebase.database)
     implementation(libs.firebase.storage)
     implementation(libs.androidx.benchmark.common)
+    implementation(libs.play.services.location)
     ksp(libs.hilt.kapt)
 
     implementation (libs.glide)
