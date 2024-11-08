@@ -24,7 +24,7 @@ class MapViewModel @Inject constructor(
     fun sendLocation(latitude: Double?, longitude: Double?,chatId:String,onResult:()-> Unit)= viewModelScope.launch{
         val timestamp = System.currentTimeMillis()
         val randomId = "$timestamp-${UUID.randomUUID()}"
-        val mapsApiKey = BuildConfig.GOOGLE_MAPS_KEY
+        val mapsApiKey = BuildConfig.JS_MAP_KEY
 
         val mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x400&key=$mapsApiKey"
 

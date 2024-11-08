@@ -40,6 +40,11 @@ android {
             "GOOGLE_MAPS_KEY",
             "\"${project.findProperty("GOOGLE_MAPS_KEY")}\""
         )
+        buildConfigField(
+            "String",
+            "JS_MAP_KEY",
+            "\"${project.findProperty("JS_MAP_KEY")}\""
+        )
 
         buildFeatures {
             buildConfig = true

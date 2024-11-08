@@ -232,7 +232,7 @@ class ChatViewModel @Inject constructor(
                                     imageUrl = chat.chatImage!!,
                                     lastMessageSenderId = chat.chatLastMessageSenderId!!,
                                     lastMessage = chat.chatLastMessage!!,
-                                    messageTime = chat.chatLastMessageTime!!,
+                                    messageTime = chat.chatLastMessageTime.toString(),
                                     isOnline = false
                                 )
                             }
@@ -270,7 +270,7 @@ class ChatViewModel @Inject constructor(
                             imageUrl = user.profileImageUrl,
                             lastMessage = chat.chatLastMessage,
                             lastMessageSenderId = chat.chatLastMessageSenderId,
-                            messageTime = chat.chatLastMessageTime,
+                            messageTime = chat.chatLastMessageTime.toString(),
                             isOnline = user.status
                         )
                         if (!_chatUserList.value.any { it.chatRoomId == chatItem.chatRoomId }) {
