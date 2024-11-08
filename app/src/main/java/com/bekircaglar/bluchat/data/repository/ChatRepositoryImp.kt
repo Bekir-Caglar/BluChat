@@ -168,6 +168,7 @@ class ChatRepositoryImp @Inject constructor(
                 val chatList = mutableListOf<ChatRoom>()
                 for (chatSnapshot in snapshot.children) {
                     val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
+
                     if (chatRoom != null && chatRoom.users!!.contains(currentUser)) {
                         chatList.add(chatRoom)
                     }

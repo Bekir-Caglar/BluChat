@@ -63,6 +63,9 @@ import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatBottomSheet
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberBottomSheet
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatBottomSheet
 import kotlinx.coroutines.CoroutineScope
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Locale
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
@@ -221,7 +224,6 @@ fun ChatListScreen(navController: NavController) {
             }
 
             Spacer(modifier = Modifier.padding(top = 16.dp))
-
             if (chatList.isNotEmpty()) {
                 LazyColumn(
                     modifier = Modifier
@@ -229,7 +231,16 @@ fun ChatListScreen(navController: NavController) {
                         .padding(it)
                         .background(MaterialTheme.colorScheme.background),
                 ) {
-                    items(chatList) { chat ->
+
+                    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+                    val dayOfWeekFormat = SimpleDateFormat("EEEE", Locale.getDefault())
+                    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+                    items(chatList.sortedByDescending { it.messageTime }) { chat ->
+
+                        val formattedMessageTime = remember(chat.messageTime) {
+                            chat.messageTime?.let { it1 -> formatMessageTime(it1.toLong(), timeFormat, dayOfWeekFormat, dateFormat) }
+                        }
+
                         val myChat = Chats(
                             chatRoomId = chat.chatRoomId,
                             imageUrl = chat.imageUrl,
@@ -237,7 +248,7 @@ fun ChatListScreen(navController: NavController) {
                             surname = chat.surname,
                             lastMessage = chat.lastMessage,
                             lastMessageSenderId = chat.lastMessageSenderId,
-                            messageTime = chat.messageTime,
+                            messageTime = formattedMessageTime,
                             isOnline = chat.isOnline
                         )
 
@@ -292,3 +303,27 @@ fun ChatListScreen(navController: NavController) {
 }
 }
 
+fun formatMessageTime(
+    timestamp: Long,
+    timeFormat: SimpleDateFormat,
+    dayOfWeekFormat: SimpleDateFormat,
+    dateFormat: SimpleDateFormat
+): String {
+    val messageDate = Calendar.getInstance().apply { timeInMillis = timestamp }
+    val currentDate = Calendar.getInstance()
+
+    return when {
+        messageDate.isSameDay(currentDate) -> timeFormat.format(messageDate.time)
+        messageDate.isSameWeek(currentDate) -> dayOfWeekFormat.format(messageDate.time)
+        else -> dateFormat.format(messageDate.time)
+    }
+}
+fun Calendar.isSameDay(other: Calendar): Boolean {
+    return this.get(Calendar.YEAR) == other.get(Calendar.YEAR) &&
+            this.get(Calendar.DAY_OF_YEAR) == other.get(Calendar.DAY_OF_YEAR)
+}
+
+fun Calendar.isSameWeek(other: Calendar): Boolean {
+    return this.get(Calendar.YEAR) == other.get(Calendar.YEAR) &&
+            this.get(Calendar.WEEK_OF_YEAR) == other.get(Calendar.WEEK_OF_YEAR)
+}
