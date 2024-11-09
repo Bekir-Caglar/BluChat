@@ -1,8 +1,11 @@
 package com.bekircaglar.bluchat.presentation.auth.signup
 
+import android.content.Context
+import androidx.compose.ui.platform.LocalContext
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import androidx.navigation.NavController
+import com.bekircaglar.bluchat.BuildConfig
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.usecase.CheckPhoneNumberUseCase
@@ -10,7 +13,12 @@ import com.bekircaglar.bluchat.domain.usecase.ExceptionHandlerUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.AuthUseCase
 import com.bekircaglar.bluchat.domain.usecase.auth.CreateUserUseCase
 import com.bekircaglar.bluchat.navigation.Screens
+import com.google.firebase.auth.FirebaseAuth
+import com.onesignal.OneSignal
+import com.onesignal.debug.LogLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -19,6 +27,7 @@ import javax.inject.Inject
 @HiltViewModel
 class SignUpViewModel @Inject constructor(
     private val authUseCase: AuthUseCase,
+    private val auth:FirebaseAuth,
     private val createUserUseCase: CreateUserUseCase,
     private val checkPhoneNumberUseCase: CheckPhoneNumberUseCase,
 ) : ViewModel() {
@@ -26,6 +35,7 @@ class SignUpViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState
 
+    val currentUser = auth.currentUser
     fun checkPassword(
         password: String,
         email: String,
@@ -33,6 +43,7 @@ class SignUpViewModel @Inject constructor(
         surname: String,
         phoneNumber: String,
         navController: NavController,
+        context: Context
     ) = viewModelScope.launch {
         _uiState.value = UiState.Loading
         try {
@@ -46,6 +57,7 @@ class SignUpViewModel @Inject constructor(
                             email = email,
                             password = password,
                             navController = navController,
+                            context = context,
                         )
                     }
 
@@ -69,6 +81,7 @@ class SignUpViewModel @Inject constructor(
         name: String,
         surname: String,
         phoneNumber: String,
+        context: Context,
         email: String,
         navController: NavController,
         password: String,
@@ -83,6 +96,7 @@ class SignUpViewModel @Inject constructor(
                         phoneNumber = phoneNumber,
                         email = email,
                         navController = navController,
+                        context = context
                     )
                 }
 
@@ -103,6 +117,7 @@ class SignUpViewModel @Inject constructor(
 
     private fun createUser(
         name: String,
+        context: Context,
         surname: String,
         phoneNumber: String,
         email: String,

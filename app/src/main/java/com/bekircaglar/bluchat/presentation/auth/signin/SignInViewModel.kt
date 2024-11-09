@@ -5,6 +5,7 @@ import android.content.Intent
 import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.bekircaglar.bluchat.BuildConfig
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.UiState
@@ -28,7 +29,11 @@ import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
 import com.google.firebase.auth.GoogleAuthProvider
 import com.google.firebase.auth.auth
+import com.onesignal.OneSignal
+import com.onesignal.debug.LogLevel
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -48,7 +53,15 @@ class SignInViewModel @Inject constructor(
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState: StateFlow<UiState> = _uiState
 
+    private val _currentUser = MutableStateFlow<FirebaseUser?>(null)
+    val currentUser: StateFlow<FirebaseUser?> = _currentUser
+
     private lateinit var googleSignInClient: GoogleSignInClient
+
+
+    init {
+        _currentUser.value = auth.currentUser
+    }
 
     fun signOut(context: Context) =
         viewModelScope.launch {
