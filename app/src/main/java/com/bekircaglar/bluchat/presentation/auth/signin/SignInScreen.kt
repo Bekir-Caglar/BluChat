@@ -53,6 +53,7 @@ import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.presentation.auth.component.LoginFacebookButton
 import com.facebook.CallbackManager
 import com.google.android.gms.auth.api.signin.GoogleSignIn
+import com.onesignal.OneSignal
 
 @Composable
 fun SignInScreen(navController: NavController) {
@@ -64,6 +65,7 @@ fun SignInScreen(navController: NavController) {
     var phoneNumberDialogState by remember { mutableStateOf(false) }
 
     val googleUser = GoogleSignIn.getLastSignedInAccount(context)
+    val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -205,7 +207,7 @@ fun SignInScreen(navController: NavController) {
                                 },
                                 onError = {
                                     ShowToastMessage(context, it)
-                                }
+                                },
                             )
                         },
                         containerColor = MaterialTheme.colorScheme.primary,

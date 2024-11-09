@@ -1,5 +1,7 @@
 package com.bekircaglar.bluchat.domain.model
 
+import com.google.firebase.database.Exclude
+
 data class Message(
     val messageId:String? = "",
     val senderId:String? = "",
@@ -12,4 +14,7 @@ data class Message(
     val pinned : Boolean? = false,
     val starred : Boolean? = false,
     val replyTo : String? = "",
-    )
+    ){
+    @Exclude
+    fun isRead() : Boolean = read == true
+}

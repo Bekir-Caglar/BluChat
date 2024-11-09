@@ -26,7 +26,9 @@ class MapViewModel @Inject constructor(
         val randomId = "$timestamp-${UUID.randomUUID()}"
         val mapsApiKey = BuildConfig.JS_MAP_KEY
 
-        val mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x400&key=$mapsApiKey"
+        val mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x400&key=AIzaSyCPMnG0zGCkZd26TutZlEcVSwhIKxWdkBk"
+        val mapsLink = "https://www.google.com/maps?q=$latitude,$longitude"
+
 
         val myMessage = Message(
             messageId = randomId,

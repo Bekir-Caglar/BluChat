@@ -237,6 +237,7 @@ fun SignUpScreen(navController: NavController) {
                                     surname = surname,
                                     phoneNumber = phoneNumber,
                                     navController = navController,
+                                    context = context
                                 )
                             }
                         },

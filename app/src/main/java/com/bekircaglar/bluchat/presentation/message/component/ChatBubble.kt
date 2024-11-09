@@ -59,6 +59,7 @@ import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextOverflow
+import com.bekircaglar.bluchat.ui.theme.chatAnswerTextColor
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -179,12 +180,7 @@ fun ChatBubble(
                     Spacer(modifier = Modifier.size(8.dp))
 
                     if (messageType == "text") {
-                        Text(
-                            text = message.message!!,
-                            color = if (isSentByMe) Color.White else Color(0xFF001F3F),
-                            fontSize = 16.sp,
-                            textAlign = TextAlign.Start
-                        )
+                        MessageText(message, isSentByMe)
                     } else if (messageType == "image") {
                         if (message.imageUrl?.contains(".mp4") == true) {
                             VideoThumbnailComposable(
@@ -238,7 +234,7 @@ fun ChatBubble(
                                 Icon(
                                     painter = painterResource(R.drawable.double_tick),
                                     contentDescription = "Tick",
-                                    tint = if (message.read == true) Color.Green else Color.Gray,
+                                    tint = if (message.isRead()) Color.Green else Color.Gray,
                                 )
                             }
                         }
@@ -257,7 +253,7 @@ fun ChatBubble(
                                 Icon(
                                     painter = painterResource(R.drawable.double_tick),
                                     contentDescription = "Tick",
-                                    tint = if (message.read == true) Color.Green else Color.Gray,
+                                    tint = if (message.isRead()) Color.Green else Color.Gray,
                                 )
                             }
                         }
@@ -266,6 +262,18 @@ fun ChatBubble(
             }
         }
     }
+}
+@Composable
+private fun MessageText(
+    message: Message,
+    isSentByMe: Boolean
+) {
+    Text(
+        text = message.message ?: return,
+        color = if (isSentByMe) Color.White else chatAnswerTextColor,
+        fontSize = 16.sp,
+        textAlign = TextAlign.Start
+    )
 }
 
 

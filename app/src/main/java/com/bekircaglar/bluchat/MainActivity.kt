@@ -51,16 +51,17 @@ class MainActivity : ComponentActivity() {
         FacebookSdk.sdkInitialize(applicationContext)
         AppEventsLogger.activateApp(application)
         callbackManager = CallbackManager.Factory.create()
+
         val ONESIGNAL_APP_ID = BuildConfig.ONESIGNAL_APP_ID
 
         OneSignal.Debug.logLevel = LogLevel.VERBOSE
         OneSignal.initWithContext(this, ONESIGNAL_APP_ID)
 
-        CoroutineScope(Dispatchers.IO).launch {
-            OneSignal.Notifications.requestPermission(false)
-            val playerId = OneSignal.User.pushSubscription.id
-            chatsRepository.saveSubId(playerId)
-            OneSignal.login(auth.currentUser!!.uid)
+        auth.currentUser?.let { user ->
+            CoroutineScope(Dispatchers.IO).launch {
+                OneSignal.Notifications.requestPermission(false)
+                OneSignal.login(user.uid)
+            }
         }
 
         installSplashScreen()
@@ -83,7 +84,20 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+
+        auth.addAuthStateListener { firebaseAuth ->
+            firebaseAuth.currentUser?.let { user ->
+                CoroutineScope(Dispatchers.IO).launch {
+                    OneSignal.Notifications.requestPermission(false)
+                    val playerId = OneSignal.User.pushSubscription.id
+                    chatsRepository.saveSubId(playerId)
+                    OneSignal.login(user.uid)
+                }
+            }
+        }
     }
+
+
 
     override fun onConfigurationChanged(newConfig: Configuration) {
         super.onConfigurationChanged(newConfig)

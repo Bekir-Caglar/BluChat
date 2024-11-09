@@ -16,3 +16,4 @@ val LightBlue = Color(0xFFDFEDF6)     // Daha önce verdiğin açık tonlardan b
 val SoftBlue = Color(0xFF879FFF)      // Daha önce verdiğin açık mavimsi tonlardan biri
 val BrightBlue = Color(0xFF002DE3)    // Canlı bir mavi
 val DarkBlue = Color(0xFF001A83)      // Daha koyu bir tonor(0xFFD2D5F9)
+val chatAnswerTextColor = Color(0xFF001F3F)
