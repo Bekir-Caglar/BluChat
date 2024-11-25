@@ -87,7 +87,7 @@ fun MapScreen(navController:NavController,chatId:String) {
                     ) {
                         Icon(
                             imageVector = Icons.Default.Search,
-                            contentDescription = "Profil",
+                            contentDescription = "Search",
                             tint = MaterialTheme.colorScheme.onSurface
                         )
                     }

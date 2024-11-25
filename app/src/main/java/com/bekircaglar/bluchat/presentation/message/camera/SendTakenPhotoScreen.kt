@@ -37,6 +37,7 @@ import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.Player
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 import com.bekircaglar.bluchat.utils.IMAGE
@@ -105,7 +106,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
                     viewModel.sendMessage(
                         imageUrl = imageUrl,
                         message = message,
-                        messageType = IMAGE,
+                        messageType = MessageType.IMAGE.toString(),
                         chatId = chatId,
                     )
                     navController.navigate(Screens.MessageScreen.createRoute(chatId))
@@ -125,7 +126,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
                         viewModel.sendMessage(
                             imageUrl = imageUrl,
                             message = message,
-                            messageType = IMAGE,
+                            messageType = MessageType.IMAGE.toString(),
                             chatId = chatId,
                         )
                         navController.navigate(Screens.MessageScreen.createRoute(chatId))

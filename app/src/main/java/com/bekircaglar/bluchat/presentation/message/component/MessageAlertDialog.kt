@@ -13,7 +13,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
-import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.domain.model.message.Message
 import java.time.Instant
 import java.time.LocalDateTime
 import java.time.ZoneId
@@ -36,7 +36,6 @@ fun MessageAlertDialog(
             Column {
                ChatBubble(
                    context = context,
-                     messageType = message.messageType ?: "",
                      message = message,
                      isSentByMe = true,
                      timestamp = timestamp,

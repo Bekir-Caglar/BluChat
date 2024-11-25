@@ -66,7 +66,6 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ContactsScreen(navController: NavController) {
-
     val viewModel: ContactsViewModel = hiltViewModel()
     val context = LocalContext.current
 
@@ -74,27 +73,9 @@ fun ContactsScreen(navController: NavController) {
     val contacts by viewModel.contacts.collectAsStateWithLifecycle()
 
     var addContactSheetState by remember { mutableStateOf(false) }
-
-    val myContacts = getContacts()
-    myContacts.forEach {
-        println(it.name + " " + it.phoneNumber)
-    }
-
-    LaunchedEffect(Unit) {
-        viewModel.getAppUserContacts(myContacts)
-    }
-
-    if (addContactSheetState) {
-        AddContactSheet(onSave = { phoneNumber ->
-            viewModel.addContact(phoneNumber)
-            addContactSheetState = false
-        }, onDismissRequest = {
-            addContactSheetState = false
-        })
-    }
-
     var hasPermission by remember { mutableStateOf(false) }
-    val requestPermissionLauncher = rememberLauncherForActivityResult(
+
+    val permissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         hasPermission = isGranted
@@ -102,75 +83,89 @@ fun ContactsScreen(navController: NavController) {
 
     LaunchedEffect(Unit) {
         when (PackageManager.PERMISSION_GRANTED) {
-            ActivityCompat.checkSelfPermission(
-                context,
-                Manifest.permission.READ_CONTACTS
-            ) -> {
+            ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
                 hasPermission = true
             }
-
             else -> {
-                requestPermissionLauncher.launch(Manifest.permission.READ_CONTACTS)
+                permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
         }
     }
 
-    Scaffold(
-        topBar = {
-            ChatAppTopBar(
-                title = {
-                    Text(text = "Contacts")
-                },
-                containerColor = MaterialTheme.colorScheme.secondary,
-                actionIcon = Icons.Default.Search,
-            )
-        },
-        bottomBar = {
-            ChatAppBottomAppBar(navController = navController)
-        },
-        floatingActionButton = {
-            ChatAppFAB(
-                onClick = {
-                    addContactSheetState = true
-                },
-                backgroundColor = MaterialTheme.colorScheme.primary,
-                contentColor = MaterialTheme.colorScheme.background
-            )
+    if (hasPermission) {
+        val myContacts = getContacts()
+        myContacts.forEach {
+            println(it.name + " " + it.phoneNumber)
         }
-    ) { padding ->
-        Column(modifier = Modifier.padding(padding)) {
-            when (uiState) {
-                is UiState.Loading -> {
-                    CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
-                }
 
-                is UiState.Success -> {
-                    val groupedContacts = contacts.sortedBy { it.name }.groupBy { contact ->
-                        contact.name.first().uppercaseChar()
+        LaunchedEffect(Unit) {
+            viewModel.getAppUserContacts(myContacts)
+        }
+
+        if (addContactSheetState) {
+            AddContactSheet(onSave = { phoneNumber ->
+                viewModel.addContact(phoneNumber)
+                addContactSheetState = false
+            }, onDismissRequest = {
+                addContactSheetState = false
+            })
+        }
+
+        Scaffold(
+            topBar = {
+                ChatAppTopBar(
+                    title = {
+                        Text(text = "Contacts")
+                    },
+                    containerColor = MaterialTheme.colorScheme.secondary,
+                    actionIcon = Icons.Default.Search,
+                )
+            },
+            bottomBar = {
+                ChatAppBottomAppBar(navController = navController)
+            },
+            floatingActionButton = {
+                ChatAppFAB(
+                    onClick = {
+                        addContactSheetState = true
+                    },
+                    backgroundColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.background
+                )
+            }
+        ) { padding ->
+            Column(modifier = Modifier.padding(padding)) {
+                when (uiState) {
+                    is UiState.Loading -> {
+                        CircularProgressIndicator(modifier = Modifier.align(Alignment.CenterHorizontally))
                     }
 
-                    LazyColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        groupedContacts.forEach { (initial, contactList) ->
-                            stickyHeader {
-                                Text(
-                                    text = initial.toString(),
-                                    style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(
-                                            color = MaterialTheme.colorScheme.background.copy(0.8f)
-                                        )
-                                        .padding(4.dp)
-                                        .padding(start = 8.dp),
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    textAlign = TextAlign.Start
-                                )
-                            }
+                    is UiState.Success -> {
+                        val groupedContacts = contacts.sortedBy { it.name }.groupBy { contact ->
+                            contact.name.first().uppercaseChar()
+                        }
 
-                            if (hasPermission) {
+                        LazyColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            groupedContacts.forEach { (initial, contactList) ->
+                                stickyHeader {
+                                    Text(
+                                        text = initial.toString(),
+                                        style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(
+                                                color = MaterialTheme.colorScheme.background.copy(0.8f)
+                                            )
+                                            .padding(4.dp)
+                                            .padding(start = 8.dp),
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        textAlign = TextAlign.Start
+                                    )
+                                }
+
                                 items(contactList, key = { it.phoneNumber }) { contact ->
                                     ContactItem(
                                         name = contact.name + " " + contact.surname,
@@ -178,28 +173,28 @@ fun ContactsScreen(navController: NavController) {
                                         profileImageUrl = contact.profileImageUrl
                                     )
                                 }
-                            } else {
-                                item {
-                                    Text(text = "Contact Permission Denied")
-                                }
                             }
-
                         }
                     }
-                }
 
-                is UiState.Error -> {
-                    (uiState as UiState.Error).message?.let {
-                        ShowToastMessage(message = it, context = context)
+                    is UiState.Error -> {
+                        (uiState as UiState.Error).message?.let {
+                            ShowToastMessage(message = it, context = context)
+                        }
                     }
-                }
 
-                else -> {}
+                    else -> {}
+                }
             }
         }
+    } else {
+        Text(
+            text = "Permission to read contacts is required.",
+            modifier = Modifier.fillMaxSize(),
+            textAlign = TextAlign.Center
+        )
     }
 }
-
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable

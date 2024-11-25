@@ -1,4 +1,4 @@
-package com.bekircaglar.bluchat.domain.model
+package com.bekircaglar.bluchat.domain.model.message
 
 data class Messages(
     var id:String,
