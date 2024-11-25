@@ -9,8 +9,9 @@ import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.UiState
-import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.model.Users
+import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.domain.usecase.message.CreateMessageRoomUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.DeleteMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.EditMessageUseCase
@@ -421,7 +422,8 @@ class MessageViewModel @Inject constructor(
 
 
     fun sendMessage(
-        imageUrl: String? = "",
+        imageUrl: String?= null ,
+        videoUrl: String = "",
         message: String,
         chatId: String,
         messageType: String,
@@ -430,49 +432,60 @@ class MessageViewModel @Inject constructor(
 
         val timestamp = System.currentTimeMillis()
         val randomId = "$timestamp-${UUID.randomUUID()}"
+        var myMessage = message
 
 
-        val myMessage = Message(
-            messageId = randomId,
-            senderId = currentUser.uid,
-            message = message,
-            timestamp = timestamp,
-            read = false,
-            messageType = messageType,
-            imageUrl = imageUrl,
-            replyTo = replyTo
-        )
+        val messageToSend: Message = when (messageType) {
+            MessageType.TEXT.toString() -> Message(
+                message = message,
+                messageId = randomId,
+                senderId = auth.currentUser?.uid,
+                timestamp = timestamp,
+                messageType = messageType,
+                replyTo = replyTo
+            )
+            MessageType.IMAGE.toString() -> {
+                Message(
+                    messageId = randomId,
+                    senderId = auth.currentUser?.uid,
+                    message = if (myMessage != "") message
+                    else {
+                        myMessage = "Image 🏞️"
+                        message
+                    },
+                    messageType = messageType,
+                    imageUrl = imageUrl,
+                    timestamp = timestamp,
+                    replyTo = replyTo
+                )
+            }
+            MessageType.VIDEO.toString() -> Message(
+                messageId = randomId,
+                senderId = auth.currentUser?.uid,
+                message = message,
+                videoUrl = videoUrl,
+                messageType = messageType,
+                timestamp = timestamp,
+                replyTo = replyTo
+            )
+            else -> Message(
+                messageId = randomId,
+                senderId = auth.currentUser?.uid,
+                message = message,
+                messageType = messageType,
+                timestamp = timestamp,
+            )
 
+        }
 
-        sendMessageUseCase(myMessage, chatId).collect { response ->
+        sendMessageUseCase(messageToSend, chatId).collect { response ->
             when (response) {
                 is Response.Loading -> {
                 }
 
                 is Response.Success -> {
-                    setLastMessage(myMessage, chatId)
-                    viewModelScope.launch {
-                        val chatUsersIdResponse = getUserFromChatIdUseCase(chatId).first()
-                        if (chatUsersIdResponse is Response.Success) {
-                            val chatUsersId = chatUsersIdResponse.data
-                            val currentUserId = currentUser.uid
-                            val currentUserResponse = getUserUseCase.getUserData(currentUserId).first()
-                            if (currentUserResponse is Response.Success) {
-                                val currentUser = currentUserResponse.data
-
-                                chatUsersId.filterNotNull().forEach { chatUserId ->
-                                    val userResponse = getUserUseCase.getUserData(chatUserId).first()
-                                    if (userResponse is Response.Success && !userResponse.data.status) {
-                                        sendNotificationToChannel(
-                                            title = "${currentUser.name} ${currentUser.surname}",
-                                            userId = userResponse.data.uid,
-                                            message = message
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    setLastMessage(messageToSend, chatId)
+                    sendNotification(chatId, myMessage,imageUrl)
                 }
 
                 is Response.Error -> {
@@ -480,6 +493,35 @@ class MessageViewModel @Inject constructor(
 
                 else -> {
 
+                }
+            }
+        }
+
+
+
+    }
+
+    private fun sendNotification(chatId: String, message: String,imageUrl: String?) {
+        viewModelScope.launch {
+            val chatUsersIdResponse = getUserFromChatIdUseCase(chatId).first()
+            if (chatUsersIdResponse is Response.Success) {
+                val chatUsersId = chatUsersIdResponse.data
+                val currentUserId = currentUser.uid
+                val currentUserResponse = getUserUseCase.getUserData(currentUserId).first()
+                if (currentUserResponse is Response.Success) {
+                    val currentUser = currentUserResponse.data
+
+                    chatUsersId.filterNotNull().forEach { chatUserId ->
+                        val userResponse = getUserUseCase.getUserData(chatUserId).first()
+                        if (userResponse is Response.Success && !userResponse.data.status) {
+                            sendNotificationToChannel(
+                                title = "${currentUser.name} ${currentUser.surname}",
+                                userId = userResponse.data.uid,
+                                message = message,
+                                imageUrl = imageUrl
+                            )
+                        }
+                    }
                 }
             }
         }

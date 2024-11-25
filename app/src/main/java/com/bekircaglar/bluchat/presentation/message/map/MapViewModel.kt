@@ -3,8 +3,8 @@ package com.bekircaglar.bluchat.presentation.message.map
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.bekircaglar.bluchat.BuildConfig
-import com.bekircaglar.bluchat.domain.model.Message
-import com.bekircaglar.bluchat.domain.repository.AuthRepository
+import com.bekircaglar.bluchat.domain.model.message.Message
+import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.bluchat.utils.IMAGE
 import com.bekircaglar.bluchat.utils.Response
@@ -24,23 +24,21 @@ class MapViewModel @Inject constructor(
     fun sendLocation(latitude: Double?, longitude: Double?,chatId:String,onResult:()-> Unit)= viewModelScope.launch{
         val timestamp = System.currentTimeMillis()
         val randomId = "$timestamp-${UUID.randomUUID()}"
-        val mapsApiKey = BuildConfig.JS_MAP_KEY
+        val mapsApiKey = BuildConfig.GOOGLE_MAPS_KEY
 
-        val mapUrl = "https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x400&key=AIzaSyCPMnG0zGCkZd26TutZlEcVSwhIKxWdkBk"
-        val mapsLink = "https://www.google.com/maps?q=$latitude,$longitude"
-
-
-        val myMessage = Message(
-            messageId = randomId,
-            senderId = auth.currentUser!!.uid,
-            message = "",
+        val locationMessage = Message(
+            latitude = latitude ?: 0.0,
+            longitude = longitude ?: 0.0,
+            locationName = "",
+            messageType = MessageType.LOCATION.toString(),
             timestamp = timestamp,
-            read = false,
-            messageType = IMAGE,
-            imageUrl = mapUrl,
-            replyTo = ""
+            messageId = randomId,
+            senderId = auth.currentUser?.uid,
+
         )
-        sendMessageUseCase.invoke(message = myMessage, chatId = chatId).collect{
+
+
+        sendMessageUseCase.invoke(message = locationMessage, chatId = chatId).collect{
             when(it){
                 is Response.Success -> {
                     onResult()

@@ -89,8 +89,6 @@ class MainActivity : ComponentActivity() {
             firebaseAuth.currentUser?.let { user ->
                 CoroutineScope(Dispatchers.IO).launch {
                     OneSignal.Notifications.requestPermission(false)
-                    val playerId = OneSignal.User.pushSubscription.id
-                    chatsRepository.saveSubId(playerId)
                     OneSignal.login(user.uid)
                 }
             }

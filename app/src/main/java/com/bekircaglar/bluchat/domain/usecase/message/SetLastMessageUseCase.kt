@@ -1,6 +1,6 @@
 package com.bekircaglar.bluchat.domain.usecase.message
 
-import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.repository.MessageRepository
 import javax.inject.Inject
 

@@ -153,7 +153,6 @@ fun StarredMessagesScreen(chatId:String,navController: NavController){
                         message.messageType?.let { messageType ->
                             ChatBubble(
                                 message = message,
-                                messageType = messageType,
                                 isSentByMe = message.senderId == currentUser.uid,
                                 timestamp = timestamp,
                                 senderName = senderName,
@@ -172,7 +171,7 @@ fun StarredMessagesScreen(chatId:String,navController: NavController){
                                 onUnStarMessage = {
                                     viewModel.unStarMessage(message,chatId)
                                 },
-                                onvVideoClick ={
+                                onVideoClick ={
                                     val videoUrl = it
                                     val intent = Intent(context, VideoPlayerActivity::class.java).apply {
                                         putExtra("videoUri",videoUrl )

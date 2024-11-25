@@ -19,12 +19,15 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -66,10 +69,12 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import coil.compose.rememberImagePainter
+import com.bekircaglar.bluchat.BuildConfig
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.VideoPlayerActivity
-import com.bekircaglar.bluchat.domain.model.Message
+import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
+import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
@@ -77,8 +82,6 @@ import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomShe
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
 import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
-import com.bekircaglar.bluchat.utils.IMAGE
-import com.bekircaglar.bluchat.utils.TEXT
 import com.bekircaglar.bluchat.utils.UiState
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -318,7 +321,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                     viewModel.sendMessage(
                                         message = chatMessage,
                                         chatId = chatId,
-                                        messageType = TEXT,
+                                        messageType = MessageType.TEXT.toString(),
                                         replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
                                     )
                                     chatMessage = ""
@@ -335,7 +338,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                         viewModel.sendMessage(
                                             message = chatMessage,
                                             chatId = chatId,
-                                            messageType = TEXT,
+                                            messageType = MessageType.TEXT.toString(),
                                             replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
                                         )
                                         chatMessage = ""
@@ -354,401 +357,435 @@ fun MessageScreen(navController: NavController, chatId: String) {
         }
 
     ) {
-        if (screenState is UiState.Loading) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize(),
-                contentAlignment = Alignment.Center
-            ) {
-                CircularProgressIndicator(
-                    modifier = Modifier.size(60.dp),
-                )
-            }
-        } else if (screenState is UiState.Success) {
-            LaunchedEffect(Unit) {
-                listState.scrollToItem(messages.lastIndex + 1)
-            }
-
-            LaunchedEffect(listState.isScrollInProgress) {
-                listState.layoutInfo.visibleItemsInfo.forEach { visibleItem ->
-                    val myMessage = messages.find {
-                        visibleItem.key == it.messageId
-                    }
-                    if (myMessage?.read == false && myMessage.senderId != currentUser.uid)
-                        viewModel.markMessageAsRead(visibleItem.key.toString(), chatId)
-
-                }
-            }
-
-            if (imageSendDialogState) {
-                ImageSendBottomSheet(
-                    imageResId = uploadedImage!!,
-                    onSend = { imageResId, message ->
-                        viewModel.sendMessage(
-                            message = message,
-                            chatId = chatId,
-                            imageUrl = imageResId,
-                            messageType = IMAGE
-                        )
-                        imageSendDialogState = false
-                    },
-                    onDismiss = {
-                        imageSendDialogState = false
-                    }
-                )
-            }
-
-            LaunchedEffect(uploadedImage) {
-                imageUploadState = false
-                if (uploadedImage != null) {
-                    imageSendDialogState = true
-                }
-            }
-
-            LaunchedEffect(uploadedVideo) {
-                videoUploadState = false
-                if (uploadedVideo != null) {
-                    val encodedVideoUrl = URLEncoder.encode(
-                        uploadedVideo.toString(),
-                        StandardCharsets.UTF_8.toString()
-                    )
-                    navController.navigate(
-                        Screens.SendTakenPhotoScreen.createRoute(
-                            encodedVideoUrl,
-                            chatId
-                        )
-                    )
-                }
-            }
-
-            if (bottomSheetState) {
-                MessageExtraBottomSheet(
-                    onDismiss = { bottomSheetState = false },
-                    onClicked = { option ->
-                        when (option) {
-                            "Photos" -> {
-                                permissionLauncherForGallery.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
-                            }
-
-                            "Video" -> {
-                                permissionLauncherForVideo.launch(android.Manifest.permission.READ_MEDIA_VIDEO)
-                            }
-
-                            "Camera" -> {
-                                permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
-                            }
-
-                            "Location" -> {
-                                navController.navigate(Screens.MapScreen.createRoute(chatId))
-                            }
-                        }
-                    },
-                    myList = listOf(
-                        SheetOption("Photos", R.drawable.ic_photos),
-                        SheetOption("Video", R.drawable.ic_video_camera_media),
-                        SheetOption("Camera", R.drawable.ic_camera),
-                        SheetOption("Location", R.drawable.ic_location),
-                        SheetOption("Contact", R.drawable.ic_user_square),
-                        SheetOption("Contact", R.drawable.ic_facebook),
-                    )
-                )
-            }
-
-            if (messages.isNotEmpty()) {
-                Column(modifier = Modifier.padding(it)) {
-                    if (moreMessageState is UiState.Loading) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surface),
-                            horizontalArrangement = Arrangement.Center,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            CircularProgressIndicator(
-                                modifier = Modifier.size(24.dp)
-                            )
-                        }
-                    }
-                }
-                Column(modifier = Modifier.padding(it)) {
-                    if (pinnedMessages.lastOrNull() != null) {
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(MaterialTheme.colorScheme.surface)
-                                .padding(8.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween
-                        ) {
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                horizontalArrangement = Arrangement.Start
-                            ) {
-                                Box(
-                                    modifier = Modifier
-                                        .size(40.dp)
-                                        .clip(MaterialTheme.shapes.medium)
-                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
-                                ) {
-                                    Icon(
-                                        painter = painterResource(id = R.drawable.baseline_push_pin_24),
-                                        contentDescription = null,
-                                        modifier = Modifier.padding(8.dp)
-                                    )
-                                }
-                                Text(
-                                    text = pinnedMessages.lastOrNull()!!.message ?: "",
-                                    color = MaterialTheme.colorScheme.onPrimary,
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    modifier = Modifier
-                                        .padding(8.dp)
-                                        .padding(start = 8.dp)
-                                )
-                            }
-                            pinnedMessages.lastOrNull()!!.imageUrl?.let { imageUrl ->
-                                if (imageUrl.contains(".mp4")) {
-                                    VideoThumbnailComposable(
-                                        context = context,
-                                        size = 50.dp,
-                                        videoUrl = imageUrl,
-                                        onVideoClick = {})
-                                } else {
-                                    Image(
-                                        painter = rememberImagePainter(data = imageUrl),
-                                        contentDescription = null,
-                                        contentScale = ContentScale.Crop,
-                                        modifier = Modifier
-                                            .size(50.dp)
-                                            .clip(MaterialTheme.shapes.medium)
-                                    )
-                                }
-                            }
-                        }
-
-                    }
-                    LazyColumn(
-                        state = listState,
-                        reverseLayout = false,
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .paint(
-                                painter = if (loadThemePreference(context = context)) {
-                                    painterResource(id = R.drawable.bg_message_dark)
-                                } else {
-                                    painterResource(id = R.drawable.bg_message_light)
-                                },
-                                contentScale = ContentScale.FillBounds
-                            )
-                    ) {
-                        groupedMessages.forEach { (date, messagesForDate) ->
-                            stickyHeader {
-                                Box(
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
-                                        .padding(8.dp),
-                                    contentAlignment = Alignment.Center
-                                ) {
-                                    Text(
-                                        text = date,
-                                        style = MaterialTheme.typography.titleMedium,
-                                        color = MaterialTheme.colorScheme.onSurface,
-                                        textAlign = TextAlign.Center
-                                    )
-                                }
-                            }
-
-                            itemsIndexed(
-                                messagesForDate,
-                                key = { _, message -> message.messageId ?: 0 }) { _, message ->
-                                if (message != null) {
-                                    val timestamp = convertTimestampToDate(message.timestamp!!)
-                                    val senderId = message.senderId
-
-                                    var senderName by remember { mutableStateOf("") }
-                                    LaunchedEffect(senderId) {
-                                        viewModel.getUserNameFromUserId(senderId!!) { name ->
-                                            senderName = name
-                                        }
-                                    }
-                                    var replyedMessage by remember { mutableStateOf<Message?>(null) }
-                                    if (message.replyTo != "") {
-                                        LaunchedEffect(replyedMessage) {
-                                            viewModel.getMessageById(message.replyTo.toString(),chatId, onResult = {
-                                                replyedMessage = it
-                                            })
-
-                                        }
-                                    }
-
-                                    var senderReplyName by remember { mutableStateOf("") }
-                                    LaunchedEffect(replyedMessage) {
-                                        replyedMessage?.senderId?.let { it1 ->
-                                            viewModel.getUserNameFromUserId(it1) { name ->
-                                                senderReplyName = name
-                                            }
-                                        }
-                                    }
-
-
-                                    val senderNameColor = viewModel.getUserColor(senderId!!)
-                                    message.messageType?.let { messageType ->
-                                        ChatBubble(
-                                            context = context,
-                                            message = message,
-                                            messageType = messageType,
-                                            isSentByMe = message.senderId == currentUser.uid,
-                                            timestamp = timestamp,
-                                            senderName = senderName,
-                                            senderNameColor = senderNameColor,
-                                            onImageClick = { imageUrl ->
-                                                val encode = URLEncoder.encode(
-                                                    imageUrl,
-                                                    StandardCharsets.UTF_8.toString()
-                                                )
-                                                navController.navigate(
-                                                    Screens.ImageScreen.createRoute(
-                                                        encode
-                                                    )
-                                                )
-                                            },
-                                            onvVideoClick = { videoUrl ->
-                                                val intent = Intent(
-                                                    context,
-                                                    VideoPlayerActivity::class.java
-                                                ).apply {
-                                                    putExtra("videoUri", videoUrl)
-                                                }
-                                                context.startActivity(intent)
-                                            },
-                                            onEditClick = {
-                                                selectedMessageForEdit = message
-                                            },
-                                            onDeleteClick = {
-                                                selectedMessageForDeletion = message
-                                            },
-                                            onPinMessageClick = {
-                                                viewModel.pinMessage(message, chatId)
-//                                                viewModel.getPinnedMessages(chatId)
-                                            },
-                                            onUnPinMessageClick = {
-                                                viewModel.unPinMessage(message, chatId)
-//                                                viewModel.getPinnedMessages(chatId)
-                                            },
-                                            onStarMessage = {
-                                                viewModel.starMessage(message, chatId)
-                                            },
-                                            onUnStarMessage = {
-                                                viewModel.unStarMessage(message, chatId)
-                                            },
-                                            onSwipeRight = {
-                                                selectedMessageForReply = it
-                                                replyState = true
-                                            },
-                                            replyMessage = replyedMessage,
-                                            replyMessageName = senderReplyName
-                                        )
-
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-
-            } else {
+        Box(modifier = Modifier.padding(it)) {
+            if (screenState is UiState.Loading) {
                 Box(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .background(MaterialTheme.colorScheme.secondary),
+                        .fillMaxSize(),
                     contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "Let's start chatting",
-                        textAlign = TextAlign.Center,
-                        style = MaterialTheme.typography.titleLarge,
-                        modifier = Modifier
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(60.dp),
                     )
                 }
-            }
+            } else if (screenState is UiState.Success) {
+                LaunchedEffect(Unit) {
+                    listState.scrollToItem(messages.lastIndex + 1)
+                }
 
-            if (selectedMessageForEdit != null && selectedMessageForEdit?.senderId == currentUser.uid) {
-                Dialog(onDismissRequest = { selectedMessageForEdit = null }) {
+                LaunchedEffect(listState.isScrollInProgress) {
+                    listState.layoutInfo.visibleItemsInfo.forEach { visibleItem ->
+                        val myMessage = messages.find {
+                            visibleItem.key == it.messageId
+                        }
+                        if (myMessage?.read == false && myMessage.senderId != currentUser.uid)
+                            viewModel.markMessageAsRead(visibleItem.key.toString(), chatId)
 
-                    Column {
-                        ChatBubble(
-                            message = selectedMessageForEdit!!,
-                            messageType = selectedMessageForEdit!!.messageType!!,
-                            isSentByMe = selectedMessageForEdit!!.senderId == currentUser.uid,
-                            timestamp = convertTimestampToDate(selectedMessageForEdit!!.timestamp!!),
-                            senderName = "",
-                            onImageClick = { },
-                            senderNameColor = Color.Transparent,
-                            onEditClick = { },
-                            onDeleteClick = { },
-                            context = context
+                    }
+                }
+
+                if (imageSendDialogState) {
+                    ImageSendBottomSheet(
+                        imageResId = uploadedImage!!,
+                        onSend = { imageResId, message ->
+                            viewModel.sendMessage(
+                                message = message,
+                                chatId = chatId,
+                                imageUrl = imageResId,
+                                messageType = MessageType.IMAGE.toString(),
+                            )
+                            imageSendDialogState = false
+                        },
+                        onDismiss = {
+                            imageSendDialogState = false
+                        }
+                    )
+                }
+
+                LaunchedEffect(uploadedImage) {
+                    imageUploadState = false
+                    if (uploadedImage != null) {
+                        imageSendDialogState = true
+                    }
+                }
+
+                LaunchedEffect(uploadedVideo) {
+                    videoUploadState = false
+                    if (uploadedVideo != null) {
+                        val encodedVideoUrl = URLEncoder.encode(
+                            uploadedVideo.toString(),
+                            StandardCharsets.UTF_8.toString()
                         )
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.SpaceBetween,
+                        navController.navigate(
+                            Screens.SendTakenPhotoScreen.createRoute(
+                                encodedVideoUrl,
+                                chatId
+                            )
+                        )
+                    }
+                }
+
+                if (bottomSheetState) {
+                    MessageExtraBottomSheet(
+                        onDismiss = { bottomSheetState = false },
+                        onClicked = { option ->
+                            when (option) {
+                                "Photos" -> {
+                                    permissionLauncherForGallery.launch(android.Manifest.permission.READ_MEDIA_IMAGES)
+                                }
+
+                                "Video" -> {
+                                    permissionLauncherForVideo.launch(android.Manifest.permission.READ_MEDIA_VIDEO)
+                                }
+
+                                "Camera" -> {
+                                    permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
+                                }
+
+                                "Location" -> {
+                                    navController.navigate(Screens.MapScreen.createRoute(chatId))
+                                }
+                            }
+                        },
+                        myList = listOf(
+                            SheetOption("Photos", R.drawable.ic_photos),
+                            SheetOption("Video", R.drawable.ic_video_camera_media),
+                            SheetOption("Camera", R.drawable.ic_camera),
+                            SheetOption("Location", R.drawable.ic_location),
+                            SheetOption("Contact", R.drawable.ic_user_square),
+                            SheetOption("Contact", R.drawable.ic_facebook),
+                        )
+                    )
+                }
+
+                if (messages.isNotEmpty()) {
+                    Column(modifier = Modifier.padding(it)) {
+                        if (moreMessageState is UiState.Loading) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface),
+                                horizontalArrangement = Arrangement.Center,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                CircularProgressIndicator(
+                                    modifier = Modifier.size(24.dp)
+                                )
+                            }
+                        }
+                    }
+                    val lastPinnedMessage = pinnedMessages.lastOrNull()
+                    Column {
+                        if (pinnedMessages.lastOrNull() != null) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .background(MaterialTheme.colorScheme.surface)
+                                    .padding(8.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween
+                            ) {
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    Box(
+                                        modifier = Modifier
+                                            .size(40.dp)
+                                            .clip(MaterialTheme.shapes.medium)
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                    ) {
+                                        Icon(
+                                            painter = painterResource(id = R.drawable.baseline_push_pin_24),
+                                            contentDescription = null,
+                                            modifier = Modifier.padding(8.dp)
+                                        )
+                                    }
+                                    Text(
+                                        text = when (lastPinnedMessage?.messageType) {
+                                            MessageType.TEXT.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Text message" else lastPinnedMessage.useMessage
+                                            MessageType.IMAGE.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Image 🏞️" else lastPinnedMessage.useMessage
+                                            MessageType.VIDEO.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Video 🎥" else lastPinnedMessage.useMessage
+                                            MessageType.LOCATION.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Location 🗺️" else lastPinnedMessage.useMessage
+                                            else -> ""
+
+                                        },
+                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        modifier = Modifier
+                                            .padding(8.dp)
+                                            .padding(start = 8.dp)
+                                    )
+                                }
+
+                                when (lastPinnedMessage?.messageType) {
+                                    MessageType.IMAGE.toString() -> {
+                                        Image(
+                                            painter = rememberImagePainter(data = lastPinnedMessage.useImageUrl),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(MaterialTheme.shapes.medium)
+                                        )
+                                    }
+
+                                    MessageType.VIDEO.toString() -> {
+                                        VideoThumbnailComposable(
+                                            context = context,
+                                            size = 50.dp,
+                                            videoUrl = lastPinnedMessage.useVideoUrl,
+                                            onVideoClick = {}
+                                        )
+
+
+                                    }
+
+                                    MessageType.LOCATION.toString() -> {
+                                        val latitude = lastPinnedMessage.useLatitude
+                                        val longitude = lastPinnedMessage.useLongitude
+                                        val mapsApiKey = BuildConfig.GOOGLE_MAPS_KEY
+
+                                        val mapUrl =
+                                            "https://maps.googleapis.com/maps/api/staticmap?center=$latitude,$longitude&zoom=15&size=400x400&markers=color:red%7C$latitude,$longitude&key=$mapsApiKey"
+                                        Image(
+                                            painter = rememberImagePainter(data = mapUrl),
+                                            contentDescription = null,
+                                            contentScale = ContentScale.Crop,
+                                            modifier = Modifier
+                                                .size(50.dp)
+                                                .clip(MaterialTheme.shapes.medium)
+                                        )
+                                    }
+
+                                }
+                            }
+
+                        }
+                        LazyColumn(
+                            state = listState,
+                            reverseLayout = false,
                             modifier = Modifier
-                                .background(
-                                    color = MaterialTheme.colorScheme.surface,
-                                    shape = MaterialTheme.shapes.medium
+                                .fillMaxSize()
+                                .paint(
+                                    painter = if (loadThemePreference(context = context)) {
+                                        painterResource(id = R.drawable.bg_message_dark)
+                                    } else {
+                                        painterResource(id = R.drawable.bg_message_light)
+                                    },
+                                    contentScale = ContentScale.FillBounds
                                 )
                         ) {
-                            MessageTextField(
-                                searchText = editedMessage,
-                                onSearchTextChange = { newText ->
-                                    editedMessage =
-                                        newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                                },
-                                onSend = {
-                                    viewModel.editMessage(
-                                        messageId = selectedMessageForEdit!!.messageId!!,
-                                        chatId = chatId,
-                                        message = editedMessage
-                                    )
-                                    selectedMessageForEdit = null
-                                },
-                                placeholderText = "Edit your message",
-                                modifier = Modifier
-                                    .width(250.dp)
+                            groupedMessages.forEach { (date, messagesForDate) ->
+                                stickyHeader {
+                                    Box(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                                            .padding(8.dp),
+                                        contentAlignment = Alignment.Center
+                                    ) {
+                                        Text(
+                                            text = date,
+                                            style = MaterialTheme.typography.titleMedium,
+                                            color = MaterialTheme.colorScheme.onSurface,
+                                            textAlign = TextAlign.Center
+                                        )
+                                    }
+                                }
+
+                                itemsIndexed(
+                                    messagesForDate,
+                                    key = { _, message -> message.messageId ?: 0 }) { _, message ->
+                                    if (message != null) {
+                                        val timestamp = convertTimestampToDate(message.timestamp!!)
+                                        val senderId = message.senderId
+
+                                        var senderName by remember { mutableStateOf("") }
+                                        LaunchedEffect(senderId) {
+                                            viewModel.getUserNameFromUserId(senderId!!) { name ->
+                                                senderName = name
+                                            }
+                                        }
+                                        var replyedMessage by remember { mutableStateOf<Message?>(null) }
+                                        if (message.replyTo != "") {
+                                            LaunchedEffect(replyedMessage) {
+                                                viewModel.getMessageById(
+                                                    message.replyTo.toString(),
+                                                    chatId,
+                                                    onResult = {
+                                                        replyedMessage = it
+                                                    })
+
+                                            }
+                                        }
+
+                                        var senderReplyName by remember { mutableStateOf("") }
+                                        LaunchedEffect(replyedMessage) {
+                                            replyedMessage?.senderId?.let { it1 ->
+                                                viewModel.getUserNameFromUserId(it1) { name ->
+                                                    senderReplyName = name
+                                                }
+                                            }
+                                        }
+
+
+                                        val senderNameColor = viewModel.getUserColor(senderId!!)
+                                        message.messageType?.let { messageType ->
+                                            ChatBubble(
+                                                context = context,
+                                                message = message,
+                                                isSentByMe = message.senderId == currentUser.uid,
+                                                timestamp = timestamp,
+                                                senderName = senderName,
+                                                senderNameColor = senderNameColor,
+                                                onImageClick = { imageUrl ->
+                                                    val encode = URLEncoder.encode(
+                                                        imageUrl,
+                                                        StandardCharsets.UTF_8.toString()
+                                                    )
+                                                    navController.navigate(
+                                                        Screens.ImageScreen.createRoute(
+                                                            encode
+                                                        )
+                                                    )
+                                                },
+                                                onVideoClick = { videoUrl ->
+                                                    val intent = Intent(
+                                                        context,
+                                                        VideoPlayerActivity::class.java
+                                                    ).apply {
+                                                        putExtra("videoUri", videoUrl)
+                                                    }
+                                                    context.startActivity(intent)
+                                                },
+                                                onEditClick = {
+                                                    selectedMessageForEdit = message
+                                                },
+                                                onDeleteClick = {
+                                                    selectedMessageForDeletion = message
+                                                },
+                                                onPinMessageClick = {
+                                                    viewModel.pinMessage(message, chatId)
+//                                                viewModel.getPinnedMessages(chatId)
+                                                },
+                                                onUnPinMessageClick = {
+                                                    viewModel.unPinMessage(message, chatId)
+//                                                viewModel.getPinnedMessages(chatId)
+                                                },
+                                                onStarMessage = {
+                                                    viewModel.starMessage(message, chatId)
+                                                },
+                                                onUnStarMessage = {
+                                                    viewModel.unStarMessage(message, chatId)
+                                                },
+                                                onSwipeRight = {
+                                                    selectedMessageForReply = it
+                                                    replyState = true
+                                                },
+                                                replyMessage = replyedMessage,
+                                                replyMessageName = senderReplyName
+                                            )
+
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+
+                } else {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .background(MaterialTheme.colorScheme.secondary),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Text(
+                            text = "Let's start chatting",
+                            textAlign = TextAlign.Center,
+                            style = MaterialTheme.typography.titleLarge,
+                            modifier = Modifier
+                        )
+                    }
+                }
+
+                if (selectedMessageForEdit != null && selectedMessageForEdit?.senderId == currentUser.uid) {
+                    Dialog(onDismissRequest = { selectedMessageForEdit = null }) {
+                        Column {
+                            ChatBubble(
+                                message = selectedMessageForEdit!!,
+                                isSentByMe = selectedMessageForEdit!!.senderId == currentUser.uid,
+                                timestamp = convertTimestampToDate(selectedMessageForEdit!!.timestamp!!),
+                                senderName = "",
+                                onImageClick = { },
+                                senderNameColor = Color.Transparent,
+                                onEditClick = { },
+                                onDeleteClick = { },
+                                context = context
                             )
-
-                            Spacer(modifier = Modifier.weight(1f))
-
-                            IconButton(
-                                onClick = {
-                                    viewModel.editMessage(
-                                        messageId = selectedMessageForEdit!!.messageId!!,
-                                        chatId = chatId,
-                                        message = editedMessage
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                modifier = Modifier
+                                    .background(
+                                        color = MaterialTheme.colorScheme.surface,
+                                        shape = MaterialTheme.shapes.medium
                                     )
-                                    selectedMessageForEdit = null
-
-                                }, modifier = Modifier.padding(end = 16.dp)
                             ) {
-                                SendIcon()
+                                MessageTextField(
+                                    searchText = editedMessage,
+                                    onSearchTextChange = { newText ->
+                                        editedMessage =
+                                            newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
+                                    },
+                                    onSend = {
+                                        viewModel.editMessage(
+                                            messageId = selectedMessageForEdit!!.messageId!!,
+                                            chatId = chatId,
+                                            message = editedMessage
+                                        )
+                                        selectedMessageForEdit = null
+                                    },
+                                    placeholderText = "Edit your message",
+                                    modifier = Modifier
+                                        .width(250.dp)
+                                )
+
+                                Spacer(modifier = Modifier.weight(1f))
+
+                                IconButton(
+                                    onClick = {
+                                        viewModel.editMessage(
+                                            messageId = selectedMessageForEdit!!.messageId!!,
+                                            chatId = chatId,
+                                            message = editedMessage
+                                        )
+                                        selectedMessageForEdit = null
+
+                                    }, modifier = Modifier.padding(end = 16.dp)
+                                ) {
+                                    SendIcon()
+                                }
                             }
                         }
                     }
                 }
-            }
-            if (selectedMessageForDeletion != null && selectedMessageForDeletion?.senderId == currentUser.uid) {
-                MessageAlertDialog(
-                    message = selectedMessageForDeletion!!,
-                    onDismiss = { selectedMessageForDeletion = null },
-                    onConfirm = {
-                        viewModel.deleteMessage(
-                            chatId,
-                            selectedMessageForDeletion!!.messageId!!
-                        )
-                        selectedMessageForDeletion = null
-                    },
-                    context = context
-                )
+                if (selectedMessageForDeletion != null && selectedMessageForDeletion?.senderId == currentUser.uid) {
+                    MessageAlertDialog(
+                        message = selectedMessageForDeletion!!,
+                        onDismiss = { selectedMessageForDeletion = null },
+                        onConfirm = {
+                            viewModel.deleteMessage(
+                                chatId,
+                                selectedMessageForDeletion!!.messageId!!
+                            )
+                            selectedMessageForDeletion = null
+                        },
+                        context = context
+                    )
+                }
             }
         }
     }
@@ -792,12 +829,44 @@ private fun Reply(messageSenderName: String, message: Message, onDismiss: () -> 
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.primary
             )
-            Text(
-                text = message.message!!,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+
+            when (message.messageType) {
+                MessageType.TEXT.toString() -> {
+                    Text(
+                        text = message.useMessage,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                MessageType.IMAGE.toString() -> {
+                    Text(
+                        text = message.message ?: "Image 🏞️",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                }
+
+                MessageType.VIDEO.toString() -> {
+                    Text(
+                        text = message.message ?: "Video 🎥",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+                MessageType.LOCATION.toString() -> {
+                    Text(
+                        text = message.message ?: "Location 🗺️",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+
+            }
         }
+
 
         IconButton(onClick = { onDismiss() }) {
             Icon(

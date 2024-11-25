@@ -15,7 +15,7 @@ import java.io.IOException
 const val YOUR_ONESIGNAL_APP_ID = BuildConfig.ONESIGNAL_APP_ID
 const val YOUR_REST_API_KEY = BuildConfig.REST_API_KEY
 
-suspend fun sendNotificationToChannel(title:String,userId:String, message: String) {
+suspend fun sendNotificationToChannel(title:String,userId:String, message: String,imageUrl:String? = "") {
     withContext(Dispatchers.IO) {
         val client = OkHttpClient()
 
@@ -27,10 +27,15 @@ suspend fun sendNotificationToChannel(title:String,userId:String, message: Strin
             put("contents", JSONObject().apply {
                 put("en", message)
             })
+            imageUrl?.let {
+                put("big_picture", it)
+            }
             put("include_aliases", JSONObject().put("external_id", JSONArray().apply {
                 put(userId)
             }))
+
             put("target_channel", "push")
+
         }
 
         val body: RequestBody =

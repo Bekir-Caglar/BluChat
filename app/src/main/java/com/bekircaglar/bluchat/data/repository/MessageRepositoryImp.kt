@@ -7,10 +7,10 @@ import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.STORED_MESSAGES
 import com.bekircaglar.bluchat.utils.STORED_USERS
 import com.bekircaglar.bluchat.domain.model.ChatRoom
-import com.bekircaglar.bluchat.domain.model.Message
-import com.bekircaglar.bluchat.domain.model.Messages
+import com.bekircaglar.bluchat.domain.model.message.Message
+import com.bekircaglar.bluchat.domain.model.message.MessageType
+import com.bekircaglar.bluchat.domain.model.message.Messages
 import com.bekircaglar.bluchat.domain.repository.MessageRepository
-import com.bekircaglar.bluchat.utils.USER_COLLECTION
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.database.DataSnapshot
 import com.google.firebase.database.DatabaseError
@@ -75,7 +75,8 @@ class MessageRepositoryImp @Inject constructor(
                     databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(STORED_MESSAGES)
                 val randomId = messageRef.push().key!!
 
-                messageRef.child(randomId).setValue(message.copy(messageId = randomId)).await()
+                message.messageId = randomId
+                messageRef.child(randomId).setValue(message).await()
                 emit(Response.Success("Message Sent"))
             } catch (e: Exception) {
                 emit(Response.Error(e.message.toString()))
@@ -508,13 +509,31 @@ class MessageRepositoryImp @Inject constructor(
         emit(Response.Success(downloadUrl.toString()))
 
     }
-
     override suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>> =
         flow {
             val dbRef = databaseReference.child(CHAT_COLLECTION).child(chatId)
-            dbRef.child("chatLastMessage").setValue(message.message)
+
+            when (message.messageType) {
+                MessageType.TEXT.toString() -> {
+                    dbRef.child("chatLastMessage").setValue(message.message)
+                }
+                MessageType.IMAGE.toString() -> {
+                    dbRef.child("chatLastMessage").setValue("[Photo]")
+                }
+                MessageType.VIDEO.toString() -> {
+                    dbRef.child("chatLastMessage").setValue("[Video]")
+                }
+                MessageType.AUDIO.toString() -> {
+                    dbRef.child("chatLastMessage").setValue("[Audio]")
+                }
+                MessageType.LOCATION.toString() -> {
+                    dbRef.child("chatLastMessage").setValue("[Location]")
+                }
+                //TODO UI A TASI
+            }
             dbRef.child("chatLastMessageTime").setValue(message.timestamp.toString())
             dbRef.child("chatLastMessageSenderId").setValue(message.senderId)
+            emit(Response.Success("Last message set successfully"))
         }
 
     override suspend fun getMessageById(
