@@ -19,15 +19,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -36,9 +33,8 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Star
-import androidx.compose.material3.BottomAppBar
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -58,6 +54,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
+import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
@@ -80,6 +77,7 @@ import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
+import com.bekircaglar.bluchat.presentation.message.component.MessageBottomBar
 import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 import com.bekircaglar.bluchat.utils.UiState
@@ -90,10 +88,14 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
+
+enum class VoiceRecordingState {
+    IDLE, RECORDING, DRAGGING, LOCKED, CANCELLING
+}
+
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(
-    ExperimentalFoundationApi::class, ExperimentalMaterial3Api::class,
-    ExperimentalLayoutApi::class
+    ExperimentalFoundationApi::class
 )
 @Composable
 fun MessageScreen(navController: NavController, chatId: String) {
@@ -275,9 +277,10 @@ fun MessageScreen(navController: NavController, chatId: String) {
             )
         },
         bottomBar = {
-            Column {
+            Column(
+                modifier = Modifier.background(Color.Transparent)
+            ) {
                 if (replyState) {
-
                     var senderName by remember { mutableStateOf("") }
                     selectedMessageForReply!!.senderId?.let {
                         viewModel.getUserNameFromUserId(
@@ -285,7 +288,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 senderName = it
                             })
                     }
-
                     Reply(
                         messageSenderName = senderName,
                         message = selectedMessageForReply!!,
@@ -294,64 +296,28 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             selectedMessageForReply = null
                         })
                 }
+                MessageBottomBar(
+                    onAttachClicked = {
+                        bottomSheetState = true
+                    },
+                    sendMessage = { message ->
+                        viewModel.sendMessage(
+                            message = message,
+                            chatId = chatId,
+                            messageType = MessageType.TEXT.toString(),
+                            replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
+                        )
+                        replyState = false
+                        selectedMessageForReply = null
+                    },
+                    onCameraClicked = {
+                        permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
+                    },
+                    onEmojiClicked = {
 
-                BottomAppBar(
-                    containerColor = MaterialTheme.colorScheme.background,
-                ) {
-                    Column(modifier = Modifier.fillMaxWidth()) {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.padding(8.dp)
-                        ) {
-                            IconButton(
-                                onClick = {
-                                    bottomSheetState = true
-                                },
-                                modifier = Modifier.padding(end = 8.dp)
-                            ) {
-                                PlusIcon()
-                            }
-                            MessageTextField(
-                                searchText = chatMessage,
-                                onSearchTextChange = { newText ->
-                                    chatMessage =
-                                        newText.replaceFirstChar { if (it.isLowerCase()) it.titlecase() else it.toString() }
-                                },
-                                onSend = {
-                                    viewModel.sendMessage(
-                                        message = chatMessage,
-                                        chatId = chatId,
-                                        messageType = MessageType.TEXT.toString(),
-                                        replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
-                                    )
-                                    chatMessage = ""
-                                    replyState = false
-                                    selectedMessageForReply = null
-                                },
-                                placeholderText = "Type a message",
-                                modifier = Modifier.weight(1f)
-                            )
+                    },
+                )
 
-                            IconButton(
-                                onClick = {
-                                    if (chatMessage.isNotEmpty()) {
-                                        viewModel.sendMessage(
-                                            message = chatMessage,
-                                            chatId = chatId,
-                                            messageType = MessageType.TEXT.toString(),
-                                            replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
-                                        )
-                                        chatMessage = ""
-                                        replyState = false
-                                        selectedMessageForReply = null
-                                    }
-                                }, modifier = Modifier.padding(start = 8.dp)
-                            ) {
-                                SendIcon()
-                            }
-                        }
-                    }
-                }
             }
 
         }
@@ -607,7 +573,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                                 senderName = name
                                             }
                                         }
-                                        var replyedMessage by remember { mutableStateOf<Message?>(null) }
+                                        var replyedMessage by remember {
+                                            mutableStateOf<Message?>(
+                                                null
+                                            )
+                                        }
                                         if (message.replyTo != "") {
                                             LaunchedEffect(replyedMessage) {
                                                 viewModel.getMessageById(
@@ -766,7 +736,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
                                     }, modifier = Modifier.padding(end = 16.dp)
                                 ) {
-                                    SendIcon()
+                                    Icon(
+                                        imageVector = Icons.Default.Send,
+                                        contentDescription = "Send edited message",
+                                        tint = MaterialTheme.colorScheme.onSurface
+                                    )
                                 }
                             }
                         }
@@ -878,20 +852,6 @@ private fun Reply(messageSenderName: String, message: Message, onDismiss: () -> 
     }
 }
 
-
-@Composable
-private fun PlusIcon() {
-    Icon(imageVector = Icons.Outlined.Add, contentDescription = null, tint = Color.Gray)
-}
-
-@Composable
-private fun SendIcon() {
-    Icon(
-        painter = painterResource(id = R.drawable.ic_send),
-        contentDescription = null,
-        tint = MaterialTheme.colorScheme.primary,
-    )
-}
 
 fun convertTimestampToDate(timestamp: Long): String {
     val instant = Instant.ofEpochMilli(timestamp)
