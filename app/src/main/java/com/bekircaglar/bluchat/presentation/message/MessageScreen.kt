@@ -56,12 +56,15 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -116,6 +119,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
     val listState = rememberLazyListState()
 
     var pageNumber by remember { mutableStateOf(1) }
+
+    var emojiState by remember { mutableStateOf(false) }
 
     var selectedMessageForDeletion by remember { mutableStateOf<Message?>(null) }
     var selectedMessageForPin by remember { mutableStateOf<Message?>(null) }
@@ -313,10 +318,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     onCameraClicked = {
                         permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                     },
-                    onEmojiClicked = {
-
-                    },
                 )
+
 
             }
 
