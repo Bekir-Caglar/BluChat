@@ -7,6 +7,7 @@ import android.media.MediaMetadataRetriever
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.border
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -18,6 +19,8 @@ import androidx.compose.ui.composed
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.takeOrElse
+import androidx.compose.ui.input.pointer.PointerInputScope
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import coil.ImageLoader
 import com.bekircaglar.bluchat.presentation.shimmer.PlaceholderHighlight
@@ -77,5 +80,15 @@ fun ImageLoader.getVideoThumbnail(context: Context, videoUrl: String): Bitmap? {
         null
     } finally {
         retriever.release()
+    }
+}
+fun Modifier.conditionalPointerInput(
+    isLongPressEnabled: Boolean,
+    onLongPress: suspend PointerInputScope.() -> Unit
+): Modifier {
+    return if (isLongPressEnabled) {
+        this.pointerInput(Unit, onLongPress)
+    } else {
+        this
     }
 }
