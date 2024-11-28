@@ -1,6 +1,7 @@
 package com.bekircaglar.bluchat.data.repository
 
 import android.net.Uri
+import androidx.core.net.toUri
 import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
 import com.bekircaglar.bluchat.utils.MESSAGE_COLLECTION
 import com.bekircaglar.bluchat.utils.Response
@@ -22,6 +23,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.tasks.await
+import java.io.File
 import javax.inject.Inject
 
 class MessageRepositoryImp @Inject constructor(
@@ -509,6 +511,7 @@ class MessageRepositoryImp @Inject constructor(
         emit(Response.Success(downloadUrl.toString()))
 
     }
+
     override suspend fun setLastMessage(chatId: String, message: Message): Flow<Response<String>> =
         flow {
             val dbRef = databaseReference.child(CHAT_COLLECTION).child(chatId)
@@ -546,5 +549,32 @@ class MessageRepositoryImp @Inject constructor(
         val snapshot = dbRef.get().await()
         val message = snapshot.getValue(Message::class.java)
         emit(Response.Success(message!!))
+    }
+
+    override suspend fun uploadAudio(
+        audioFilePath: String,
+    ): Flow<Response<String>> = flow{
+
+        val audioFile = File(audioFilePath)
+
+        val audioUri = Uri.fromFile(audioFile)
+
+        val randomUUID = java.util.UUID.randomUUID().toString()
+        val storageReference = storageReference.reference.child("audios/${"$randomUUID.mp3"}")
+        val uploadTask = storageReference.putFile(audioUri)
+
+        val downloadUrl = uploadTask.continueWithTask { task ->
+            if (!task.isSuccessful) {
+                task.exception?.let {
+                    throw it
+                }
+            }
+            storageReference.downloadUrl
+        }.await()
+        emit(Response.Success(downloadUrl.toString()))
+
+
+
+
     }
 }

@@ -61,9 +61,11 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
+import androidx.core.net.toUri
 import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -78,11 +80,14 @@ import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
+import com.bekircaglar.bluchat.presentation.message.component.AudioMessageBubble
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
 import com.bekircaglar.bluchat.presentation.message.component.MessageBottomBar
 import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
+import com.bekircaglar.bluchat.presentation.message.component.formatDuration
+import com.bekircaglar.bluchat.utils.AudioRecorderManager
 import com.bekircaglar.bluchat.utils.UiState
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
@@ -91,10 +96,6 @@ import java.time.LocalDateTime
 import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
-
-enum class VoiceRecordingState {
-    IDLE, RECORDING, DRAGGING, LOCKED, CANCELLING
-}
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(
@@ -110,6 +111,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     val uploadedImage by viewModel.uploadedImageUri.collectAsStateWithLifecycle()
     val uploadedVideo by viewModel.uploadedVideoUri.collectAsStateWithLifecycle()
     val selectedImage by viewModel.selectedImageUri.collectAsStateWithLifecycle()
+    val uploadedAudioUri by viewModel.uploadedAudioUri.collectAsStateWithLifecycle()
     val currentUser = viewModel.currentUser
     var messageText by remember { mutableStateOf("") }
     var bottomSheetState by remember { mutableStateOf(false) }
@@ -287,25 +289,27 @@ fun MessageScreen(navController: NavController, chatId: String) {
             ) {
                 if (replyState) {
                     var senderName by remember { mutableStateOf("") }
-                    selectedMessageForReply!!.senderId?.let {
+                    selectedMessageForReply?.senderId?.let {
                         viewModel.getUserNameFromUserId(
                             it, onResult = {
                                 senderName = it
                             })
                     }
-                    Reply(
-                        messageSenderName = senderName,
-                        message = selectedMessageForReply!!,
-                        onDismiss = {
-                            replyState = false
-                            selectedMessageForReply = null
-                        })
+                    selectedMessageForReply?.let {
+                        Reply(
+                            messageSenderName = senderName,
+                            message = it,
+                            onDismiss = {
+                                replyState = false
+                                selectedMessageForReply = null
+                            })
+                    }
                 }
                 MessageBottomBar(
                     onAttachClicked = {
                         bottomSheetState = true
                     },
-                    sendMessage = { message ->
+                    onSendMessage = { message ->
                         viewModel.sendMessage(
                             message = message,
                             chatId = chatId,
@@ -318,6 +322,16 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     onCameraClicked = {
                         permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                     },
+                    onSendAudio = { audioPath,audioDuration ->
+                        viewModel.uploadAudio(
+                            audioPath = audioPath,
+                            audioDuration = audioDuration,
+                            chatId = chatId,
+                            replyTo = if (selectedMessageForReply != null) selectedMessageForReply?.messageId else ""
+                        )
+
+
+                    }
                 )
 
 
@@ -470,12 +484,18 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             modifier = Modifier.padding(8.dp)
                                         )
                                     }
+                                    val formattedDuration = formatDuration(lastPinnedMessage?.useAudioDuration?.times(1000) ?: 0)
+                                    val voiceMessage =if (lastPinnedMessage?.messageType == MessageType.AUDIO.toString()) "Voice message 🎤 ($formattedDuration)"
+                                    else ""
+
                                     Text(
                                         text = when (lastPinnedMessage?.messageType) {
+
                                             MessageType.TEXT.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Text message" else lastPinnedMessage.useMessage
                                             MessageType.IMAGE.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Image 🏞️" else lastPinnedMessage.useMessage
                                             MessageType.VIDEO.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Video 🎥" else lastPinnedMessage.useMessage
                                             MessageType.LOCATION.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) "Location 🗺️" else lastPinnedMessage.useMessage
+                                            MessageType.AUDIO.toString() -> if (lastPinnedMessage.message.isNullOrEmpty()) voiceMessage else lastPinnedMessage.useMessage
                                             else -> ""
 
                                         },
@@ -526,6 +546,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                                 .clip(MaterialTheme.shapes.medium)
                                         )
                                     }
+
 
                                 }
                             }
@@ -836,6 +857,14 @@ private fun Reply(messageSenderName: String, message: Message, onDismiss: () -> 
                 MessageType.LOCATION.toString() -> {
                     Text(
                         text = message.message ?: "Location 🗺️",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                }
+                MessageType.AUDIO.toString() -> {
+                    val formattedDuration = formatDuration(message.useAudioDuration*1000)
+                    Text(
+                        text = "Voice message 🎤 (${formattedDuration})",
                         style = MaterialTheme.typography.bodySmall,
                         color = MaterialTheme.colorScheme.onSurface
                     )

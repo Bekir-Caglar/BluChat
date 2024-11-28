@@ -32,6 +32,7 @@ data class Message(
     val imageUrl: String? = "",
     val videoUrl: String? = "",
     val audioUrl: String? = "",
+    val audioDuration: Int? = 0,
     val locationName: String? = "",
     val latitude: Double? = 0.0,
     val longitude: Double? = 0.0,
@@ -67,6 +68,10 @@ data class Message(
     @get:Exclude
     val useAudioUrl: String
         get() = audioUrl ?: ""
+
+    @get:Exclude
+    val useAudioDuration: Int
+        get() = audioDuration ?: 0
 
     @get:Exclude
     val useLocationName: String
