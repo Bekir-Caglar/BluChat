@@ -31,6 +31,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.SetLastMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.StarMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnPinMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UnStarMessageUseCase
+import com.bekircaglar.bluchat.domain.usecase.message.UploadAudioUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UploadVideoUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
@@ -70,7 +71,8 @@ class MessageViewModel @Inject constructor(
     private val markMessageAsReadUseCase: MarkMessageAsReadUseCase,
     private val uploadVideoUseCase: UploadVideoUseCase,
     private val setLastMessageUseCase: SetLastMessageUseCase,
-    private val getMessageByIdUseCase: GetMessageByIdUseCase
+    private val getMessageByIdUseCase: GetMessageByIdUseCase,
+    private val uploadAudioUseCase: UploadAudioUseCase
 ) : ViewModel() {
 
     val currentUser = auth.currentUser!!
@@ -95,6 +97,9 @@ class MessageViewModel @Inject constructor(
 
     private val _uploadedVideoUri = MutableStateFlow<Uri?>(null)
     val uploadedVideoUri: StateFlow<Uri?> = _uploadedVideoUri
+
+    private val _uploadedAudioUri = MutableStateFlow<Uri?>(null)
+    val uploadedAudioUri: StateFlow<Uri?> = _uploadedAudioUri
 
     private val _uiState = MutableStateFlow<UiState>(UiState.Idle)
     val uiState = _uiState.asStateFlow()
@@ -420,14 +425,46 @@ class MessageViewModel @Inject constructor(
             }
         }
 
+    fun uploadAudio(audioPath: String, audioDuration: Int, chatId: String, replyTo: String?) {
+        viewModelScope.launch {
+            uploadAudioUseCase.invoke(audioPath).collect { response ->
+                when (response) {
+                    is Response.Success -> {
+                        val uploadedUri = response.data.toUri()
+                        _uploadedAudioUri.value = uploadedUri
+
+                        sendMessage(
+                            audioDuration = audioDuration,
+                            message = "",
+                            audioUrl = uploadedUri.toString(),
+                            chatId = chatId,
+                            messageType = MessageType.AUDIO.toString(),
+                            replyTo = replyTo ?: ""
+                        )
+                    }
+
+                    is Response.Error -> {
+                    }
+
+                    is Response.Loading -> {
+                    }
+
+                    else -> {
+                    }
+                }
+            }
+        }
+    }
 
     fun sendMessage(
-        imageUrl: String?= null ,
+        imageUrl: String? = null,
         videoUrl: String = "",
         message: String,
         chatId: String,
         messageType: String,
-        replyTo: String? = ""
+        replyTo: String? = "",
+        audioUrl: String = "",
+        audioDuration: Int = 0
     ) = viewModelScope.launch {
 
         val timestamp = System.currentTimeMillis()
@@ -444,6 +481,7 @@ class MessageViewModel @Inject constructor(
                 messageType = messageType,
                 replyTo = replyTo
             )
+
             MessageType.IMAGE.toString() -> {
                 Message(
                     messageId = randomId,
@@ -459,6 +497,7 @@ class MessageViewModel @Inject constructor(
                     replyTo = replyTo
                 )
             }
+
             MessageType.VIDEO.toString() -> Message(
                 messageId = randomId,
                 senderId = auth.currentUser?.uid,
@@ -468,6 +507,22 @@ class MessageViewModel @Inject constructor(
                 timestamp = timestamp,
                 replyTo = replyTo
             )
+
+            MessageType.AUDIO.toString() -> Message(
+                messageId = randomId,
+                senderId = auth.currentUser?.uid,
+                message = if (myMessage != "") message
+                else {
+                    myMessage = "Audio 🎵"
+                    message
+                },
+                audioUrl = audioUrl,
+                audioDuration = audioDuration,
+                messageType = messageType,
+                timestamp = timestamp,
+                replyTo = replyTo
+            )
+
             else -> Message(
                 messageId = randomId,
                 senderId = auth.currentUser?.uid,
@@ -485,7 +540,7 @@ class MessageViewModel @Inject constructor(
 
                 is Response.Success -> {
                     setLastMessage(messageToSend, chatId)
-                    sendNotification(chatId, myMessage,imageUrl)
+                    sendNotification(chatId, myMessage, imageUrl)
                 }
 
                 is Response.Error -> {
@@ -498,10 +553,9 @@ class MessageViewModel @Inject constructor(
         }
 
 
-
     }
 
-    private fun sendNotification(chatId: String, message: String,imageUrl: String?) {
+    private fun sendNotification(chatId: String, message: String, imageUrl: String?) {
         viewModelScope.launch {
             val chatUsersIdResponse = getUserFromChatIdUseCase(chatId).first()
             if (chatUsersIdResponse is Response.Success) {

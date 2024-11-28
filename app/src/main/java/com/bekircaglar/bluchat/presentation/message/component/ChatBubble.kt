@@ -4,6 +4,8 @@ import android.content.Context
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -30,20 +32,26 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat.startActivity
+import androidx.core.net.toUri
 import coil.ImageLoader
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.BuildConfig
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.model.message.MessageType
+import com.bekircaglar.bluchat.presentation.message.component.AudioMessageBubble
+import com.bekircaglar.bluchat.presentation.message.component.formatDuration
 import com.bekircaglar.bluchat.ui.theme.chatAnswerTextColor
 import com.bekircaglar.bluchat.utils.chatBubbleModifier
 import com.bekircaglar.bluchat.utils.getVideoThumbnail
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
+import kotlin.math.roundToInt
 
 private val BubblePadding = 12.dp
 private val BubbleShapeSent = RoundedCornerShape(16.dp, 16.dp, 0.dp, 16.dp)
@@ -89,75 +97,104 @@ fun ChatBubble(
         onUnStarMessage = onUnStarMessage
     )
 
+    val offsetX = remember { Animatable(0f) }
+    val coroutineScope = rememberCoroutineScope()
+
     Row(
         modifier = Modifier
-            .chatBubbleModifier(isSentByMe) { expanded = true }
+            .chatBubbleModifier(isSentByMe) {
+                expanded = !expanded
+            }
             .pointerInput(Unit) {
-                detectHorizontalDragGestures { _, dragAmount ->
-                    if (dragAmount > 50 && !isSentByMe) {
-                        onSwipeRight(message)
+                detectHorizontalDragGestures(
+                    onDragEnd = {
+                        if (offsetX.value > 300f) {
+                            onSwipeRight(message)
+                        }
+                        coroutineScope.launch {
+                            offsetX.animateTo(0f, tween(durationMillis = 300))
+                        }
+                    }
+                ) { change, dragAmount ->
+                    change.consume()
+                    coroutineScope.launch {
+                        offsetX.snapTo(offsetX.value + dragAmount)
                     }
                 }
-            },
+            }
+            .offset { IntOffset(offsetX.value.roundToInt(), 0) },
         horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
     ) {
-        Row(
-            modifier = Modifier.fillMaxWidth(0.7f),
-            horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
-        ) {
-            Surface(
-                modifier = Modifier
-                    .wrapContentSize()
-                    .shadow(
-                        elevation = 1.dp,
-                        shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived
-                    )
-                    .background(
-                        if (isSentByMe) BubbleColorSent else BubbleColorReceived,
-                        shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived
-                    ),
-                shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived,
-                color = if (isSentByMe) BubbleColorSent else BubbleColorReceived
+        if (message.messageType == MessageType.AUDIO.toString()) {
+            Row(
+                modifier = Modifier.fillMaxWidth(0.7f),
+                horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
             ) {
-                Column(modifier = Modifier.padding(BubblePadding)) {
-                    replyMessage?.let {
-                        ReplyMessage(replyMessageName, it)
+                AudioMessageBubble(
+                    audioUrl = message.useAudioUrl.toUri(),
+                    audioDuration = message.useAudioDuration,
+                    isIncoming = !isSentByMe
+                )
+            }
+        } else {
+            Row(
+                modifier = Modifier.fillMaxWidth(0.7f),
+                horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
+            ) {
+                Surface(
+                    modifier = Modifier
+                        .wrapContentSize()
+                        .shadow(
+                            elevation = 1.dp,
+                            shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived
+                        )
+                        .background(
+                            if (isSentByMe) BubbleColorSent else BubbleColorReceived,
+                            shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived
+                        ),
+                    shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived,
+                    color = if (isSentByMe) BubbleColorSent else BubbleColorReceived
+                ) {
+                    Column(modifier = Modifier.padding(BubblePadding)) {
+                        replyMessage?.let {
+                            ReplyMessage(replyMessageName, it)
+                            Spacer(modifier = Modifier.size(8.dp))
+                        }
+                        if (!isSentByMe) {
+                            Text(
+                                text = senderName,
+                                color = senderNameColor,
+                                fontSize = SenderNameFontSize,
+                                textAlign = TextAlign.Start
+                            )
+                        }
+
                         Spacer(modifier = Modifier.size(8.dp))
+
+                        when (message.messageType) {
+                            MessageType.TEXT.toString() -> TextMessage(message, isSentByMe)
+                            MessageType.IMAGE.toString() -> ImageMessage(
+                                message,
+                                isSentByMe,
+                                onImageClick,
+                                {
+                                    if (isSentByMe) expanded = !expanded
+                                }
+                            )
+                            MessageType.VIDEO.toString() -> VideoMessage(
+                                context,
+                                message,
+                                onVideoClick,
+                                isSentByMe
+                            )
+                            MessageType.LOCATION.toString() -> LocationMessage(
+                                isSentByMe = isSentByMe,
+                                context,
+                                message,
+                                { if (isSentByMe) expanded = !expanded }                            )
+                        }
+                        MessageTimestamp(message, timestamp, isSentByMe)
                     }
-                    if (!isSentByMe) {
-                        Text(
-                            text = senderName,
-                            color = senderNameColor,
-                            fontSize = SenderNameFontSize,
-                            textAlign = TextAlign.Start
-                        )
-                    }
-
-                    Spacer(modifier = Modifier.size(8.dp))
-
-                    when (message.messageType) {
-                        MessageType.TEXT.toString() -> TextMessage(message, isSentByMe)
-                        MessageType.IMAGE.toString() -> ImageMessage(
-                            message,
-                            isSentByMe,
-                            onImageClick,
-                            { expanded = true })
-
-                        MessageType.VIDEO.toString() -> VideoMessage(
-                            context,
-                            message,
-                            onVideoClick,
-                            isSentByMe
-                        )
-
-                        MessageType.LOCATION.toString() -> LocationMessage(
-                            isSentByMe = isSentByMe,
-                            context,
-                            message,
-                            { expanded = true })
-                    }
-                    MessageTimestamp(message, timestamp, isSentByMe)
-
                 }
             }
         }
@@ -188,8 +225,11 @@ fun ReplyMessage(replyMessageName: String?, replyMessage: Message) {
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.primary
             )
+
+            val formattedDuration = formatDuration(replyMessage.useAudioDuration*1000)
             Text(
-                text = replyMessage.message ?: "",
+                text = if (replyMessage.messageType == MessageType.AUDIO.toString()) "Voice message 🎤 ($formattedDuration)"
+                else replyMessage.useMessage ?: "",
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 maxLines = 1,

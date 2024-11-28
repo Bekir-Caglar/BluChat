@@ -48,4 +48,6 @@ interface MessageRepository {
 
     suspend fun getMessageById(messageId: String, chatId: String): Flow<Response<Message>>
 
+    suspend fun uploadAudio(audioFilePath: String): Flow<Response<String>>
+
 }
