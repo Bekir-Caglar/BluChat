@@ -8,17 +8,27 @@ import android.os.Looper
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -41,26 +51,26 @@ fun AudioMessageBubble(
 ) {
     val context = LocalContext.current
     val coroutineScope = rememberCoroutineScope()
-    
+
     var isPlaying by remember { mutableStateOf(false) }
     var currentProgress by remember { mutableStateOf(0f) }
-    var totalDuration by remember { mutableStateOf(audioDuration*1000) }
-    
+    var totalDuration by remember { mutableStateOf(audioDuration * 1000) }
+
     val audioPlayerManager = remember { AudioPlayerManager(context) }
 
     val waveform = remember { generateWaveform(audioUrl) }
 
     val bubbleColor = if (isIncoming)
         MaterialTheme.colorScheme.secondary
-    else 
+    else
         MaterialTheme.colorScheme.primary
-    
-    val textColor = if (isIncoming) 
+
+    val textColor = if (isIncoming)
         MaterialTheme.colorScheme.primary
-    else 
+    else
         MaterialTheme.colorScheme.background
 
-    val formattedDuration = remember{ formatDuration(totalDuration) }
+    val formattedDuration = remember { formatDuration(totalDuration) }
 
     val togglePlayback: () -> Unit = {
         coroutineScope.launch {
@@ -99,7 +109,7 @@ fun AudioMessageBubble(
     }
 
     val animatedProgress by animateFloatAsState(
-        targetValue = currentProgress, 
+        targetValue = currentProgress,
         label = "Audio Progress"
     )
 
@@ -115,14 +125,17 @@ fun AudioMessageBubble(
             modifier = Modifier
                 .size(40.dp)
                 .clip(CircleShape)
-                .background(if (isIncoming) MaterialTheme.colorScheme.primary
-                else Color.White.copy(alpha = 0.2f)
+                .background(
+                    if (isIncoming) MaterialTheme.colorScheme.primary
+                    else Color.White.copy(alpha = 0.2f)
                 )
                 .clickable { togglePlayback() },
             contentAlignment = Alignment.Center
         ) {
             Icon(
-                painter = if (isPlaying) painterResource(R.drawable.baseline_pause_24) else painterResource(R.drawable.baseline_play_arrow_24),
+                painter = if (isPlaying) painterResource(R.drawable.baseline_pause_24) else painterResource(
+                    R.drawable.baseline_play_arrow_24
+                ),
                 contentDescription = if (isPlaying) "Pause" else "Play",
                 tint = Color.White,
                 modifier = Modifier.size(24.dp)
@@ -208,11 +221,12 @@ class AudioPlayerManager(private val context: Context) {
             prepare()
 
 
+
             if (startProgress > 0f) {
                 val seekToPosition = (duration * startProgress).toInt()
                 seekTo(seekToPosition)
             }
-            
+
             val duration = duration
             start()
 
@@ -222,7 +236,7 @@ class AudioPlayerManager(private val context: Context) {
                     val currentPosition = currentPosition
                     val progress = currentPosition.toFloat() / duration
                     onProgress(progress, duration)
-                    
+
                     if (isPlaying) {
                         handler.postDelayed(this, 100)
                     }
@@ -244,6 +258,7 @@ class AudioPlayerManager(private val context: Context) {
         mediaPlayer?.pause()
     }
 }
+
 
 @Preview
 @Composable

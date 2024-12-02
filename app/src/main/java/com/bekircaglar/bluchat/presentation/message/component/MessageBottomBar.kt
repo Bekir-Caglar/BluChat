@@ -2,10 +2,7 @@ package com.bekircaglar.bluchat.presentation.message.component
 
 import android.Manifest
 import android.content.Context
-import android.content.pm.PackageManager
-import android.media.MediaPlayer
-import android.media.MediaRecorder
-import android.os.Environment
+import android.view.ContextThemeWrapper
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -19,7 +16,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
@@ -47,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,28 +50,27 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
-import androidx.core.content.ContextCompat
 import androidx.emoji2.emojipicker.EmojiPickerView
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.utils.AudioRecorderManager
 import com.bekircaglar.bluchat.utils.PermissionManager
 import com.bekircaglar.bluchat.utils.VibrationUtils
 import com.bekircaglar.bluchat.utils.conditionalPointerInput
+import com.google.common.io.Resources
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun MessageBottomBar(
     onAttachClicked: () -> Unit,
     onCameraClicked: () -> Unit,
     onSendMessage: (String) -> Unit,
-    onSendAudio: (String,Int) -> Unit
+    onSendAudio: (String, Int) -> Unit
 ) {
     val context = LocalContext.current
 
@@ -112,7 +106,7 @@ fun MessageBottomBar(
     fun startAudioRecording(recorderManager: AudioRecorderManager) {
         try {
             recorderManager.startRecording()
-            VibrationUtils.vibrate(context, 50) // Optional subtle feedback
+            VibrationUtils.vibrate(context, 50)
         } catch (e: Exception) {
             Toast.makeText(context, "Failed to start recording", Toast.LENGTH_SHORT).show()
         }
@@ -129,6 +123,7 @@ fun MessageBottomBar(
     }
 
 
+
     BottomAppBar(
         containerColor = Color.Transparent,
         modifier = Modifier.fillMaxWidth()
@@ -140,31 +135,47 @@ fun MessageBottomBar(
                 .fillMaxWidth()
                 .padding(8.dp)
         ) {
-            if (!isPressed) {
-                MessageTextField(
-                    searchText = chatMessage,
-                    onSearchTextChange = { newText -> chatMessage = newText },
-                    onSend = {
-                        if (chatMessage.isNotEmpty()) {
-                            onSendMessage(chatMessage)
-                            chatMessage = ""
-                        }
-                    },
-                    onEmojiClicked = { emojiState = !emojiState },
-                    onCameraClicked = onCameraClicked,
-                    onAttachClicked = onAttachClicked,
-                    placeholderText = "Type a message",
-                    modifier = Modifier.weight(1f)
-                )
-            } else {
-                RecordingStatusDisplay(
-                    recordingCounter = recordingCounter,
-                    modifier = Modifier.weight(1f)
-                )
-            }
+            AnimatedContent(
+                modifier = Modifier.weight(1f),
+                targetState = isPressed,
+                label = "animatedContent",
+                transitionSpec ={
+                    scaleIn(animationSpec = tween(300)) togetherWith scaleOut(
+                        animationSpec = tween(300)
+                    )
+                }
+            ) {
+                when (it) {
+                    true -> {
+                        RecordingStatusDisplay(
+                            recordingCounter = recordingCounter,
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
 
+                    false -> {
+                        MessageTextField(
+                            searchText = chatMessage,
+                            onSearchTextChange = { newText -> chatMessage = newText },
+                            onSend = {
+                                if (chatMessage.isNotEmpty()) {
+                                    onSendMessage(chatMessage)
+                                    chatMessage = ""
+                                }
+                            },
+                            onEmojiClicked = { emojiState = !emojiState },
+                            onCameraClicked = onCameraClicked,
+                            onAttachClicked = onAttachClicked,
+                            placeholderText = "Type a message",
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                }
+            }
             Spacer(modifier = Modifier.width(16.dp))
 
+            // markdowntext url email phonen umber contact vs. regext haftaya
+            // bolca animasyon ve renk şeması düzenle
             AudioRecordButton(
                 hasMessageContent = hasMessageContent,
                 buttonSize = buttonSize,
@@ -195,7 +206,7 @@ fun MessageBottomBar(
                         val recordedFilePath = audioRecorderManager.stopRecording()
 
                         if (!cancelRecording && recordedFilePath != null && recordingCounter >= 1) {
-                            onSendAudio(recordedFilePath,recordingCounter)
+                            onSendAudio(recordedFilePath, recordingCounter)
                         }
                     }
 
@@ -213,10 +224,10 @@ fun MessageBottomBar(
                 onDragEnd = {
                     if (offsetX < -200) {
                         audioRecorderManager.stopRecording()
-                    }else{
+                    } else {
                         val recordedFilePath = audioRecorderManager.stopRecording()
                         if (recordedFilePath != null && recordingCounter >= 1) {
-                            onSendAudio(recordedFilePath,recordingCounter)
+                            onSendAudio(recordedFilePath, recordingCounter)
                         }
                     }
                     buttonSize = 48.dp
@@ -359,7 +370,8 @@ fun AudioRecordButton(
                     scaleIn(animationSpec = tween(600)) togetherWith scaleOut(
                         animationSpec = tween(600)
                     )
-                }
+                },
+                label = "iconContent"
             ) { targetState ->
                 Icon(
                     painter = if (targetState) painterResource(R.drawable.ic_send)

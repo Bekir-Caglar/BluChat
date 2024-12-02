@@ -61,7 +61,6 @@ private val TimestampFontSize = 12.sp
 private val SenderNameFontSize = 14.sp
 private val MessageFontSize = 16.sp
 
-@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ChatBubble(
     context: Context,
@@ -82,7 +81,7 @@ fun ChatBubble(
     replyMessage: Message? = null,
     replyMessageName: String? = null
 ) {
-    val BubbleColorSent = MaterialTheme.colorScheme.tertiary
+    val bubbleColorSent = MaterialTheme.colorScheme.primary
     var expanded by remember { mutableStateOf(false) }
 
     MessageDropdownMenu(
@@ -149,11 +148,11 @@ fun ChatBubble(
                             shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived
                         )
                         .background(
-                            if (isSentByMe) BubbleColorSent else BubbleColorReceived,
+                            if (isSentByMe) bubbleColorSent else BubbleColorReceived,
                             shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived
                         ),
                     shape = if (isSentByMe) BubbleShapeSent else BubbleShapeReceived,
-                    color = if (isSentByMe) BubbleColorSent else BubbleColorReceived
+                    color = if (isSentByMe) bubbleColorSent else BubbleColorReceived
                 ) {
                     Column(modifier = Modifier.padding(BubblePadding)) {
                         replyMessage?.let {
