@@ -40,6 +40,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.ui.theme.AppTheme
+import com.bekircaglar.bluchat.ui.theme.BlueLight
+import com.bekircaglar.bluchat.ui.theme.DarkBlue
 import kotlinx.coroutines.launch
 
 @Composable
@@ -61,12 +63,12 @@ fun AudioMessageBubble(
     val waveform = remember { generateWaveform(audioUrl) }
 
     val bubbleColor = if (isIncoming)
-        MaterialTheme.colorScheme.secondary
+        BlueLight
     else
         MaterialTheme.colorScheme.primary
 
     val textColor = if (isIncoming)
-        MaterialTheme.colorScheme.primary
+        DarkBlue
     else
         MaterialTheme.colorScheme.background
 

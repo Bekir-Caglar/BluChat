@@ -70,9 +70,8 @@ fun MessageTextField(
         maxLines = 1,
         singleLine = true,
         colors = TextFieldDefaults.colors(
-            focusedTextColor = colorScheme.onSurface,
-            unfocusedContainerColor = colorScheme.surface,
-            focusedContainerColor = colorScheme.surface,
+            unfocusedContainerColor = colorScheme.primary.copy(alpha = 0.2f),
+            focusedContainerColor = colorScheme.primary.copy(alpha = 0.3f),
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         ),
@@ -85,7 +84,7 @@ fun MessageTextField(
                 Icon(
                     painter = painterResource(id = R.drawable.outline_emoji_emotions_24),
                     contentDescription = "Emoji",
-                    tint = colorScheme.primary,
+                    tint = colorScheme.onSurface,
                     modifier = Modifier
                         .size(25.dp)
                 )
@@ -102,7 +101,7 @@ fun MessageTextField(
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_attach_file_24),
                         contentDescription = "Attach",
-                        tint = colorScheme.primary,
+                        tint = colorScheme.onSurface,
                         modifier = Modifier
                             .size(25.dp)
                     )
@@ -115,7 +114,7 @@ fun MessageTextField(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_camera),
                         contentDescription = "Camera",
-                        tint = colorScheme.primary,
+                        tint = colorScheme.onSurface,
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .size(25.dp)

@@ -22,6 +22,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
@@ -80,6 +81,7 @@ fun ContactsScreen(navController: NavController) {
             ActivityCompat.checkSelfPermission(context, Manifest.permission.READ_CONTACTS) -> {
                 hasPermission = true
             }
+
             else -> {
                 permissionLauncher.launch(Manifest.permission.READ_CONTACTS)
             }
@@ -88,10 +90,6 @@ fun ContactsScreen(navController: NavController) {
 
     if (hasPermission) {
         val myContacts = getContacts()
-        myContacts.forEach {
-            println(it.name + " " + it.phoneNumber)
-        }
-
         LaunchedEffect(Unit) {
             viewModel.getAppUserContacts(myContacts)
         }
@@ -109,10 +107,9 @@ fun ContactsScreen(navController: NavController) {
             topBar = {
                 ChatAppTopBar(
                     title = {
-                        Text(text = "Contacts")
+                        Text(text = "Contacts", color = MaterialTheme.colorScheme.primary)
                     },
-                    containerColor = MaterialTheme.colorScheme.secondary,
-                    actionIcon = Icons.Default.Search,
+                    containerColor = MaterialTheme.colorScheme.background,
                 )
             },
             bottomBar = {
@@ -150,12 +147,10 @@ fun ContactsScreen(navController: NavController) {
                                         style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold),
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .background(
-                                                color = MaterialTheme.colorScheme.background.copy(0.8f)
-                                            )
+                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.05f))
                                             .padding(4.dp)
                                             .padding(start = 8.dp),
-                                        color = MaterialTheme.colorScheme.onPrimary,
+                                        color = MaterialTheme.colorScheme.primary,
                                         textAlign = TextAlign.Start
                                     )
                                 }
@@ -208,8 +203,8 @@ fun AddContactSheet(onSave: (String) -> Unit, onDismissRequest: () -> Unit) {
                 sheetState.hide()
             }
             onDismissRequest()
-
-        }
+        },
+        containerColor = MaterialTheme.colorScheme.background,
     ) {
         Column(
             modifier = Modifier
@@ -231,13 +226,13 @@ fun AddContactSheet(onSave: (String) -> Unit, onDismissRequest: () -> Unit) {
                     Text(text = "Enter phone Number")
                 },
                 modifier = Modifier
-                    .width(400.dp),
+                    .width(350.dp),
                 shape = RoundedCornerShape(12.dp),
                 colors = TextFieldDefaults.colors().copy(
                     focusedIndicatorColor = Color.Transparent,
                     unfocusedIndicatorColor = Color.Transparent,
-                    focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                    unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
+                    focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                    unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                 )
             )
 

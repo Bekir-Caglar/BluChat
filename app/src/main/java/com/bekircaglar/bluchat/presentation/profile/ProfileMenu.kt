@@ -15,6 +15,8 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.dp
@@ -28,12 +30,10 @@ fun ProfileMenu(
 ) {
     Row(
         modifier = Modifier
-//            .clip(MaterialTheme.shapes.medium)
-//            .shadow(elevation = 2.dp, shape = MaterialTheme.shapes.medium)
             .fillMaxWidth()
             .clickable(onClick = onClick)
-            .padding(vertical = 16.dp, horizontal = 16.dp)
-,
+            .padding(vertical = 16.dp, horizontal = 16.dp),
+
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -56,7 +56,6 @@ fun ProfileMenu(
             imageVector = Icons.Default.KeyboardArrowRight,
             contentDescription = null,
             modifier = Modifier.size(24.dp),
-            tint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
         )
     }
 }

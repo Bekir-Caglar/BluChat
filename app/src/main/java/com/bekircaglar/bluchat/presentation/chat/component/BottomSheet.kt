@@ -53,7 +53,7 @@ fun BottomSheet(onDismiss: () -> Unit, onClicked: (String) -> Unit) {
                         Image(
                             painter = painterResource(id = option.icon),
                             contentDescription = null,
-                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSecondary.copy(alpha = 0.8f)),
+                            colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onSurface),
                             modifier = Modifier
                                 .size(30.dp)
                         )
@@ -62,7 +62,7 @@ fun BottomSheet(onDismiss: () -> Unit, onClicked: (String) -> Unit) {
                     Spacer(modifier = Modifier.width(24.dp))
 
                     Column(modifier = Modifier.weight(1f)) {
-                        Text(text = option.title, color = MaterialTheme.colorScheme.onSecondary)
+                        Text(text = option.title, color = MaterialTheme.colorScheme.onSurface)
                     }
 
                 }

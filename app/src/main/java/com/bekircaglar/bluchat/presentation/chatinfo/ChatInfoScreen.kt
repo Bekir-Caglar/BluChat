@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
@@ -372,7 +373,7 @@ fun ChatInfoScreen(
                             color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                         )
                     }
-                    Spacer(modifier = Modifier.height(32.dp))
+                    Spacer(modifier = Modifier.height(8.dp))
 
 
 
@@ -513,7 +514,7 @@ fun ChatInfoScreen(
                             } else if (chatType == GROUP) {
                                 TextField(
                                     value = "",
-                                    onValueChange = { /*TODO*/ },
+                                    onValueChange = {},
                                     leadingIcon = {
                                         Icon(
                                             imageVector = Icons.Default.Search,
@@ -530,8 +531,8 @@ fun ChatInfoScreen(
                                     colors = TextFieldDefaults.colors().copy(
                                         focusedIndicatorColor = Color.Transparent,
                                         unfocusedIndicatorColor = Color.Transparent,
-                                        focusedContainerColor = MaterialTheme.colorScheme.secondary,
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.secondary,
+                                        focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+                                        unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
                                     )
                                 )
                             }
@@ -567,16 +568,41 @@ fun ChatInfoScreen(
 
                     Spacer(modifier = Modifier.weight(1f))
 
-
-                    if (isCurrentUserAdmin) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.Center,
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        if (isCurrentUserAdmin) {
+                            ElevatedButton(
+                                onClick = {
+                                    viewModel.deleteGroup(chatId!!)
+                                    navController?.navigate(Screens.ChatListScreen.route) {
+                                        popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
+                                    }
+                                },
+                                modifier = Modifier.padding(bottom = 16.dp),
+                                colors = ButtonColors(
+                                    containerColor = MaterialTheme.colorScheme.background,
+                                    contentColor = Color.Gray,
+                                    disabledContainerColor = Color.LightGray,
+                                    disabledContentColor = Color.Blue,
+                                ),
+                            ) {
+                                Text(
+                                    text = "Delete Group", color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                            Spacer(modifier = Modifier.width(16.dp))
+                        }
                         ElevatedButton(
                             onClick = {
-                                viewModel.deleteGroup(chatId!!)
+                                viewModel.leaveChat(chatId!!)
                                 navController?.navigate(Screens.ChatListScreen.route) {
                                     popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
                                 }
                             },
-                            modifier = Modifier.padding(16.dp),
+                            modifier = Modifier.padding(bottom = 16.dp),
                             colors = ButtonColors(
                                 containerColor = MaterialTheme.colorScheme.background,
                                 contentColor = Color.Gray,
@@ -584,33 +610,14 @@ fun ChatInfoScreen(
                                 disabledContentColor = Color.Blue,
                             ),
                         ) {
-                            Text(
-                                text = "Delete Group", color = Color.Red
+                            if (chatType == PRIVATE) {
+                                Text(
+                                    text = "Leave Chat", color = MaterialTheme.colorScheme.error
+                                )
+                            } else Text(
+                                text = "Leave Group", color = MaterialTheme.colorScheme.error
                             )
                         }
-                    }
-                    ElevatedButton(
-                        onClick = {
-                            viewModel.leaveChat(chatId!!)
-                            navController?.navigate(Screens.ChatListScreen.route) {
-                                popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
-                            }
-                        },
-                        modifier = Modifier.padding(bottom = 16.dp),
-                        colors = ButtonColors(
-                            containerColor = MaterialTheme.colorScheme.background,
-                            contentColor = Color.Gray,
-                            disabledContainerColor = Color.LightGray,
-                            disabledContentColor = Color.Blue,
-                        ),
-                    ) {
-                        if (chatType == PRIVATE) {
-                            Text(
-                                text = "Leave Chat", color = Color.Red
-                            )
-                        } else Text(
-                            text = "Leave Group", color = MaterialTheme.colorScheme.error
-                        )
                     }
 
                 }
@@ -642,7 +649,7 @@ fun MemberItem(
         Row(verticalAlignment = Alignment.CenterVertically,
             modifier = Modifier.clickable { onItemClick() }) {
             Image(
-                painter = rememberImagePainter(data = member.profileImageUrl!!),
+                painter = rememberImagePainter(data = member.profileImageUrl),
                 contentDescription = null,
                 modifier = Modifier
                     .size(50.dp)
@@ -661,7 +668,7 @@ fun MemberItem(
         if (isCurrentUserAdmin) {
             Icon(imageVector = Icons.Default.Clear,
                 contentDescription = "Remove User",
-                tint = Color.Red,
+                tint = MaterialTheme.colorScheme.error,
                 modifier = Modifier.clickable {
                     onUserKicked()
                 })

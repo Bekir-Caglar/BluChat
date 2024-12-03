@@ -43,9 +43,8 @@ fun ContactItem(name: String, phoneNumber: String, profileImageUrl: String) {
             contentDescription = "Profile Image",
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .size(64.dp)
+                .size(58.dp)
                 .clip(CircleShape)
-                .border(2.dp, Color.Gray, CircleShape)
         )
 
 
@@ -61,9 +60,7 @@ fun ContactItem(name: String, phoneNumber: String, profileImageUrl: String) {
             Text(text = phoneNumber, style = MaterialTheme.typography.bodySmall, color = Color.Gray)
         }
 
-        IconButton(
-            onClick = { /* İletişim butonuna tıklama işlemi */ }
-        ) {
+        IconButton(onClick = {}) {
             Icon(
                 imageVector = Icons.Default.Call,
                 contentDescription = "Call Contact",

@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.chat.searchchat
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -7,11 +8,13 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.presentation.chat.component.Chats
+import com.bekircaglar.bluchat.presentation.chat.component.SearchTextField
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -29,7 +32,8 @@ fun OpenChatBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
-        sheetState = bottomSheetState
+        sheetState = bottomSheetState,
+        containerColor = MaterialTheme.colorScheme.background,
     ) {
         Column(
             modifier = Modifier
@@ -42,20 +46,11 @@ fun OpenChatBottomSheet(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            TextField(
-                value = textFieldValue,
-                onValueChange = { onSearchQueryChange(it) },
-                label = { Text("Search by phone number") },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                colors = TextFieldDefaults.colors().copy(
-                    focusedTextColor = MaterialTheme.colorScheme.onSurface,
-                    unfocusedTextColor = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
-                    focusedIndicatorColor = Color.Transparent,
-                    unfocusedIndicatorColor = Color.Transparent
-                ),
-                singleLine = true
+            SearchTextField(
+                query = textFieldValue,
+                onQueryChange = onSearchQueryChange,
+                modifier = Modifier.fillMaxWidth(),
+                text = "Search by phone number"
             )
 
             Spacer(modifier = Modifier.height(8.dp))
