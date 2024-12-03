@@ -1,14 +1,13 @@
 package com.bekircaglar.bluchat.navigation
 
-import androidx.compose.material.icons.Icons
 import com.bekircaglar.bluchat.R
 
 
-sealed class Screens(val route:String,val icon:Int? = null,val badgeCount:Int = 0,) {
+sealed class Screens(val route:String,val selectedIcon:Int? = null,val unSelectedIcon:Int? = null, val badgeCount:Int = 0, val label:String? = null){
     data object SingInScreen:Screens("sign_in_screen",)
     data object SingUpScreen:Screens("sign_up_screen",)
-    data object ChatListScreen:Screens("chat_screen", icon = R.drawable.ic_outlined_chat,)
-    data object ProfileScreen:Screens("profile_screen", icon = R.drawable.ic_outlined_profile)
+    data object ChatListScreen:Screens("chat_screen", selectedIcon = R.drawable.ic_filled_chat,unSelectedIcon = R.drawable.ic_outlined_chat, label = "Chats")
+    data object ProfileScreen:Screens("profile_screen", selectedIcon = R.drawable.ic_filled_person,unSelectedIcon = R.drawable.ic_outlined_profile, label = "Profile")
     data object MessageScreen:Screens("message_screen/{chatId}"){
         fun createRoute(chatId:String):String = "message_screen/$chatId"
     }
@@ -27,7 +26,7 @@ sealed class Screens(val route:String,val icon:Int? = null,val badgeCount:Int = 
     data object StarredMessagesScreen:Screens("starred_messages_screen/{chatId}"){
         fun createRoute(chatId:String):String = "starred_messages_screen/$chatId"
     }
-    data object ContactScreen:Screens("contact_screen", icon = R.drawable.ic_contacts)
+    data object ContactScreen:Screens("contact_screen", selectedIcon = R.drawable.ic_filled_contacts, unSelectedIcon = R.drawable.ic_contacts, label = "Contacts")
 
     data object MapScreen:Screens("map_screen/{chatId}"){
         fun createRoute(chatId:String):String = "map_screen/$chatId"

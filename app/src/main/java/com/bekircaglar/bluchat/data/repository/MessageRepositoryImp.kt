@@ -521,18 +521,17 @@ class MessageRepositoryImp @Inject constructor(
                     dbRef.child("chatLastMessage").setValue(message.message)
                 }
                 MessageType.IMAGE.toString() -> {
-                    dbRef.child("chatLastMessage").setValue("[Photo]")
+                    dbRef.child("chatLastMessage").setValue(if (message.useMessage.isEmpty()) "Image 🏞️" else message.message)
                 }
                 MessageType.VIDEO.toString() -> {
-                    dbRef.child("chatLastMessage").setValue("[Video]")
+                    dbRef.child("chatLastMessage").setValue(if (message.useMessage.isEmpty()) "Video 🎥 " else message.message)
                 }
                 MessageType.AUDIO.toString() -> {
-                    dbRef.child("chatLastMessage").setValue("[Audio]")
+                    dbRef.child("chatLastMessage").setValue("Voice Message 🎤")
                 }
                 MessageType.LOCATION.toString() -> {
-                    dbRef.child("chatLastMessage").setValue("[Location]")
+                    dbRef.child("chatLastMessage").setValue("Location 📍")
                 }
-                //TODO UI A TASI
             }
             dbRef.child("chatLastMessageTime").setValue(message.timestamp.toString())
             dbRef.child("chatLastMessageSenderId").setValue(message.senderId)

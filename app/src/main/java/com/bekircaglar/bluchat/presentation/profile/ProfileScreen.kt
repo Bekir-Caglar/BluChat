@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.profile
 
+import ChatAppBottomAppBar
 import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -44,7 +45,6 @@ import coil.compose.rememberAsyncImagePainter
 import com.bekircaglar.bluchat.domain.model.MenuItem
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
-import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.profile.account.AccountDialog
 import com.bekircaglar.bluchat.presentation.profile.appearance.AppearanceDialog

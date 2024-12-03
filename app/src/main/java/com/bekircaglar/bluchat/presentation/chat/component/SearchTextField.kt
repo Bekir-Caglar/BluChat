@@ -1,6 +1,8 @@
 package com.bekircaglar.bluchat.presentation.chat.component
 
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -14,28 +16,25 @@ import androidx.compose.ui.unit.dp
 
 @Composable
 fun SearchTextField(
-    searchText: String,
-    onSearchTextChange: (String) -> Unit,
+    query: String,
+    onQueryChange: (String) -> Unit,
     modifier: Modifier = Modifier,
-    placeholderText: String = "Search",
-    width: Int = 250,
-    height: Int = 60
+    text: String = "Search..."
 ) {
     TextField(
-        value = searchText,
-        onValueChange = onSearchTextChange,
-        modifier = modifier
-            .width(width.dp)
-            .height(height = height.dp)
-            .clip(MaterialTheme.shapes.medium),
-        placeholder = { Text(placeholderText, style = MaterialTheme.typography.bodySmall) },
-        maxLines = 1,
-        singleLine = true,
-        colors = TextFieldDefaults.colors(
-            unfocusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
-            focusedContainerColor = MaterialTheme.colorScheme.secondaryContainer,
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = { Text(text = text) },
+        colors = TextFieldDefaults.colors().copy(
+            unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+            focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
+            focusedTextColor = MaterialTheme.colorScheme.onSurface,
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
-        )
+        ),
+        modifier = modifier
+            .fillMaxWidth(0.7f)
+            .heightIn(min = 56.dp)
+            .clip(MaterialTheme.shapes.medium)
     )
 }

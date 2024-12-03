@@ -1,5 +1,6 @@
 package com.bekircaglar.bluchat.presentation.contacts
 
+import ChatAppBottomAppBar
 import android.Manifest
 import android.content.pm.PackageManager
 import android.provider.ContactsContract
@@ -19,16 +20,13 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
-import androidx.compose.material3.Button
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
@@ -45,21 +43,17 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.app.ActivityCompat
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.presentation.ShowToastMessage
 import com.bekircaglar.bluchat.presentation.auth.component.AuthButton
-import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import com.bekircaglar.bluchat.presentation.contacts.component.ContactItem
-import com.bekircaglar.bluchat.ui.theme.ChatAppBordoTheme
 import com.bekircaglar.bluchat.utils.UiState
 import kotlinx.coroutines.launch
 

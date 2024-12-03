@@ -60,6 +60,7 @@ fun Chats(
     isSelected: Boolean = false,
     onImageLoaded: () -> Unit,
     currentUserId: String? = "",
+    messageType : String? = ""
 ) {
     val profileImage = chat.imageUrl
     val name = chat.name
@@ -68,7 +69,6 @@ fun Chats(
     val messageTime = chat.messageTime
     val isOnline = chat.isOnline
     val lastMessageSender = chat.lastMessageSenderId
-
 
 
 
@@ -86,7 +86,7 @@ fun Chats(
             val painterState = painter.state
 
             if (painterState is AsyncImagePainter.State.Loading) {
-                Box(modifier = Modifier.size(64.dp), contentAlignment = Alignment.Center) {
+                Box(modifier = Modifier.size(58.dp), contentAlignment = Alignment.Center) {
                     CircularProgressIndicator()
                 }
             }
@@ -99,22 +99,18 @@ fun Chats(
                 contentDescription = null,
                 contentScale = ContentScale.Crop,
                 modifier = if (chat.surname.isBlank()) Modifier
-                    .size(64.dp)
+                    .size(58.dp)
                     .clip(shape = MaterialTheme.shapes.large)
-                    .border(2.dp, Color.Gray, MaterialTheme.shapes.large)
                 else Modifier
-                    .size(64.dp)
+                    .size(58.dp)
                     .clip(CircleShape)
-                    .border(2.dp, Color.Gray, CircleShape)
 
             )
-
-
 
             if (isOnline) {
                 Box(
                     modifier = Modifier
-                        .size(14.dp)
+                        .size(16.dp)
                         .clip(CircleShape)
                         .background(Color.Green)
                         .align(Alignment.BottomEnd)
@@ -135,11 +131,10 @@ fun Chats(
             if (lastMessage != null) {
                 if (chat.surname == "" && currentUserId == lastMessageSender) {
                     myMessage = "You: $lastMessage"
-                }else if (chat.surname == ""){
+                }else if (chat.surname == "" && lastMessageSenderName != "" && lastMessage != "") {
                     myMessage = "$lastMessageSenderName: $lastMessage"
                 }
                 else myMessage = "$lastMessage"
-
                 Text(
                     text = myMessage,
                     style = MaterialTheme.typography.bodyMedium,

@@ -45,7 +45,6 @@ import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.presentation.message.component.AudioMessageBubble
 import com.bekircaglar.bluchat.presentation.message.component.formatDuration
-import com.bekircaglar.bluchat.ui.theme.chatAnswerTextColor
 import com.bekircaglar.bluchat.utils.chatBubbleModifier
 import com.bekircaglar.bluchat.utils.getVideoThumbnail
 import kotlinx.coroutines.Dispatchers
@@ -242,7 +241,7 @@ fun ReplyMessage(replyMessageName: String?, replyMessage: Message) {
 fun TextMessage(message: Message, isSentByMe: Boolean) {
     Text(
         text = message.useMessage,
-        color = if (isSentByMe) Color.White else chatAnswerTextColor,
+        color = if (isSentByMe) Color.White else Color(0xFF001F3F),
         fontSize = MessageFontSize,
         textAlign = TextAlign.Start
     )

@@ -68,13 +68,10 @@ fun SelectGroupMemberBottomSheet(
             Spacer(modifier = Modifier.height(8.dp))
 
             SearchTextField(
-                searchText = textFieldValue,
-                onSearchTextChange = { onSearchQueryChange(it) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(vertical = 8.dp),
-                placeholderText = "Search user by phone number",
-                height = 50
+                query = textFieldValue,
+                onQueryChange = onSearchQueryChange,
+                modifier = Modifier.fillMaxWidth(),
+                text = "Search by phone number"
             )
 
             Spacer(modifier = Modifier.height(16.dp))
