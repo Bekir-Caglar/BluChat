@@ -44,7 +44,8 @@ fun GroupChatBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { onDismissRequest() },
-        sheetState = bottomSheetState
+        sheetState = bottomSheetState,
+        containerColor = MaterialTheme.colorScheme.background,
     ) {
         Column(
             modifier = Modifier
@@ -52,7 +53,6 @@ fun GroupChatBottomSheet(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // Profil Resmi Kutusu
             Box(
                 contentAlignment = Alignment.Center,
                 modifier = if (isImageLoading) Modifier else Modifier.clickable { onPermissionRequest() }
@@ -64,7 +64,6 @@ fun GroupChatBottomSheet(
                     modifier = Modifier
                         .size(100.dp)
                         .clip(CircleShape)
-                        .background(MaterialTheme.colorScheme.secondaryContainer)
                 )
 
                 Icon(

@@ -57,7 +57,7 @@ import java.nio.charset.StandardCharsets
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 
-fun StarredMessagesScreen(chatId:String,navController: NavController){
+fun StarredMessagesScreen(chatId: String, navController: NavController) {
     val context = LocalContext.current
     val viewModel: MessageViewModel = hiltViewModel()
     val starredMessages by viewModel.starredMessages.collectAsStateWithLifecycle()
@@ -93,12 +93,11 @@ fun StarredMessagesScreen(chatId:String,navController: NavController){
                 }
 
 
-            }, navigationIcon = Icons.Default.KeyboardArrowLeft,
+            },
+                navigationIcon = Icons.Default.KeyboardArrowLeft,
                 onNavigateIconClicked = {
                     navController.navigate(Screens.MessageScreen.createRoute(chatId))
                 },
-                actionIcon2 = Icons.Default.Search,
-                onActionIcon2Clicked = {}
             )
         }
     ) {
@@ -169,13 +168,14 @@ fun StarredMessagesScreen(chatId:String,navController: NavController){
                                     )
                                 },
                                 onUnStarMessage = {
-                                    viewModel.unStarMessage(message,chatId)
+                                    viewModel.unStarMessage(message, chatId)
                                 },
-                                onVideoClick ={
+                                onVideoClick = {
                                     val videoUrl = it
-                                    val intent = Intent(context, VideoPlayerActivity::class.java).apply {
-                                        putExtra("videoUri",videoUrl )
-                                    }
+                                    val intent =
+                                        Intent(context, VideoPlayerActivity::class.java).apply {
+                                            putExtra("videoUri", videoUrl)
+                                        }
                                     context.startActivity(intent)
                                 },
                                 context = context

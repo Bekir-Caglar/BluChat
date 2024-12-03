@@ -30,7 +30,8 @@ fun SelectGroupMemberBottomSheet(
 
     ModalBottomSheet(
         onDismissRequest = { onDismiss() },
-        sheetState = bottomSheetState
+        sheetState = bottomSheetState,
+        containerColor = MaterialTheme.colorScheme.background,
     ) {
         Column(
             modifier = Modifier
@@ -106,17 +107,4 @@ fun SelectGroupMemberBottomSheet(
             }
         }
     }
-}
-
-
-@Preview
-@Composable
-fun PreviewSelectGroupMemberDialog() {
-    SelectGroupMemberBottomSheet(
-        textFieldValue = "",
-        onSearchQueryChange = {},
-        searchResults = listOf(),
-        onDismiss = {},
-        onNext = {}
-    )
 }

@@ -8,8 +8,6 @@ class MenuItem(
     val onClick: () -> Unit
 ) {
     fun onClick() {
-        if (title == "Account") {
-
-        }
+        onClick()
     }
 }

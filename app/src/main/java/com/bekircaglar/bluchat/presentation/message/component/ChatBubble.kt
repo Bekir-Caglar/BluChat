@@ -45,6 +45,7 @@ import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.presentation.message.component.AudioMessageBubble
 import com.bekircaglar.bluchat.presentation.message.component.formatDuration
+import com.bekircaglar.bluchat.presentation.message.convertTimestampToDate
 import com.bekircaglar.bluchat.utils.chatBubbleModifier
 import com.bekircaglar.bluchat.utils.getVideoThumbnail
 import kotlinx.coroutines.Dispatchers
@@ -82,6 +83,7 @@ fun ChatBubble(
 ) {
     val bubbleColorSent = MaterialTheme.colorScheme.primary
     var expanded by remember { mutableStateOf(false) }
+    val timestamp = convertTimestampToDate(message.timestamp!!)
 
     MessageDropdownMenu(
         expanded = expanded,
@@ -139,6 +141,7 @@ fun ChatBubble(
                 modifier = Modifier.fillMaxWidth(0.7f),
                 horizontalArrangement = if (isSentByMe) Arrangement.End else Arrangement.Start
             ) {
+
                 Surface(
                     modifier = Modifier
                         .wrapContentSize()
@@ -169,29 +172,39 @@ fun ChatBubble(
 
                         Spacer(modifier = Modifier.size(8.dp))
 
-                        when (message.messageType) {
-                            MessageType.TEXT.toString() -> TextMessage(message, isSentByMe)
-                            MessageType.IMAGE.toString() -> ImageMessage(
-                                message,
-                                isSentByMe,
-                                onImageClick,
-                                {
-                                    if (isSentByMe) expanded = !expanded
-                                }
-                            )
-                            MessageType.VIDEO.toString() -> VideoMessage(
-                                context,
-                                message,
-                                onVideoClick,
-                                isSentByMe
-                            )
-                            MessageType.LOCATION.toString() -> LocationMessage(
-                                isSentByMe = isSentByMe,
-                                context,
-                                message,
-                                { if (isSentByMe) expanded = !expanded }                            )
+                        Column(
+                            horizontalAlignment = Alignment.End
+                        ) {
+                            when (message.messageType) {
+                                MessageType.TEXT.toString() -> TextMessage(
+                                    message,
+                                    isSentByMe
+                                )
+
+                                MessageType.IMAGE.toString() -> ImageMessage(
+                                    message,
+                                    isSentByMe,
+                                    onImageClick, {
+                                        if (isSentByMe) expanded = !expanded
+                                    }
+                                )
+
+                                MessageType.VIDEO.toString() -> VideoMessage(
+                                    context,
+                                    message,
+                                    onVideoClick,
+                                    isSentByMe
+                                )
+
+                                MessageType.LOCATION.toString() -> LocationMessage(
+                                    isSentByMe = isSentByMe,
+                                    context,
+                                    message,
+                                    { if (isSentByMe) expanded = !expanded })
+                            }
+                            MessageTimestamp(message, timestamp, isSentByMe)
+
                         }
-                        MessageTimestamp(message, timestamp, isSentByMe)
                     }
                 }
             }
@@ -224,7 +237,7 @@ fun ReplyMessage(replyMessageName: String?, replyMessage: Message) {
                 color = MaterialTheme.colorScheme.primary
             )
 
-            val formattedDuration = formatDuration(replyMessage.useAudioDuration*1000)
+            val formattedDuration = formatDuration(replyMessage.useAudioDuration * 1000)
             Text(
                 text = if (replyMessage.messageType == MessageType.AUDIO.toString()) "Voice message 🎤 ($formattedDuration)"
                 else replyMessage.useMessage ?: "",
@@ -349,12 +362,13 @@ fun LocationMessage(
 
 @Composable
 fun MessageTimestamp(message: Message, timestamp: String, isSentByMe: Boolean) {
-    Row(verticalAlignment = Alignment.Bottom
+    Row(
+        verticalAlignment = Alignment.Bottom
     ) {
         if (message.isEdited) {
             Text(
                 text = "Edited",
-                color = Color.LightGray,
+                color = Color.White,
                 fontSize = TimestampFontSize,
                 textAlign = TextAlign.End,
                 modifier = Modifier.align(Alignment.CenterVertically)
@@ -363,7 +377,7 @@ fun MessageTimestamp(message: Message, timestamp: String, isSentByMe: Boolean) {
         }
         Text(
             text = timestamp,
-            color = if (isSentByMe) Color.White else Color.Gray,
+            color = if (isSentByMe) Color.White.copy(0.8f) else Color.Gray,
             fontSize = TimestampFontSize,
             textAlign = TextAlign.End,
             modifier = Modifier.align(Alignment.CenterVertically)
@@ -372,12 +386,13 @@ fun MessageTimestamp(message: Message, timestamp: String, isSentByMe: Boolean) {
             Icon(
                 painter = painterResource(R.drawable.double_tick),
                 contentDescription = "Tick",
-                tint = if (message.isRead) Color.Green else Color.Gray,
+                tint = if (message.isRead) Color.Green else Color.LightGray,
                 modifier = Modifier.align(Alignment.CenterVertically)
             )
         }
     }
 }
+
 @Composable
 fun MessageDropdownMenu(
     expanded: Boolean,

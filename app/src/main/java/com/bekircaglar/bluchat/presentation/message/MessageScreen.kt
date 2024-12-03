@@ -277,9 +277,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                 onActionIconClicked = {
                     navController.navigate(Screens.StarredMessagesScreen.createRoute(chatId))
                 },
-                actionIcon2 = Icons.Default.Search,
                 onActionIcon2Clicked = {
-
                 }
             )
         },
@@ -557,11 +555,12 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             reverseLayout = false,
                             modifier = Modifier
                                 .fillMaxSize()
+                                .background(MaterialTheme.colorScheme.primary.copy(0.2f))
                                 .paint(
                                     painter = if (loadThemePreference(context = context)) {
-                                        painterResource(id = R.drawable.bg_message_dark)
+                                        painterResource(id = R.drawable.wp_dark)
                                     } else {
-                                        painterResource(id = R.drawable.bg_message_light)
+                                        painterResource(id = R.drawable.wp_background)
                                     },
                                     contentScale = ContentScale.FillBounds
                                 )

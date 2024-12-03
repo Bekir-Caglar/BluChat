@@ -72,7 +72,7 @@ fun MessageExtraBottomSheet(
                                 Image(
                                     painter = painterResource(id = option.icon),
                                     contentDescription = null,
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
                                     modifier = Modifier.size(30.dp)
                                 )
                             }

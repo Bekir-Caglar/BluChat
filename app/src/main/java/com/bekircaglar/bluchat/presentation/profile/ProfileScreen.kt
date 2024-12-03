@@ -20,6 +20,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -163,9 +164,9 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
         topBar = {
             ChatAppTopBar(
                 title = {
-                    Text(text = "Profile", color = MaterialTheme.colorScheme.onSecondary)
+                    Text(text = "Profile", color = MaterialTheme.colorScheme.primary)
                 },
-                containerColor = MaterialTheme.colorScheme.secondary,
+                containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
             )
         },
         bottomBar = {
@@ -183,7 +184,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
-                        .background(color = MaterialTheme.colorScheme.secondary),
+                        .background(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     contentAlignment = Alignment.Center
                 ) {
                     CircularProgressIndicator(
@@ -200,7 +201,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     modifier = Modifier
                         .fillMaxWidth()
                         .height(250.dp)
-                        .background(color = MaterialTheme.colorScheme.secondary),
+                        .background(color = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f)),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
                     Spacer(modifier = Modifier.height(20.dp))
@@ -232,7 +233,6 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
 
                     }
 
-
                     Spacer(modifier = Modifier.height(20.dp))
                     Text(
                         text = userName,
@@ -243,26 +243,26 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     Text(
                         text = "+90 $userNumber",
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer,
                     )
                 }
             }
+            HorizontalDivider(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(0.3f.dp)
+                    .shadow(elevation = 1.dp)
+            )
             LazyColumn(
                 modifier = Modifier
                     .fillMaxWidth()
                     .height(500.dp),
                 contentPadding = PaddingValues(top = 8.dp),
             ) {
-
                 items(menuItemList) {
                     ProfileMenu(menuIcon = it.icon, menuTitle = it.title, onClick = {
                         it.onClick.invoke()
                     })
-
-
                 }
-
-
             }
         }
     }
