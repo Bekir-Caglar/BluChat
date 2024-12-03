@@ -17,7 +17,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import coil.compose.rememberImagePainter
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.ui.theme.ChatAppBordoTheme
+import com.bekircaglar.bluchat.ui.theme.AppTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -90,7 +90,7 @@ fun ImageSendBottomSheet(
 @Preview
 @Composable
 fun ImageSendBottomSheetPreview() {
-    ChatAppBordoTheme {
+    AppTheme {
         ImageSendBottomSheet(
             imageResId = Uri.parse("https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6"),
             onSend = {

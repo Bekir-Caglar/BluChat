@@ -2,6 +2,7 @@
 
 package com.bekircaglar.bluchat.presentation.chat
 
+import ChatAppBottomAppBar
 import android.net.Uri
 import android.os.Build
 import android.widget.Toast
@@ -10,6 +11,9 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandHorizontally
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -41,9 +45,14 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
@@ -53,7 +62,6 @@ import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
-import com.bekircaglar.bluchat.presentation.bottomappbar.ChatAppBottomAppBar
 import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
 import com.bekircaglar.bluchat.presentation.chat.component.ChatAppFAB
 import com.bekircaglar.bluchat.presentation.chat.component.Chats
@@ -123,27 +131,39 @@ fun ChatListScreen(navController: NavController) {
 
     Scaffold(topBar = {
         TopAppBar(title = {
-            Text(text = "Chats", color = MaterialTheme.colorScheme.onPrimary)
+            if (!isSearchActive)
+            Text(
+                text = "BluChat",
+                style = MaterialTheme.typography.headlineMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
         }, colors = TopAppBarDefaults.topAppBarColors(
-            containerColor = MaterialTheme.colorScheme.secondary,
-            titleContentColor = MaterialTheme.colorScheme.onPrimary,
-            actionIconContentColor = MaterialTheme.colorScheme.onPrimary
+            containerColor = MaterialTheme.colorScheme.background,
+            titleContentColor = MaterialTheme.colorScheme.background,
+            actionIconContentColor = MaterialTheme.colorScheme.primary
         ), actions = {
             AnimatedVisibility(
                 visible = isSearchActive,
-                enter = expandHorizontally(),
+                enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start, clip = false),
+                exit =  shrinkHorizontally(shrinkTowards = Alignment.Start, clip = false) + fadeOut()
             ) {
                 SearchTextField(
-                    searchText = searchText,
-                    height = 50,
-                    width = 300,
-                    onSearchTextChange = { searchText = it },
+                    query = searchText,
+                    onQueryChange = { searchText = it },
+                    modifier = Modifier.padding(end = 16.dp)
                 )
             }
             IconButton(onClick = { isSearchActive = !isSearchActive }) {
                 Icon(
                     Icons.Default.Search, contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.onPrimary,
+                    tint = MaterialTheme.colorScheme.primary,
+                )
+            }
+            IconButton(onClick = {}) {
+                Icon(
+                    painter = painterResource(id = R.drawable.ic_more),
+                    contentDescription = "Notifications",
+                    tint = MaterialTheme.colorScheme.primary
                 )
             }
         })
@@ -238,7 +258,14 @@ fun ChatListScreen(navController: NavController) {
                     items(chatList.sortedByDescending { it.messageTime }) { chat ->
 
                         val formattedMessageTime = remember(chat.messageTime) {
-                            chat.messageTime?.let { it1 -> formatMessageTime(it1.toLong(), timeFormat, dayOfWeekFormat, dateFormat) }
+                            chat.messageTime?.let { it1 ->
+                                formatMessageTime(
+                                    it1.toLong(),
+                                    timeFormat,
+                                    dayOfWeekFormat,
+                                    dateFormat
+                                )
+                            }
                         }
 
                         val myChat = Chats(
@@ -258,49 +285,49 @@ fun ChatListScreen(navController: NavController) {
                                 viewModel.getUserNameFromUserId(it1) { name ->
                                     lastMessageSenderName = name
                                 }
+                            }
                         }
+                        Chats(
+                            chat = myChat,
+                            onClick = {
+                                navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
+                            },
+                            onImageLoaded = {
+                                viewModel.changeImageState()
+                            },
+                            lastMessageSenderName = lastMessageSenderName,
+                            currentUserId = currentUser,
+
+                        )
                     }
-                    Chats(
-                        chat = myChat,
-                        onClick = {
-                            navController.navigate(Screens.MessageScreen.createRoute(chat.chatRoomId))
-                        },
-                        onImageLoaded = {
-                            viewModel.changeImageState()
-                        },
-                        lastMessageSenderName = lastMessageSenderName,
-                        currentUserId = currentUser
-                    )
-                    HorizontalDivider(modifier = Modifier.padding(horizontal = 16.dp))
                 }
-            }
-        } else {
-            Box(
-                modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
-            ) {
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center
+            } else {
+                Box(
+                    modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center
                 ) {
-                    Image(
-                        painter = painterResource(id = R.drawable.sticker_shake_hand),
-                        contentDescription = "Chat",
-                        modifier = Modifier.size(200.dp)
-                    )
-                    Spacer(modifier = Modifier.height(64.dp))
-                    Text(
-                        text = "No chats yet!", style = MaterialTheme.typography.titleLarge
-                    )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Image(
+                            painter = painterResource(id = R.drawable.sticker_shake_hand),
+                            contentDescription = "Chat",
+                            modifier = Modifier.size(200.dp)
+                        )
+                        Spacer(modifier = Modifier.height(64.dp))
+                        Text(
+                            text = "No chats yet!", style = MaterialTheme.typography.titleLarge
+                        )
+                    }
                 }
             }
         }
-    }
 
-    if (uiState is UiState.Error) {
-        val errorMessage = (uiState as UiState.Error).message
-        Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+        if (uiState is UiState.Error) {
+            val errorMessage = (uiState as UiState.Error).message
+            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+        }
     }
-}
 }
 
 fun formatMessageTime(
@@ -318,6 +345,7 @@ fun formatMessageTime(
         else -> dateFormat.format(messageDate.time)
     }
 }
+
 fun Calendar.isSameDay(other: Calendar): Boolean {
     return this.get(Calendar.YEAR) == other.get(Calendar.YEAR) &&
             this.get(Calendar.DAY_OF_YEAR) == other.get(Calendar.DAY_OF_YEAR)

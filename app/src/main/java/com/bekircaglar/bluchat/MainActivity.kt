@@ -12,10 +12,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
-import com.bekircaglar.bluchat.data.repository.ChatRepositoryImp
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
 import com.bekircaglar.bluchat.navigation.ChatAppNavigation
-import com.bekircaglar.bluchat.ui.theme.ChatAppBordoTheme
+import com.bekircaglar.bluchat.ui.theme.AppTheme
 import com.facebook.CallbackManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
@@ -27,13 +26,6 @@ import com.onesignal.debug.LogLevel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import okhttp3.MediaType.Companion.toMediaTypeOrNull
-import okhttp3.OkHttpClient
-import okhttp3.Request
-import okhttp3.RequestBody.Companion.toRequestBody
-import org.json.JSONObject
-import java.io.IOException
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -72,7 +64,7 @@ class MainActivity : ComponentActivity() {
                 mutableStateOf(loadThemePreference(context = this))
             }
 
-            ChatAppBordoTheme(darkTheme = isDarkTheme) {
+            AppTheme(darkTheme = isDarkTheme) {
                 val navController = rememberNavController()
                 ChatAppNavigation(
                     navController = navController,

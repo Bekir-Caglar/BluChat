@@ -39,7 +39,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.ui.theme.ChatAppBordoTheme
+import com.bekircaglar.bluchat.ui.theme.AppTheme
 import kotlinx.coroutines.launch
 
 @Composable
@@ -263,7 +263,7 @@ class AudioPlayerManager(private val context: Context) {
 @Preview
 @Composable
 fun AudioMessageBubblePreview() {
-    ChatAppBordoTheme {
+    AppTheme {
         AudioMessageBubble(
             audioUrl = Uri.EMPTY,
             isIncoming = true

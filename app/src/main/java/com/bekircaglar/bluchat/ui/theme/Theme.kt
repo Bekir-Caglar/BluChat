@@ -8,69 +8,41 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 
-private val DarkColorScheme = darkColorScheme(
-    primary = OceanBlue,        // Ana vurgu rengi (ör. butonlar)
-    onPrimary = IceBlue,        // Primary'nin üzerinde metin rengi (beyaz-açık)
-
-    secondary = MidnightBlue,        // İkincil vurgu rengi (ör. aktif durumlar, ikincil butonlar)
-    onSecondary = SkyBlue, // Secondary'nin üzerindeki metin (koyu)
-
-    tertiary = OceanBlue,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
-    onTertiary = NavyBlue,      // Tertiary'nin üzerindeki metin
-
-    background = AppColor,      // Uygulamanın genel arka plan rengi
-    onBackground = IceBlue,     // Arka plandaki metinlerin rengi
-
-    surface = NavyBlue,         // Yüzey rengi (kartlar, dialoglar, vb.)
-    onSurface = PowderBlue,     // Yüzeylerin üzerindeki metin rengi
-
-    error = Color.Red,         // Hata rengi (mavi varyasyonu kullanarak özelleştirildi)
-    onError = MidnightBlue      // Hatanın üzerindeki metin
+private val LightColorScheme = lightColorScheme(
+    primary = Blue,
+    secondary = Yellow,
+    tertiary = Orange,
+    background = LightBackground,
+    surface = BlueLight,
+    onPrimary = LightText,
+    onSecondary = DarkBlue,
+    onBackground = DarkText,
+    onSurface = DarkText
 )
 
-// Light Theme Color Scheme
-private val LightColorScheme = lightColorScheme(
-    primary = SkyBlue,          // Ana vurgu rengi (açık tonlar)
-    onPrimary = MidnightBlue,   // Primary'nin üzerindeki metin rengi
-
-    secondary = PowderBlue,     // İkincil vurgu rengi (daha yumuşak mavi)
-    onSecondary = NavyBlue,     // Secondary'nin üzerindeki metin
-
-    tertiary = BlueMinus20,        // Üçüncül vurgu rengi (ek vurgu öğeleri için)
-    onTertiary = DeepBlue,      // Tertiary'nin üzerindeki metin
-
-    background = Color.White,       // Arka plan rengi (çok açık ton)
-    onBackground = NavyBlue,    // Arka plan üzerindeki metin rengi
-
-    surface = LightBlue,        // Yüzey rengi (kartlar, dialoglar, vb.)
-    onSurface = DeepBlue,       // Yüzeylerin üzerindeki metin rengi
-
-    error = Color.Red,         // Hata rengi (mavi varyasyonu)
-    onError = DarkBlue          // Hata üzerindeki metin
+private val DarkColorScheme = darkColorScheme(
+    primary = BlueLight,
+    secondary = Orange,
+    tertiary = Yellow,
+    background = DarkBackground,
+    surface = DarkBlue,
+    onPrimary = DarkText,
+    onSecondary = Blue,
+    onBackground = LightText,
+    onSurface = LightText
 )
 
 @Composable
-fun ChatAppBordoTheme(
+fun AppTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
-    // Dynamic color is available on Android 12+
-    dynamicColor: Boolean = false,
     content: @Composable () -> Unit
 ) {
-    val colorScheme = when {
-        dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
-            if (darkTheme) dynamicDarkColorScheme(context) else dynamicLightColorScheme(context)
-        }
-
-        darkTheme -> DarkColorScheme
-        else -> LightColorScheme
-    }
+    val colors = if (darkTheme) DarkColorScheme else LightColorScheme
 
     MaterialTheme(
-        colorScheme = colorScheme,
+        colorScheme = colors,
         typography = Typography,
         content = content
     )
