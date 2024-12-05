@@ -66,13 +66,13 @@ fun MessageExtraBottomSheet(
                             Box(
                                 modifier = Modifier
                                     .size(60.dp)
-                                    .background(MaterialTheme.colorScheme.surface, shape = CircleShape),
+                                    .background(MaterialTheme.colorScheme.primary, shape = CircleShape),
                                 contentAlignment = Alignment.Center
                             ) {
                                 Image(
                                     painter = painterResource(id = option.icon),
                                     contentDescription = null,
-                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onBackground),
+                                    colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.onPrimary),
                                     modifier = Modifier.size(30.dp)
                                 )
                             }

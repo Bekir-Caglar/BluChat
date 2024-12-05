@@ -10,6 +10,9 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.expandHorizontally
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -29,7 +32,6 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Search
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -45,21 +47,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontStyle
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.LocalLifecycleOwner
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
 import com.bekircaglar.bluchat.R
-import com.bekircaglar.bluchat.utils.UiState
 import com.bekircaglar.bluchat.domain.model.Chats
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.chat.component.BottomSheet
@@ -70,14 +66,17 @@ import com.bekircaglar.bluchat.presentation.chat.component.ShimmerItem
 import com.bekircaglar.bluchat.presentation.chat.groupchat.GroupChatBottomSheet
 import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberBottomSheet
 import com.bekircaglar.bluchat.presentation.chat.searchchat.OpenChatBottomSheet
-import kotlinx.coroutines.CoroutineScope
+import com.bekircaglar.bluchat.utils.UiState
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Locale
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @Composable
-fun ChatListScreen(navController: NavController) {
+fun ChatListScreen(
+    navController: NavController,
+) {
 
     val viewModel: ChatViewModel = hiltViewModel()
     val lifecycle = LocalLifecycleOwner.current.lifecycle
@@ -125,18 +124,18 @@ fun ChatListScreen(navController: NavController) {
         if (isGranted) {
             galleryLauncher.launch("image/*")
         } else {
-            Toast.makeText(context, "Galeriye erişim izni gerekli!", Toast.LENGTH_SHORT).show()
+            Toast.makeText(context, "Need gallery permission", Toast.LENGTH_SHORT).show()
         }
     }
 
     Scaffold(topBar = {
         TopAppBar(title = {
             if (!isSearchActive)
-            Text(
-                text = "BluChat",
-                style = MaterialTheme.typography.headlineMedium,
-                color = MaterialTheme.colorScheme.primary
-            )
+                Text(
+                    text = "BluChat",
+                    style = MaterialTheme.typography.headlineMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
         }, colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
             titleContentColor = MaterialTheme.colorScheme.background,
@@ -144,8 +143,14 @@ fun ChatListScreen(navController: NavController) {
         ), actions = {
             AnimatedVisibility(
                 visible = isSearchActive,
-                enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start, clip = false),
-                exit =  shrinkHorizontally(shrinkTowards = Alignment.Start, clip = false) + fadeOut()
+                enter = fadeIn() + expandHorizontally(
+                    expandFrom = Alignment.Start,
+                    clip = false
+                ),
+                exit = shrinkHorizontally(
+                    shrinkTowards = Alignment.Start,
+                    clip = false
+                ) + fadeOut()
             ) {
                 SearchTextField(
                     query = searchText,
@@ -297,8 +302,7 @@ fun ChatListScreen(navController: NavController) {
                             },
                             lastMessageSenderName = lastMessageSenderName,
                             currentUserId = currentUser,
-
-                        )
+                            )
                     }
                 }
             } else {
@@ -331,12 +335,17 @@ fun ChatListScreen(navController: NavController) {
 }
 
 fun formatMessageTime(
-    timestamp: Long,
+    timestamp: Long?,
     timeFormat: SimpleDateFormat,
     dayOfWeekFormat: SimpleDateFormat,
     dateFormat: SimpleDateFormat
 ): String {
-    val messageDate = Calendar.getInstance().apply { timeInMillis = timestamp }
+    if (timestamp == 0L) return ""
+    val messageDate = Calendar.getInstance().apply {
+        if (timestamp != null) {
+            timeInMillis = timestamp
+        }
+    }
     val currentDate = Calendar.getInstance()
 
     return when {

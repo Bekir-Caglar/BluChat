@@ -41,6 +41,7 @@ import com.bekircaglar.bluchat.domain.model.message.MessageType
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 import com.bekircaglar.bluchat.utils.IMAGE
+import com.bekircaglar.bluchat.utils.VIDEO
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -48,6 +49,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
     val viewModel: SendTakenPhotoViewModel = hiltViewModel()
     var message by remember { mutableStateOf("") }
     val context = LocalContext.current
+    var mediaType by remember { mutableStateOf(IMAGE) }
 
 
     Column(
@@ -65,6 +67,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
             contentAlignment = Alignment.Center
         ) {
             if (imageUrl.contains(".mp4")) {
+                mediaType = VIDEO
                 val mediaItem: MediaItem = imageUrl.let { MediaItem.fromUri(it) }
 
                 val mediaSource: MediaSource = remember {
@@ -106,7 +109,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
                     viewModel.sendMessage(
                         imageUrl = imageUrl,
                         message = message,
-                        messageType = MessageType.IMAGE.toString(),
+                        messageType = if(mediaType == MessageType.IMAGE.toString()) MessageType.IMAGE.toString() else MessageType.VIDEO.toString(),
                         chatId = chatId,
                     )
                     navController.navigate(Screens.MessageScreen.createRoute(chatId))
@@ -126,7 +129,7 @@ fun SendTakenPhotoScreen(imageUrl: String, chatId: String, navController: NavCon
                         viewModel.sendMessage(
                             imageUrl = imageUrl,
                             message = message,
-                            messageType = MessageType.IMAGE.toString(),
+                            messageType = if(mediaType == IMAGE) MessageType.IMAGE.toString() else MessageType.VIDEO.toString(),
                             chatId = chatId,
                         )
                         navController.navigate(Screens.MessageScreen.createRoute(chatId))

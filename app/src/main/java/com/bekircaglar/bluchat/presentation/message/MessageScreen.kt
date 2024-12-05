@@ -9,6 +9,17 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -47,6 +58,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -89,6 +101,7 @@ import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 import com.bekircaglar.bluchat.presentation.message.component.formatDuration
 import com.bekircaglar.bluchat.utils.AudioRecorderManager
 import com.bekircaglar.bluchat.utils.UiState
+import kotlinx.coroutines.delay
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -99,10 +112,15 @@ import java.time.format.DateTimeFormatter
 
 @RequiresApi(Build.VERSION_CODES.TIRAMISU)
 @OptIn(
-    ExperimentalFoundationApi::class
+    ExperimentalFoundationApi::class, ExperimentalSharedTransitionApi::class
 )
 @Composable
-fun MessageScreen(navController: NavController, chatId: String) {
+fun MessageScreen(
+    navController: NavController,
+    chatId: String,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
+) {
 
     val viewModel: MessageViewModel = hiltViewModel()
     val context = LocalContext.current
@@ -112,6 +130,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
     val uploadedVideo by viewModel.uploadedVideoUri.collectAsStateWithLifecycle()
     val selectedImage by viewModel.selectedImageUri.collectAsStateWithLifecycle()
     val uploadedAudioUri by viewModel.uploadedAudioUri.collectAsStateWithLifecycle()
+    val isKickedOrGroupDeleted by viewModel.isKickedOrGroupDeleted.collectAsState()
     val currentUser = viewModel.currentUser
     var messageText by remember { mutableStateOf("") }
     var bottomSheetState by remember { mutableStateOf(false) }
@@ -222,8 +241,6 @@ fun MessageScreen(navController: NavController, chatId: String) {
         viewModel.observeGroupAndUserStatus(groupId, userId)
     }
 
-    val isKickedOrGroupDeleted by viewModel.isKickedOrGroupDeleted.collectAsState()
-
     LaunchedEffect(isKickedOrGroupDeleted) {
         if (isKickedOrGroupDeleted) {
             navController.navigate(Screens.ChatListScreen.route) {
@@ -231,6 +248,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
             }
         }
     }
+
     Scaffold(
         topBar = {
             ChatAppTopBar(title = {
@@ -243,27 +261,47 @@ fun MessageScreen(navController: NavController, chatId: String) {
                         }
                         .padding(start = 8.dp)
                 ) {
-                    Image(
-                        painter = rememberImagePainter(data = userInfo?.profileImageUrl),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop,
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .size(44.dp),
-                    )
-                    Column {
-                        Text(
-                            text = userInfo?.name ?: "",
-                            modifier = Modifier.padding(start = 8.dp),
-                            fontSize = MaterialTheme.typography.titleLarge.fontSize,
+                    with(sharedTransitionScope) {
+                        Image(
+                            painter = rememberImagePainter(data = userInfo?.profileImageUrl),
+                            contentDescription = null,
+                            contentScale = ContentScale.Crop,
+                            modifier = Modifier
+                                .size(44.dp)
+                                .sharedElement(
+                                    state = rememberSharedContentState(key = "profileImage"),
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                    boundsTransform = { _, _ ->
+                                        tween(500)
+                                    }
+                                )
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.background, CircleShape)
+
+
                         )
-                        if (userInfo?.status == true) {
+                        Column {
                             Text(
-                                text = "Online",
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                modifier = Modifier.padding(start = 8.dp)
+                                text = userInfo?.name ?: "",
+                                modifier = Modifier
+                                    .padding(start = 8.dp)
+                                    .sharedElement(
+                                        state = rememberSharedContentState(key = "name"),
+                                        animatedVisibilityScope = animatedVisibilityScope,
+                                        boundsTransform = { _, _ ->
+                                            tween(1000)
+                                        }
+                                    ),
+                                fontSize = MaterialTheme.typography.titleLarge.fontSize,
                             )
+                            if (userInfo?.status == true) {
+                                Text(
+                                    text = "Online",
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                    modifier = Modifier.padding(start = 8.dp)
+                                )
+                            }
                         }
                     }
                 }
@@ -320,7 +358,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     onCameraClicked = {
                         permissionLauncherForCamera.launch(android.Manifest.permission.CAMERA)
                     },
-                    onSendAudio = { audioPath,audioDuration ->
+                    onSendAudio = { audioPath, audioDuration ->
                         viewModel.uploadAudio(
                             audioPath = audioPath,
                             audioDuration = audioDuration,
@@ -352,8 +390,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
             } else if (screenState is UiState.Success) {
                 LaunchedEffect(Unit) {
                     listState.scrollToItem(messages.lastIndex + 1)
-                }
 
+                }
+                if (messages.isNotEmpty()) {
+                    val lastMessageId = messages.first().messageId
+                    LaunchedEffect(lastMessageId) {
+                        listState.scrollToItem(messages.lastIndex + 1)
+
+                    }
+                }
                 LaunchedEffect(listState.isScrollInProgress) {
                     listState.layoutInfo.visibleItemsInfo.forEach { visibleItem ->
                         val myMessage = messages.find {
@@ -424,7 +469,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                 }
 
                                 "Location" -> {
-                                    navController.navigate(Screens.MapScreen.createRoute(chatId))
+                                    navController.navigate(
+                                        Screens.MapScreen.createRoute(
+                                            chatId
+                                        )
+                                    )
                                 }
                             }
                         },
@@ -433,8 +482,7 @@ fun MessageScreen(navController: NavController, chatId: String) {
                             SheetOption("Video", R.drawable.ic_video_camera_media),
                             SheetOption("Camera", R.drawable.ic_camera),
                             SheetOption("Location", R.drawable.ic_location),
-                            SheetOption("Contact", R.drawable.ic_user_square),
-                            SheetOption("Contact", R.drawable.ic_facebook),
+//                            SheetOption("Contact", R.drawable.ic_user_square),
                         )
                     )
                 }
@@ -474,7 +522,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                         modifier = Modifier
                                             .size(40.dp)
                                             .clip(MaterialTheme.shapes.medium)
-                                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                                            .background(
+                                                MaterialTheme.colorScheme.primary.copy(
+                                                    alpha = 0.3f
+                                                )
+                                            )
                                     ) {
                                         Icon(
                                             painter = painterResource(id = R.drawable.baseline_push_pin_24),
@@ -482,9 +534,13 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             modifier = Modifier.padding(8.dp)
                                         )
                                     }
-                                    val formattedDuration = formatDuration(lastPinnedMessage?.useAudioDuration?.times(1000) ?: 0)
-                                    val voiceMessage =if (lastPinnedMessage?.messageType == MessageType.AUDIO.toString()) "Voice message 🎤 ($formattedDuration)"
-                                    else ""
+                                    val formattedDuration = formatDuration(
+                                        lastPinnedMessage?.useAudioDuration?.times(1000)
+                                            ?: 0
+                                    )
+                                    val voiceMessage =
+                                        if (lastPinnedMessage?.messageType == MessageType.AUDIO.toString()) "Voice message 🎤 ($formattedDuration)"
+                                        else ""
 
                                     Text(
                                         text = when (lastPinnedMessage?.messageType) {
@@ -570,7 +626,11 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                     Box(
                                         modifier = Modifier
                                             .fillMaxWidth()
-                                            .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
+                                            .background(
+                                                MaterialTheme.colorScheme.surface.copy(
+                                                    alpha = 0.5f
+                                                )
+                                            )
                                             .padding(8.dp),
                                         contentAlignment = Alignment.Center
                                     ) {
@@ -585,9 +645,12 @@ fun MessageScreen(navController: NavController, chatId: String) {
 
                                 itemsIndexed(
                                     messagesForDate,
-                                    key = { _, message -> message.messageId ?: 0 }) { _, message ->
+                                    key = { _, message ->
+                                        message.messageId ?: 0
+                                    }) { _, message ->
                                     if (message != null) {
-                                        val timestamp = convertTimestampToDate(message.timestamp!!)
+                                        val timestamp =
+                                            convertTimestampToDate(message.timestamp!!)
                                         val senderId = message.senderId
 
                                         var senderName by remember { mutableStateOf("") }
@@ -622,8 +685,8 @@ fun MessageScreen(navController: NavController, chatId: String) {
                                             }
                                         }
 
-
-                                        val senderNameColor = viewModel.getUserColor(senderId!!)
+                                        val senderNameColor =
+                                            viewModel.getUserColor(senderId!!)
                                         message.messageType?.let { messageType ->
                                             ChatBubble(
                                                 context = context,
@@ -692,14 +755,15 @@ fun MessageScreen(navController: NavController, chatId: String) {
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
-                            .background(MaterialTheme.colorScheme.secondary),
+                            .background(MaterialTheme.colorScheme.primary),
                         contentAlignment = Alignment.Center
                     ) {
                         Text(
                             text = "Let's start chatting",
                             textAlign = TextAlign.Center,
                             style = MaterialTheme.typography.titleLarge,
-                            modifier = Modifier
+                            modifier = Modifier,
+                            color = MaterialTheme.colorScheme.onPrimary
                         )
                     }
                 }
@@ -860,8 +924,9 @@ private fun Reply(messageSenderName: String, message: Message, onDismiss: () -> 
                         color = MaterialTheme.colorScheme.onSurface
                     )
                 }
+
                 MessageType.AUDIO.toString() -> {
-                    val formattedDuration = formatDuration(message.useAudioDuration*1000)
+                    val formattedDuration = formatDuration(message.useAudioDuration * 1000)
                     Text(
                         text = "Voice message 🎤 (${formattedDuration})",
                         style = MaterialTheme.typography.bodySmall,

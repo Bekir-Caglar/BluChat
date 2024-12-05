@@ -107,11 +107,12 @@ fun StarredMessagesScreen(chatId: String, navController: NavController) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(it)
+                .background(MaterialTheme.colorScheme.surface.copy(alpha = 0.5f))
                 .paint(
                     painter = if (loadThemePreference(context = context)) {
-                        painterResource(id = R.drawable.bg_message_dark)
+                        painterResource(id = R.drawable.wp_dark)
                     } else {
-                        painterResource(id = R.drawable.bg_message_light)
+                        painterResource(id = R.drawable.wp_background)
                     },
                     contentScale = ContentScale.FillBounds
                 )

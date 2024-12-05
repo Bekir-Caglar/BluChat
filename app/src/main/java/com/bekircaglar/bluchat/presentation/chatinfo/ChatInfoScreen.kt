@@ -6,6 +6,12 @@ import android.net.Uri
 import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibilityScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -20,6 +26,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -56,10 +63,12 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.shadow
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -79,11 +88,13 @@ import com.bekircaglar.bluchat.presentation.chat.groupchat.SelectGroupMemberBott
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun ChatInfoScreen(
     navController: NavController? = null,
     chatId: String? = null,
+    sharedTransitionScope: SharedTransitionScope,
+    animatedVisibilityScope: AnimatedVisibilityScope
 ) {
 
     val viewModel: ChatInfoViewModel = hiltViewModel()
@@ -240,343 +251,402 @@ fun ChatInfoScreen(
                         .padding(16.dp),
                     horizontalAlignment = Alignment.CenterHorizontally
                 ) {
-                    Box(contentAlignment = Alignment.Center,
-                        modifier = if (isCurrentUserAdmin) Modifier.clickable {
-                            updateGroupInfoDialog = true
-                        } else Modifier
+                    with(sharedTransitionScope) {
+                        Box(contentAlignment = Alignment.Center,
+                            modifier = if (isCurrentUserAdmin) Modifier.clickable {
+                                updateGroupInfoDialog = true
+                            } else Modifier
 
-                    ) {
+                        ) {
+                            if (chatType == PRIVATE) {
+                                val painter =
+                                    rememberAsyncImagePainter(model = otherUser.profileImageUrl)
+                                val painterState = painter.state
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .shadow(
+                                            elevation = 5.dp,
+                                            shape = CircleShape
+                                        )
+                                        .background(color = Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (painterState is AsyncImagePainter.State.Success) {
+
+                                    } else {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier
+                                                .background(
+                                                    color = Color.White,
+                                                    shape = CircleShape
+                                                )
+                                                .size((100 / 3).dp)
+                                        )
+                                    }
+                                    Image(
+                                        painter = painter,
+                                        contentDescription = "User Image",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(120.dp)
+                                            .sharedElement(
+                                                state = rememberSharedContentState(key = "profileImage"),
+                                                animatedVisibilityScope = animatedVisibilityScope,
+                                                boundsTransform = { _, _ ->
+                                                    tween(500)
+                                                }
+                                            )
+                                            .shadow(elevation = 5.dp, shape = CircleShape)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+
+                                    )
+                                }
+
+                            } else {
+                                val painter = rememberAsyncImagePainter(model = chatRoom.chatImage)
+                                val painterState = painter.state
+                                Box(
+                                    modifier = Modifier
+                                        .size(120.dp)
+                                        .shadow(
+                                            elevation = 5.dp,
+                                            shape = CircleShape
+                                        )
+                                        .background(color = Color.White),
+                                    contentAlignment = Alignment.Center
+                                ) {
+                                    if (painterState is AsyncImagePainter.State.Success) {
+
+                                    } else {
+                                        CircularProgressIndicator(
+                                            modifier = Modifier
+                                                .background(
+                                                    color = Color.White,
+                                                    shape = CircleShape
+                                                )
+                                                .size((100 / 3).dp)
+                                        )
+                                    }
+                                    Image(
+                                        painter = painter,
+                                        contentDescription = "Group Image",
+                                        contentScale = ContentScale.Crop,
+                                        modifier = Modifier
+                                            .size(120.dp)
+                                            .shadow(elevation = 5.dp, shape = CircleShape)
+                                            .clip(CircleShape)
+                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                    )
+
+
+                                }
+
+                            }
+
+                            if (isCurrentUserAdmin) {
+                                Icon(
+                                    imageVector = Icons.Default.Create,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurface,
+                                    modifier = Modifier
+                                        .size(30.dp)
+                                        .clip(CircleShape)
+                                        .background(Color.LightGray)
+                                        .align(Alignment.BottomEnd)
+                                        .border(2.dp, Color.White, CircleShape)
+                                        .padding(4.dp)
+                                )
+                            }
+
+                        }
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
                         if (chatType == PRIVATE) {
-                            val painter = rememberAsyncImagePainter(model = otherUser.profileImageUrl)
-                            val painterState = painter.state
-                            Box(
+                            Text(
+                                text = otherUser.name + " " + otherUser.surname,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
                                 modifier = Modifier
-                                    .size(120.dp)
-                                    .shadow(
-                                        elevation = 5.dp,
-                                        shape = CircleShape
-                                    )
-                                    .background(color = Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (painterState is AsyncImagePainter.State.Success) {
-
-                                } else {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier
-                                            .background(
-                                                color = Color.White,
-                                                shape = CircleShape
-                                            )
-                                            .size((100 / 3).dp)
-                                    )
-                                }
-                                Image(
-                                    painter = painter,
-                                    contentDescription = "User Image",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(120.dp)
-                                        .shadow(elevation = 5.dp, shape = CircleShape)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                                )
-
-                            }
-
-                        } else {
-                            val painter = rememberAsyncImagePainter(model = chatRoom.chatImage)
-                            val painterState = painter.state
-                            Box(
-                                modifier = Modifier
-                                    .size(120.dp)
-                                    .shadow(
-                                        elevation = 5.dp,
-                                        shape = CircleShape
-                                    )
-                                    .background(color = Color.White),
-                                contentAlignment = Alignment.Center
-                            ) {
-                                if (painterState is AsyncImagePainter.State.Success) {
-
-                                } else {
-                                    CircularProgressIndicator(
-                                        modifier = Modifier
-                                            .background(
-                                                color = Color.White,
-                                                shape = CircleShape
-                                            )
-                                            .size((100 / 3).dp)
-                                    )
-                                }
-                                Image(
-                                    painter = painter,
-                                    contentDescription = "Group Image",
-                                    contentScale = ContentScale.Crop,
-                                    modifier = Modifier
-                                        .size(120.dp)
-                                        .shadow(elevation = 5.dp, shape = CircleShape)
-                                        .clip(CircleShape)
-                                        .background(MaterialTheme.colorScheme.secondaryContainer)
-                                )
-
-                            }
-
-                        }
-
-                        if (isCurrentUserAdmin) {
-                            Icon(
-                                imageVector = Icons.Default.Create,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onSurface,
-                                modifier = Modifier
-                                    .size(30.dp)
-                                    .clip(CircleShape)
-                                    .background(Color.LightGray)
-                                    .align(Alignment.BottomEnd)
-                                    .border(2.dp, Color.White, CircleShape)
-                                    .padding(4.dp)
+                                    .sharedElement(
+                                        state = rememberSharedContentState(key = "name"),
+                                        animatedVisibilityScope = animatedVisibilityScope,
+                                        boundsTransform = { _, _ ->
+                                            tween(1000)
+                                        }
+                                    ),
                             )
-                        }
-
-                    }
-
-                    Spacer(modifier = Modifier.height(8.dp))
-
-                    if (chatType == PRIVATE) {
-                        Text(
-                            text = otherUser.name + " " + otherUser.surname,
+                        } else Text(
+                            text = chatRoom.chatName ?: "",
                             color = MaterialTheme.colorScheme.onSurface,
                             style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold
-                        )
-                    } else Text(
-                        text = chatRoom.chatName ?: "",
-                        color = MaterialTheme.colorScheme.onSurface,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-
-
-                    Spacer(modifier = Modifier.height(4.dp))
-
-                    if (chatType == PRIVATE) {
-                        Text(
-                            text = "+90" + " " + otherUser.phoneNumber,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            style = MaterialTheme.typography.bodyMedium
-                        )
-                    } else {
-                        Text(
-                            text = "${userList.size + 1} members",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                        )
-                    }
-                    Spacer(modifier = Modifier.height(8.dp))
-
-
-
-                    Column(
-                        modifier = Modifier
-                            .shadow(elevation = 5.dp, shape = RoundedCornerShape(16.dp))
-                            .background(
-                                color = MaterialTheme.colorScheme.background,
-                            )
-                            .padding(8.dp)
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically
-                        ) {
-                            Text(
-                                modifier = Modifier.padding(start = 8.dp),
-                                text = "Media, link and documents ",
-                                style = MaterialTheme.typography.titleMedium
-                            )
-                            if (chatImages.size >= 5) Row(verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.clickable {
-                                    coroutineScope.launch {
-                                        bottomSheetScaffoldState.bottomSheetState.expand()
+                            fontWeight = FontWeight.Bold,
+                            modifier = Modifier
+                                .sharedElement(
+                                    state = rememberSharedContentState(key = "name"),
+                                    animatedVisibilityScope = animatedVisibilityScope,
+                                    boundsTransform = { _, _ ->
+                                        tween(1000)
                                     }
-                                }) {
-                                Text("View all ${chatImages.size} ")
-                                Icon(
-                                    imageVector = Icons.Default.KeyboardArrowRight,
-                                    contentDescription = "More",
-                                    tint = MaterialTheme.colorScheme.onSurface,
-                                )
-                            }
-                        }
-                        if (chatImages.isEmpty()) {
+                                ),
+                        )
+
+
+                        Spacer(modifier = Modifier.height(4.dp))
+
+                        if (chatType == PRIVATE) {
                             Text(
-                                text = "No media found",
-                                style = MaterialTheme.typography.bodyLarge,
-                                modifier = Modifier
-                                    .padding(32.dp)
-                                    .align(Alignment.CenterHorizontally)
+                                text = "+90" + " " + otherUser.phoneNumber,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                style = MaterialTheme.typography.bodyMedium
                             )
-                        } else if (chatImagesState == UiState.Loading) {
-                            CircularProgressIndicator()
-                        }
-                        LazyRow(
-                            contentPadding = PaddingValues(8.dp),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            items(chatImages) { imageUrl ->
-
-
-                                if (imageUrl.contains(".mp4")) {
-                                    VideoThumbnailComposable(context = context,
-                                        size = 100.dp,
-                                        videoUrl = imageUrl,
-                                        onVideoClick = {
-                                            val intent =
-                                                Intent(context, VideoPlayerActivity::class.java)
-                                            intent.putExtra("videoUrl", imageUrl)
-                                            context.startActivity(intent)
-                                        }
-                                    )
-                                } else {
-                                    val painter = rememberAsyncImagePainter(model = imageUrl)
-                                    val painterState = painter.state
-                                    Box(
-                                        modifier = Modifier
-                                            .size(100.dp)
-                                            .shadow(
-                                                elevation = 5.dp,
-                                                shape = RoundedCornerShape(12.dp)
-                                            )
-                                            .background(color = Color.White),
-                                        contentAlignment = Alignment.Center
-                                    ) {
-                                        if (painterState is AsyncImagePainter.State.Success) {
-
-                                        } else {
-                                            CircularProgressIndicator(
-                                                modifier = Modifier
-                                                    .background(
-                                                        color = Color.White,
-                                                        shape = CircleShape
-                                                    )
-                                                    .size((100 / 3).dp)
-                                            )
-                                        }
-                                        Image(
-                                            painter = painter,
-                                            contentDescription = null,
-                                            modifier = Modifier
-                                                .size(100.dp)
-                                                .clip(RoundedCornerShape(12.dp))
-                                                .clickable {
-                                                    val encodedUrl = Uri.encode(imageUrl)
-                                                    navController?.navigate(
-                                                        Screens.ImageScreen.createRoute(
-                                                            encodedUrl
-                                                        )
-                                                    )
-                                                },
-                                            contentScale = ContentScale.Crop
-                                        )
-
-                                    }
-
-
-                                }
-
-                            }
-
-                        }
-
-                    }
-
-                    Column(
-                        modifier = Modifier
-                            .padding(top = 16.dp)
-                            .background(
-                                color = MaterialTheme.colorScheme.background,
-                                shape = RoundedCornerShape(16.dp)
+                        } else {
+                            Text(
+                                text = "${userList.size + 1} members",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
-                    ) {
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+
+
 
                         Column(
                             modifier = Modifier
-                                .shadow(
-                                    elevation = 5.dp,
-                                    shape = RoundedCornerShape(12.dp),
+                                .shadow(elevation = 5.dp, shape = RoundedCornerShape(16.dp))
+                                .background(
+                                    color = MaterialTheme.colorScheme.background,
                                 )
-                                .background(color = Color.White),
-                        ){
-                            if (chatListState == UiState.Loading) {
-                                CircularProgressIndicator()
-                            } else if (chatType == GROUP) {
-                                TextField(
-                                    value = "",
-                                    onValueChange = {},
-                                    leadingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Default.Search,
-                                            contentDescription = "Search"
-                                        )
-                                    },
-                                    placeholder = {
-                                        Text(text = "Search members")
-                                    },
-                                    modifier = Modifier
-                                        .fillMaxWidth()
-                                        .padding(16.dp),
-                                    shape = RoundedCornerShape(16.dp),
-                                    colors = TextFieldDefaults.colors().copy(
-                                        focusedIndicatorColor = Color.Transparent,
-                                        unfocusedIndicatorColor = Color.Transparent,
-                                        focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
-                                        unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                                .padding(8.dp)
+                        ) {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    modifier = Modifier.padding(start = 8.dp),
+                                    text = "Media, link and documents ",
+                                    style = MaterialTheme.typography.titleMedium
+                                )
+                                if (chatImages.size >= 5) Row(verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable {
+                                        coroutineScope.launch {
+                                            bottomSheetScaffoldState.bottomSheetState.expand()
+                                        }
+                                    }) {
+                                    Text("View all ${chatImages.size} ")
+                                    Icon(
+                                        imageVector = Icons.Default.KeyboardArrowRight,
+                                        contentDescription = "More",
+                                        tint = MaterialTheme.colorScheme.onSurface,
                                     )
-                                )
+                                }
                             }
-                            if (isCurrentUserAdmin) {
-                                MemberItem(Users(
-                                    uid = "0",
-                                    name = "Add participants",
-                                    surname = "",
-                                    profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/add%20icon.png?alt=media&token=4a2ceced-da09-4083-8515-c2a03a507d72"
-                                ), isCurrentUserAdmin = false,
-                                    onItemClick = {
-                                        selectGroupUserDialog = true
-                                    })
-                            }
-
-                            if (chatType == GROUP) {
-                                LazyColumn(
+                            if (chatImages.isEmpty()) {
+                                Text(
+                                    text = "No media found",
+                                    style = MaterialTheme.typography.bodyLarge,
                                     modifier = Modifier
-                                        .fillMaxWidth()
-                                        .fillMaxHeight(0.5f)
-                                ) {
+                                        .padding(32.dp)
+                                        .align(Alignment.CenterHorizontally)
+                                )
+                            } else if (chatImagesState == UiState.Loading) {
+                                CircularProgressIndicator()
+                            }
+                            LazyRow(
+                                contentPadding = PaddingValues(8.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                modifier = Modifier.padding(top = 8.dp)
+                            ) {
+                                items(chatImages) { imageUrl ->
 
-                                    items(userList.distinctBy { it.uid }, key = { it.uid }) { member ->
-                                        MemberItem(member, isCurrentUserAdmin, onUserKicked = {
-                                            viewModel.kickUser(chatId = chatId!!, userId = member.uid)
-                                            viewModel.getChatRoom(chatId)
+
+                                    if (imageUrl.contains(".mp4")) {
+                                        VideoThumbnailComposable(context = context,
+                                            size = 100.dp,
+                                            videoUrl = imageUrl,
+                                            onVideoClick = {
+                                                val intent =
+                                                    Intent(context, VideoPlayerActivity::class.java)
+                                                intent.putExtra("videoUrl", imageUrl)
+                                                context.startActivity(intent)
+                                            }
+                                        )
+                                    } else {
+                                        val painter = rememberAsyncImagePainter(model = imageUrl)
+                                        val painterState = painter.state
+                                        Box(
+                                            modifier = Modifier
+                                                .size(100.dp)
+                                                .shadow(
+                                                    elevation = 5.dp,
+                                                    shape = RoundedCornerShape(12.dp)
+                                                )
+                                                .background(color = Color.White),
+                                            contentAlignment = Alignment.Center
+                                        ) {
+                                            if (painterState is AsyncImagePainter.State.Success) {
+
+                                            } else {
+                                                CircularProgressIndicator(
+                                                    modifier = Modifier
+                                                        .background(
+                                                            color = Color.White,
+                                                            shape = CircleShape
+                                                        )
+                                                        .size((100 / 3).dp)
+                                                )
+                                            }
+                                            Image(
+                                                painter = painter,
+                                                contentDescription = null,
+                                                modifier = Modifier
+                                                    .size(100.dp)
+                                                    .clip(RoundedCornerShape(12.dp))
+                                                    .clickable {
+                                                        val encodedUrl = Uri.encode(imageUrl)
+                                                        navController?.navigate(
+                                                            Screens.ImageScreen.createRoute(
+                                                                encodedUrl
+                                                            )
+                                                        )
+                                                    },
+                                                contentScale = ContentScale.Crop
+                                            )
+
+                                        }
+
+
+                                    }
+
+                                }
+
+                            }
+
+                        }
+
+                        Column(
+                            modifier = Modifier
+                                .padding(top = 16.dp)
+                                .background(
+                                    color = MaterialTheme.colorScheme.background,
+                                    shape = RoundedCornerShape(16.dp)
+                                )
+                        ) {
+
+                            Column(
+                                modifier = Modifier
+                                    .shadow(
+                                        elevation = 5.dp,
+                                        shape = RoundedCornerShape(12.dp),
+                                    )
+                                    .background(color = Color.White),
+                            ) {
+                                if (chatListState == UiState.Loading) {
+                                    CircularProgressIndicator()
+                                } else if (chatType == GROUP) {
+                                    TextField(
+                                        value = "",
+                                        onValueChange = {},
+                                        leadingIcon = {
+                                            Icon(
+                                                imageVector = Icons.Default.Search,
+                                                contentDescription = "Search"
+                                            )
+                                        },
+                                        placeholder = {
+                                            Text(text = "Search members")
+                                        },
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(16.dp),
+                                        shape = RoundedCornerShape(16.dp),
+                                        colors = TextFieldDefaults.colors().copy(
+                                            focusedIndicatorColor = Color.Transparent,
+                                            unfocusedIndicatorColor = Color.Transparent,
+                                            focusedContainerColor = MaterialTheme.colorScheme.primary.copy(
+                                                alpha = 0.2f
+                                            ),
+                                            unfocusedContainerColor = MaterialTheme.colorScheme.primary.copy(
+                                                alpha = 0.1f
+                                            ),
+                                        )
+                                    )
+                                }
+                                if (isCurrentUserAdmin) {
+                                    MemberItem(Users(
+                                        uid = "0",
+                                        name = "Add participants",
+                                        surname = "",
+                                        profileImageUrl = "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/add%20icon.png?alt=media&token=4a2ceced-da09-4083-8515-c2a03a507d72"
+                                    ), isCurrentUserAdmin = false,
+                                        onItemClick = {
+                                            selectGroupUserDialog = true
                                         })
+                                }
+
+                                if (chatType == GROUP) {
+                                    LazyColumn(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .fillMaxHeight(0.5f)
+                                    ) {
+
+                                        items(
+                                            userList.distinctBy { it.uid },
+                                            key = { it.uid }) { member ->
+                                            MemberItem(member, isCurrentUserAdmin, onUserKicked = {
+                                                viewModel.kickUser(
+                                                    chatId = chatId!!,
+                                                    userId = member.uid
+                                                )
+                                                viewModel.getChatRoom(chatId)
+                                            })
+                                        }
                                     }
                                 }
                             }
                         }
-                    }
 
-                    Spacer(modifier = Modifier.weight(1f))
+                        Spacer(modifier = Modifier.weight(1f))
 
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.Center,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        if (isCurrentUserAdmin) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            if (isCurrentUserAdmin) {
+                                ElevatedButton(
+                                    onClick = {
+                                        viewModel.deleteGroup(chatId!!)
+                                        navController?.navigate(Screens.ChatListScreen.route) {
+                                            popUpTo(Screens.ChatInfoScreen.route) {
+                                                inclusive = true
+                                            }
+                                        }
+                                    },
+                                    modifier = Modifier.padding(bottom = 16.dp),
+                                    colors = ButtonColors(
+                                        containerColor = MaterialTheme.colorScheme.background,
+                                        contentColor = Color.Gray,
+                                        disabledContainerColor = Color.LightGray,
+                                        disabledContentColor = Color.Blue,
+                                    ),
+                                ) {
+                                    Text(
+                                        text = "Delete Group",
+                                        color = MaterialTheme.colorScheme.error
+                                    )
+                                }
+                                Spacer(modifier = Modifier.width(16.dp))
+                            }
                             ElevatedButton(
                                 onClick = {
-                                    viewModel.deleteGroup(chatId!!)
+                                    viewModel.leaveChat(chatId!!)
                                     navController?.navigate(Screens.ChatListScreen.route) {
                                         popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
                                     }
@@ -589,43 +659,23 @@ fun ChatInfoScreen(
                                     disabledContentColor = Color.Blue,
                                 ),
                             ) {
-                                Text(
-                                    text = "Delete Group", color = MaterialTheme.colorScheme.error
+                                if (chatType == PRIVATE) {
+                                    Text(
+                                        text = "Leave Chat", color = MaterialTheme.colorScheme.error
+                                    )
+                                } else Text(
+                                    text = "Leave Group", color = MaterialTheme.colorScheme.error
                                 )
                             }
-                            Spacer(modifier = Modifier.width(16.dp))
                         }
-                        ElevatedButton(
-                            onClick = {
-                                viewModel.leaveChat(chatId!!)
-                                navController?.navigate(Screens.ChatListScreen.route) {
-                                    popUpTo(Screens.ChatInfoScreen.route) { inclusive = true }
-                                }
-                            },
-                            modifier = Modifier.padding(bottom = 16.dp),
-                            colors = ButtonColors(
-                                containerColor = MaterialTheme.colorScheme.background,
-                                contentColor = Color.Gray,
-                                disabledContainerColor = Color.LightGray,
-                                disabledContentColor = Color.Blue,
-                            ),
-                        ) {
-                            if (chatType == PRIVATE) {
-                                Text(
-                                    text = "Leave Chat", color = MaterialTheme.colorScheme.error
-                                )
-                            } else Text(
-                                text = "Leave Group", color = MaterialTheme.colorScheme.error
-                            )
-                        }
-                    }
 
+                    }
                 }
 
             }
         }
     }
-    if (chatListState is UiState.Error){
+    if (chatListState is UiState.Error) {
         (chatListState as UiState.Error).message?.let {
             Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
         }

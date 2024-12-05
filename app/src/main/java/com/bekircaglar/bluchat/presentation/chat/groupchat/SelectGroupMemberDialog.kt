@@ -100,7 +100,7 @@ fun SelectGroupMemberBottomSheet(
                             }
                         },
                         isSelected = selectedUsers.contains(contact),
-                        onImageLoaded = {}
+                        onImageLoaded = {},
                     )
                     Divider(modifier = Modifier.padding(vertical = 4.dp))
                 }
