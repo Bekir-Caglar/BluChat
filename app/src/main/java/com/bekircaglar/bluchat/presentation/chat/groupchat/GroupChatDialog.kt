@@ -88,7 +88,6 @@ fun GroupChatBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Grup İsmi Giriş Alanı
             OutlinedTextField(
                 value = groupChatName,
                 onValueChange = { groupChatName = it },
@@ -98,7 +97,6 @@ fun GroupChatBottomSheet(
 
             Spacer(modifier = Modifier.height(16.dp))
 
-            // Oluştur Butonu
             AuthButton(
                 enabled = !isImageLoading,
                 onClick = {

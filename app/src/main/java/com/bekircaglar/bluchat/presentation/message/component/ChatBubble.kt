@@ -307,14 +307,15 @@ fun VideoMessage(
         videoUrl = videoUrl,
         onVideoClick = { onVideoClick(videoUrl) }
     )
-
-    Spacer(modifier = Modifier.size(8.dp))
-    Text(
-        text = message.useMessage,
-        color = if (isSentByMe) Color.White else Color(0xFF001F3F),
-        fontSize = MessageFontSize,
-        textAlign = TextAlign.Start
-    )
+    if (message.useMessage.isNotEmpty()) {
+        Spacer(modifier = Modifier.size(8.dp))
+        Text(
+            text = message.useMessage,
+            color = if (isSentByMe) Color.White else Color(0xFF001F3F),
+            fontSize = MessageFontSize,
+            textAlign = TextAlign.Start
+        )
+    }
 }
 
 @OptIn(ExperimentalFoundationApi::class)

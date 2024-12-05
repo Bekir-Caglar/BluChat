@@ -64,18 +64,18 @@ fun MapScreen(navController:NavController,chatId:String) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Paylaşılan Konum", color = MaterialTheme.colorScheme.onSurface) },
+                title = { Text("Paylaşılan Konum", color = MaterialTheme.colorScheme.primary) },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.secondary
+                    containerColor = MaterialTheme.colorScheme.background
                 ),
                 navigationIcon = {
                     IconButton(onClick = {
                         navController.popBackStack()
                     }) {
                         Icon(
-                            imageVector = Icons.Default.ArrowBack,
+                            imageVector = Icons.Default.KeyboardArrowLeft,
                             contentDescription = "Geri",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 },
@@ -88,7 +88,7 @@ fun MapScreen(navController:NavController,chatId:String) {
                         Icon(
                             imageVector = Icons.Default.Search,
                             contentDescription = "Search",
-                            tint = MaterialTheme.colorScheme.onSurface
+                            tint = MaterialTheme.colorScheme.primary
                         )
                     }
                 }
@@ -167,13 +167,13 @@ fun MapScreen(navController:NavController,chatId:String) {
                             Image(
                                 painter = painterResource(R.drawable.ic_my_location),
                                 contentDescription = "Send current location",
-                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.surface),
+                                colorFilter = ColorFilter.tint(MaterialTheme.colorScheme.background),
                                 modifier = Modifier.size(25.dp)
                             )
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = "Anlık konumu gönder",
+                            text = "Send current location",
                             color = MaterialTheme.colorScheme.onBackground,
                             fontSize = 18.sp
                         )
@@ -220,7 +220,7 @@ fun MapScreen(navController:NavController,chatId:String) {
                         }
                         Spacer(modifier = Modifier.width(16.dp))
                         Text(
-                            text = "Seçili konumu gönder",
+                            text = "Send selected location",
                             color = MaterialTheme.colorScheme.onBackground,
                             fontSize = 18.sp
                         )

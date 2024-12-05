@@ -85,19 +85,3 @@ fun ImageSendBottomSheet(
         onDismissRequest = onDismiss
     )
 }
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Preview
-@Composable
-fun ImageSendBottomSheetPreview() {
-    AppTheme {
-        ImageSendBottomSheet(
-            imageResId = Uri.parse("https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/profileImages%2F1000000026?alt=media&token=87b3a27a-892e-4d79-b2ac-319904ac6dd6"),
-            onSend = {
-                img,txt ->
-            },
-            onDismiss = {},
-        )
-    }
-
-}

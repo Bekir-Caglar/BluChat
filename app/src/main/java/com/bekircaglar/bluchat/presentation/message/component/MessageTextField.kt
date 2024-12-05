@@ -58,6 +58,7 @@ fun MessageTextField(
         ),
         modifier = modifier
             .fillMaxWidth()
+            .background(Color.White, MaterialTheme.shapes.large)
             .heightIn(min = 50.dp)
             .clip(MaterialTheme.shapes.large),
         placeholder = {

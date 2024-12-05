@@ -214,9 +214,6 @@ class ChatRepositoryImp @Inject constructor(
                     chatImage = groupImg,
                     chatType = chatType,
                     chatAdminId = currentUser,
-                    chatLastMessage = "",
-                    chatLastMessageTime = "",
-                    chatLastMessageSenderId = "",
                 )
                 databaseRef.child(chatId).setValue(chat).addOnSuccessListener {
                     trySend(Response.Success(chatId)).isSuccess

@@ -58,6 +58,8 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
                             Text(
                                 text = it,
                                 fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal,
+                                color = if (isSelected) MaterialTheme.colorScheme.onSurface
+                                else MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                             )
                         }
                     },
@@ -85,13 +87,13 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
                         ) {
                             AnimatedContent(
                                 targetState = item.route == currentRoute,
-                                transitionSpec ={
+                                transitionSpec = {
                                     scaleIn(animationSpec = tween(300)) togetherWith scaleOut(
                                         animationSpec = tween(300)
                                     )
                                 },
                                 label = "Icon Animation"
-                                ) {
+                            ) {
                                 when (it) {
                                     true -> {
                                         Icon(
@@ -100,6 +102,7 @@ fun ChatAppBottomAppBar(navController: NavController? = null) {
                                             tint = iconColor
                                         )
                                     }
+
                                     false -> {
                                         Icon(
                                             painter = painterResource(id = item.unSelectedIcon!!),

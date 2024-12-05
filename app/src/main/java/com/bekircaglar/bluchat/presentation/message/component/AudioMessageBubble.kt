@@ -43,6 +43,7 @@ import com.bekircaglar.bluchat.ui.theme.AppTheme
 import com.bekircaglar.bluchat.ui.theme.BlueLight
 import com.bekircaglar.bluchat.ui.theme.DarkBlue
 import kotlinx.coroutines.launch
+import okhttp3.internal.wait
 
 @Composable
 fun AudioMessageBubble(
@@ -63,7 +64,7 @@ fun AudioMessageBubble(
     val waveform = remember { generateWaveform(audioUrl) }
 
     val bubbleColor = if (isIncoming)
-        BlueLight
+        Color.White
     else
         MaterialTheme.colorScheme.primary
 
@@ -117,7 +118,6 @@ fun AudioMessageBubble(
 
     Row(
         modifier = modifier
-            .padding(8.dp)
             .clip(RoundedCornerShape(16.dp))
             .background(bubbleColor)
             .padding(8.dp),
