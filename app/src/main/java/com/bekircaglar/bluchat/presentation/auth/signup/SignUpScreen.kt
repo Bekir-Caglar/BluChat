@@ -92,6 +92,7 @@ fun SignUpScreen(navController: NavController) {
                 onNavigateIconClicked = {
                     navController.navigate(Screens.SingInScreen.route)
                 },
+                searchIcon = false
             )
         }
     ) {

@@ -9,17 +9,10 @@ import android.widget.Toast
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedVisibilityScope
 import androidx.compose.animation.ExperimentalSharedTransitionApi
 import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
-import androidx.compose.animation.slideInVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -27,7 +20,6 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -43,11 +35,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.KeyboardArrowLeft
-import androidx.compose.material.icons.filled.Search
 import androidx.compose.material.icons.filled.Send
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -58,7 +48,6 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -66,19 +55,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.paint
-import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.viewinterop.AndroidView
 import androidx.compose.ui.window.Dialog
-import androidx.core.net.toUri
-import androidx.emoji2.emojipicker.EmojiPickerView
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -89,19 +72,16 @@ import com.bekircaglar.bluchat.VideoPlayerActivity
 import com.bekircaglar.bluchat.domain.model.message.Message
 import com.bekircaglar.bluchat.domain.model.SheetOption
 import com.bekircaglar.bluchat.domain.model.message.MessageType
-import com.bekircaglar.bluchat.loadThemePreference
+import com.bekircaglar.bluchat.utils.loadThemePreference
 import com.bekircaglar.bluchat.navigation.Screens
 import com.bekircaglar.bluchat.presentation.component.ChatAppTopBar
-import com.bekircaglar.bluchat.presentation.message.component.AudioMessageBubble
 import com.bekircaglar.bluchat.presentation.message.component.ImageSendBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageAlertDialog
 import com.bekircaglar.bluchat.presentation.message.component.MessageBottomBar
 import com.bekircaglar.bluchat.presentation.message.component.MessageExtraBottomSheet
 import com.bekircaglar.bluchat.presentation.message.component.MessageTextField
 import com.bekircaglar.bluchat.presentation.message.component.formatDuration
-import com.bekircaglar.bluchat.utils.AudioRecorderManager
 import com.bekircaglar.bluchat.utils.UiState
-import kotlinx.coroutines.delay
 import java.net.URLEncoder
 import java.nio.charset.StandardCharsets
 import java.time.Instant
@@ -284,14 +264,7 @@ fun MessageScreen(
                             Text(
                                 text = userInfo?.name ?: "",
                                 modifier = Modifier
-                                    .padding(start = 8.dp)
-                                    .sharedElement(
-                                        state = rememberSharedContentState(key = "name"),
-                                        animatedVisibilityScope = animatedVisibilityScope,
-                                        boundsTransform = { _, _ ->
-                                            tween(1000)
-                                        }
-                                    ),
+                                    .padding(start = 8.dp),
                                 fontSize = MaterialTheme.typography.titleLarge.fontSize,
                             )
                             if (userInfo?.status == true) {

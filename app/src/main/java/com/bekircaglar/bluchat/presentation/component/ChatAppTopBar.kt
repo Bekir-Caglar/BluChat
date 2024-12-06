@@ -47,6 +47,7 @@ fun ChatAppTopBar(
     onActionIcon2Clicked: () -> Unit? = {},
     containerColor: Color = MaterialTheme.colorScheme.background,
     titleColor: Color = MaterialTheme.colorScheme.primary,
+    searchIcon :Boolean = true,
 ) {
     var isSearchActive by remember { mutableStateOf(false) }
     var searchText by remember { mutableStateOf("") }
@@ -76,22 +77,30 @@ fun ChatAppTopBar(
 
         },
         actions = {
-            AnimatedVisibility(
-                visible = isSearchActive,
-                enter = fadeIn() + expandHorizontally(expandFrom = Alignment.Start, clip = false),
-                exit =  shrinkHorizontally(shrinkTowards = Alignment.Start, clip = false) + fadeOut()
-            ) {
-                SearchTextField(
-                    query = searchText,
-                    onQueryChange = { searchText = it },
-                    modifier = Modifier.padding(end = 16.dp)
-                )
-            }
-            IconButton(onClick = { isSearchActive = !isSearchActive }) {
-                Icon(
-                    Icons.Default.Search, contentDescription = "Search",
-                    tint = MaterialTheme.colorScheme.primary,
-                )
+            if (searchIcon) {
+                AnimatedVisibility(
+                    visible = isSearchActive,
+                    enter = fadeIn() + expandHorizontally(
+                        expandFrom = Alignment.Start,
+                        clip = false
+                    ),
+                    exit = shrinkHorizontally(
+                        shrinkTowards = Alignment.Start,
+                        clip = false
+                    ) + fadeOut()
+                ) {
+                    SearchTextField(
+                        query = searchText,
+                        onQueryChange = { searchText = it },
+                        modifier = Modifier.padding(end = 16.dp)
+                    )
+                }
+                IconButton(onClick = { isSearchActive = !isSearchActive }) {
+                    Icon(
+                        Icons.Default.Search, contentDescription = "Search",
+                        tint = MaterialTheme.colorScheme.primary,
+                    )
+                }
             }
             if (actionIcon != null) {
                 IconButton(onClick = { onActionIconClicked() }) {

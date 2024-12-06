@@ -299,7 +299,7 @@ fun ChatInfoScreen(
                                             )
                                             .shadow(elevation = 5.dp, shape = CircleShape)
                                             .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                            .background(MaterialTheme.colorScheme.background)
 
                                     )
                                 }
@@ -335,9 +335,16 @@ fun ChatInfoScreen(
                                         contentScale = ContentScale.Crop,
                                         modifier = Modifier
                                             .size(120.dp)
+                                            .sharedElement(
+                                                state = rememberSharedContentState(key = "profileImage"),
+                                                animatedVisibilityScope = animatedVisibilityScope,
+                                                boundsTransform = { _, _ ->
+                                                    tween(500)
+                                                }
+                                            )
                                             .shadow(elevation = 5.dp, shape = CircleShape)
                                             .clip(CircleShape)
-                                            .background(MaterialTheme.colorScheme.secondaryContainer)
+                                            .background(MaterialTheme.colorScheme.background)
                                     )
 
 
@@ -371,13 +378,6 @@ fun ChatInfoScreen(
                                 style = MaterialTheme.typography.headlineSmall,
                                 fontWeight = FontWeight.Bold,
                                 modifier = Modifier
-                                    .sharedElement(
-                                        state = rememberSharedContentState(key = "name"),
-                                        animatedVisibilityScope = animatedVisibilityScope,
-                                        boundsTransform = { _, _ ->
-                                            tween(1000)
-                                        }
-                                    ),
                             )
                         } else Text(
                             text = chatRoom.chatName ?: "",

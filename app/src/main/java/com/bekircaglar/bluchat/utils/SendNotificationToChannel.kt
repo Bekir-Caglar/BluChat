@@ -1,6 +1,7 @@
-package com.bekircaglar.bluchat
+package com.bekircaglar.bluchat.utils
 
 
+import com.bekircaglar.bluchat.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.MediaType.Companion.toMediaTypeOrNull

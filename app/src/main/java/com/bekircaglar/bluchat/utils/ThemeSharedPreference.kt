@@ -1,4 +1,4 @@
-package com.bekircaglar.bluchat
+package com.bekircaglar.bluchat.utils
 
 import android.content.Context
 import android.content.SharedPreferences

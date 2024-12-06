@@ -9,7 +9,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.GetUserFromChatIdUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SendMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.SetLastMessageUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
-import com.bekircaglar.bluchat.sendNotificationToChannel
+import com.bekircaglar.bluchat.utils.sendNotificationToChannel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.first

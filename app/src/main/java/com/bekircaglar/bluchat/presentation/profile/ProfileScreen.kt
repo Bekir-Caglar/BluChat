@@ -51,7 +51,7 @@ import com.bekircaglar.bluchat.presentation.profile.account.AccountDialog
 import com.bekircaglar.bluchat.presentation.profile.appearance.AppearanceDialog
 import com.bekircaglar.bluchat.R
 import com.bekircaglar.bluchat.utils.UiState
-import com.bekircaglar.bluchat.loadThemePreference
+import com.bekircaglar.bluchat.utils.loadThemePreference
 import com.onesignal.OneSignal
 
 @Composable
@@ -167,6 +167,7 @@ fun ProfileScreen(navController: NavController, onThemeChange: () -> Unit) {
                     Text(text = "Profile", color = MaterialTheme.colorScheme.primary)
                 },
                 containerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.1f),
+                searchIcon = false
             )
         },
         bottomBar = {
