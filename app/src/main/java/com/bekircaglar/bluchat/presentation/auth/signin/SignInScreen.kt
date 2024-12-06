@@ -139,6 +139,7 @@ fun SignInScreen(navController: NavController) {
                     }
                 },
                 containerColor = MaterialTheme.colorScheme.background,
+                searchIcon = false
             )
         },
     ) {

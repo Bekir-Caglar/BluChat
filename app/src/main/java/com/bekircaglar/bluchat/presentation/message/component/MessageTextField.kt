@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.bekircaglar.bluchat.R
+import com.bekircaglar.bluchat.ui.theme.DarkText
 import kotlin.math.min
 
 
@@ -64,7 +65,7 @@ fun MessageTextField(
         placeholder = {
             Text(
                 text = placeholderText,
-                color = colorScheme.onSurface,
+                color = DarkText.copy(alpha = 0.5f),
                 style = MaterialTheme.typography.bodySmall
             )
         },
@@ -73,6 +74,8 @@ fun MessageTextField(
         colors = TextFieldDefaults.colors(
             unfocusedContainerColor = colorScheme.primary.copy(alpha = 0.2f),
             focusedContainerColor = colorScheme.primary.copy(alpha = 0.3f),
+            focusedTextColor = DarkText,
+            unfocusedTextColor = DarkText.copy(alpha = 0.5f),
             focusedIndicatorColor = Color.Transparent,
             unfocusedIndicatorColor = Color.Transparent
         ),
@@ -85,7 +88,7 @@ fun MessageTextField(
                 Icon(
                     painter = painterResource(id = R.drawable.outline_emoji_emotions_24),
                     contentDescription = "Emoji",
-                    tint = colorScheme.onSurface,
+                    tint = DarkText,
                     modifier = Modifier
                         .size(25.dp)
                 )
@@ -102,7 +105,7 @@ fun MessageTextField(
                     Icon(
                         painter = painterResource(id = R.drawable.baseline_attach_file_24),
                         contentDescription = "Attach",
-                        tint = colorScheme.onSurface,
+                        tint = DarkText,
                         modifier = Modifier
                             .size(25.dp)
                     )
@@ -115,7 +118,7 @@ fun MessageTextField(
                     Icon(
                         painter = painterResource(id = R.drawable.ic_camera),
                         contentDescription = "Camera",
-                        tint = colorScheme.onSurface,
+                        tint = DarkText,
                         modifier = Modifier
                             .padding(end = 8.dp)
                             .size(25.dp)

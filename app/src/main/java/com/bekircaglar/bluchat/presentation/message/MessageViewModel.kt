@@ -35,7 +35,7 @@ import com.bekircaglar.bluchat.domain.usecase.message.UploadAudioUseCase
 import com.bekircaglar.bluchat.domain.usecase.message.UploadVideoUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.GetUserUseCase
 import com.bekircaglar.bluchat.domain.usecase.profile.UploadImageUseCase
-import com.bekircaglar.bluchat.sendNotificationToChannel
+import com.bekircaglar.bluchat.utils.sendNotificationToChannel
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow

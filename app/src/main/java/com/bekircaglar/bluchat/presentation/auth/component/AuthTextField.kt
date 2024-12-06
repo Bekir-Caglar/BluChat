@@ -98,7 +98,7 @@ fun AuthTextField(
             visualTransformation = if (keyboardType == KeyboardType.Password && !passwordVisible) PasswordVisualTransformation() else visualTransformation,
             colors = TextFieldDefaults.colors(
                 unfocusedContainerColor = Color.White,
-                focusedContainerColor = MaterialTheme.colorScheme.surfaceContainerHigh,
+                focusedContainerColor = MaterialTheme.colorScheme.primary.copy(alpha = 0.2f),
                 focusedIndicatorColor = Color.Transparent,
                 unfocusedIndicatorColor = Color.Transparent
             ),
@@ -108,8 +108,10 @@ fun AuthTextField(
             modifier = modifier
                 .fillMaxWidth()
                 .heightIn(min = 56.dp)
-                .shadow(4.dp, shape = MaterialTheme.shapes.medium)
+                .shadow(2.dp, shape = ShapeDefaults.Medium)
+                .background(Color.White)
                 .clip(shape = ShapeDefaults.Medium)
+
         )
         supportedTextList.forEach { (text, isValid) ->
             Text(

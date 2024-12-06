@@ -175,9 +175,6 @@ fun MessageBottomBar(
                 }
             }
             Spacer(modifier = Modifier.width(16.dp))
-
-            // markdowntext url email phonen umber contact vs. regext haftaya
-            // bolca animasyon ve renk şeması düzenle
             AudioRecordButton(
                 hasMessageContent = hasMessageContent,
                 buttonSize = buttonSize,

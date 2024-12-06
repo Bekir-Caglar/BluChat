@@ -15,6 +15,8 @@ import androidx.navigation.compose.rememberNavController
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
 import com.bekircaglar.bluchat.navigation.ChatAppNavigation
 import com.bekircaglar.bluchat.ui.theme.AppTheme
+import com.bekircaglar.bluchat.utils.loadThemePreference
+import com.bekircaglar.bluchat.utils.saveThemePreference
 import com.facebook.CallbackManager
 import com.google.firebase.auth.FirebaseAuth
 import dagger.hilt.android.AndroidEntryPoint
