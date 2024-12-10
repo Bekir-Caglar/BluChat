@@ -36,7 +36,6 @@ fun NavGraphBuilder.MainNavGraph(
     navigation(startDestination = Screens.ChatListScreen.route, route = Screens.HomeNav.route) {
         composable(Screens.ChatListScreen.route) {
             ChatListScreen(navController)
-
         }
         composable(Screens.ProfileScreen.route) {
             ProfileScreen(navController) { onThemeChange() }
@@ -79,7 +78,9 @@ fun NavGraphBuilder.MainNavGraph(
             arguments = listOf(navArgument("imageUrl") { type = NavType.StringType })
         ) {
             val imageId = it.arguments?.getString("imageUrl")
-            imageId?.let { it1 -> ImageScreen(it1) }
+            with(sharedTransitionScope) {
+                imageId?.let { it1 -> ImageScreen(it1, animatedVisibilityScope = this@composable,sharedTransitionScope = this@with) }
+            }
         }
         composable(Screens.CameraScreen.route,
             arguments = listOf(navArgument("chatId") { type = NavType.StringType })

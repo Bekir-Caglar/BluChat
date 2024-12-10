@@ -329,6 +329,7 @@ fun ChatListScreen(
 
         if (uiState is UiState.Error) {
             val errorMessage = (uiState as UiState.Error).message
+            if (errorMessage != null)
             Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
         }
     }
