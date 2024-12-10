@@ -63,6 +63,7 @@ private val MessageFontSize = 16.sp
 
 @Composable
 fun ChatBubble(
+    imageModifier: Modifier = Modifier,
     context: Context,
     message: Message,
     isSentByMe: Boolean,
@@ -186,7 +187,8 @@ fun ChatBubble(
                                     isSentByMe,
                                     onImageClick, {
                                         if (isSentByMe) expanded = !expanded
-                                    }
+                                    },
+                                    imageModifier = imageModifier
                                 )
 
                                 MessageType.VIDEO.toString() -> VideoMessage(
@@ -266,13 +268,14 @@ fun ImageMessage(
     message: Message,
     isSentByMe: Boolean,
     onImageClick: (String) -> Unit,
-    changeExpanded: () -> Unit
+    changeExpanded: () -> Unit,
+    imageModifier : Modifier = Modifier
 ) {
     val imageUrl = message.useImageUrl
     Image(
         painter = rememberImagePainter(data = imageUrl),
         contentDescription = "Image Message",
-        modifier = Modifier
+        modifier = imageModifier
             .size(200.dp)
             .clip(RoundedCornerShape(12.dp))
             .combinedClickable(

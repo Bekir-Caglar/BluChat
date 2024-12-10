@@ -20,6 +20,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -62,6 +63,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.Dialog
+import androidx.compose.ui.zIndex
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.NavController
@@ -661,60 +663,71 @@ fun MessageScreen(
                                         val senderNameColor =
                                             viewModel.getUserColor(senderId!!)
                                         message.messageType?.let { messageType ->
-                                            ChatBubble(
-                                                context = context,
-                                                message = message,
-                                                isSentByMe = message.senderId == currentUser.uid,
-                                                timestamp = timestamp,
-                                                senderName = senderName,
-                                                senderNameColor = senderNameColor,
-                                                onImageClick = { imageUrl ->
-                                                    val encode = URLEncoder.encode(
-                                                        imageUrl,
-                                                        StandardCharsets.UTF_8.toString()
-                                                    )
-                                                    navController.navigate(
-                                                        Screens.ImageScreen.createRoute(
-                                                            encode
+                                            with(sharedTransitionScope) {
+                                                ChatBubble(
+                                                    imageModifier = Modifier.sharedElement(
+                                                        state = rememberSharedContentState(
+                                                            key = "sendImage"
+                                                        ),
+                                                        boundsTransform = { _, _ ->
+                                                            tween(500)
+                                                        },
+                                                        animatedVisibilityScope = animatedVisibilityScope
+                                                    ),
+                                                    context = context,
+                                                    message = message,
+                                                    isSentByMe = message.senderId == currentUser.uid,
+                                                    timestamp = timestamp,
+                                                    senderName = senderName,
+                                                    senderNameColor = senderNameColor,
+                                                    onImageClick = { imageUrl ->
+                                                        val encode = URLEncoder.encode(
+                                                            imageUrl,
+                                                            StandardCharsets.UTF_8.toString()
                                                         )
-                                                    )
-                                                },
-                                                onVideoClick = { videoUrl ->
-                                                    val intent = Intent(
-                                                        context,
-                                                        VideoPlayerActivity::class.java
-                                                    ).apply {
-                                                        putExtra("videoUri", videoUrl)
-                                                    }
-                                                    context.startActivity(intent)
-                                                },
-                                                onEditClick = {
-                                                    selectedMessageForEdit = message
-                                                },
-                                                onDeleteClick = {
-                                                    selectedMessageForDeletion = message
-                                                },
-                                                onPinMessageClick = {
-                                                    viewModel.pinMessage(message, chatId)
+                                                        navController.navigate(
+                                                            Screens.ImageScreen.createRoute(
+                                                                encode
+                                                            )
+                                                        )
+                                                    },
+                                                    onVideoClick = { videoUrl ->
+                                                        val intent = Intent(
+                                                            context,
+                                                            VideoPlayerActivity::class.java
+                                                        ).apply {
+                                                            putExtra("videoUri", videoUrl)
+                                                        }
+                                                        context.startActivity(intent)
+                                                    },
+                                                    onEditClick = {
+                                                        selectedMessageForEdit = message
+                                                    },
+                                                    onDeleteClick = {
+                                                        selectedMessageForDeletion = message
+                                                    },
+                                                    onPinMessageClick = {
+                                                        viewModel.pinMessage(message, chatId)
 //                                                viewModel.getPinnedMessages(chatId)
-                                                },
-                                                onUnPinMessageClick = {
-                                                    viewModel.unPinMessage(message, chatId)
+                                                    },
+                                                    onUnPinMessageClick = {
+                                                        viewModel.unPinMessage(message, chatId)
 //                                                viewModel.getPinnedMessages(chatId)
-                                                },
-                                                onStarMessage = {
-                                                    viewModel.starMessage(message, chatId)
-                                                },
-                                                onUnStarMessage = {
-                                                    viewModel.unStarMessage(message, chatId)
-                                                },
-                                                onSwipeRight = {
-                                                    selectedMessageForReply = it
-                                                    replyState = true
-                                                },
-                                                replyMessage = replyedMessage,
-                                                replyMessageName = senderReplyName
-                                            )
+                                                    },
+                                                    onStarMessage = {
+                                                        viewModel.starMessage(message, chatId)
+                                                    },
+                                                    onUnStarMessage = {
+                                                        viewModel.unStarMessage(message, chatId)
+                                                    },
+                                                    onSwipeRight = {
+                                                        selectedMessageForReply = it
+                                                        replyState = true
+                                                    },
+                                                    replyMessage = replyedMessage,
+                                                    replyMessageName = senderReplyName
+                                                )
+                                            }
 
                                         }
                                     }
