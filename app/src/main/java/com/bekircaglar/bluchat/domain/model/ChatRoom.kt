@@ -9,7 +9,9 @@ data class ChatRoom(
     val chatAdminId : String? = "",
     val chatLastMessageSenderId:String? = "",
     val chatLastMessage:String? = "",
-    val chatLastMessageTime:String? = "",
+    val chatLastMessageTime:Long? = 0L,
+    val chatCreatedAt: Long = 0L,
+    val chatUpdatedAt: Long = 0L
 ) {
 }
 

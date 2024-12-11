@@ -160,15 +160,18 @@ class ChatViewModel @Inject constructor(
     fun createGroupChatRoom(
         groupMembers: List<String>,
         groupName: String,
-        firebaseImageUrl: String
+        firebaseImageUrl: Uri?
     ) = viewModelScope.launch {
         val randomUUID = java.util.UUID.randomUUID().toString()
+        val imageUrl = firebaseImageUrl
+            ?: "https://firebasestorage.googleapis.com/v0/b/chatappbordo.appspot.com/o/def_user.png?alt=media&token=54d55dc5-4fad-415a-8b6f-d0f3b0619f31".toUri()
+
         createGroupChatRoomUseCase.invoke(
             currentUserId,
             groupMembers,
             randomUUID,
             groupName,
-            firebaseImageUrl
+            imageUrl.toString()
         ).collect {
             when (it) {
                 is Response.Success -> {
@@ -231,8 +234,8 @@ class ChatViewModel @Inject constructor(
                                     name = chat.chatName!!,
                                     imageUrl = chat.chatImage!!,
                                     lastMessageSenderId = chat.chatLastMessageSenderId!!,
-                                    lastMessage = chat.chatLastMessage!!,
-                                    messageTime = chat.chatLastMessageTime.toString(),
+                                    lastMessage = chat.chatLastMessage,
+                                    messageTime = chat.chatLastMessageTime,
                                     isOnline = false
                                 )
                             }
@@ -270,7 +273,7 @@ class ChatViewModel @Inject constructor(
                             imageUrl = user.profileImageUrl,
                             lastMessage = chat.chatLastMessage,
                             lastMessageSenderId = chat.chatLastMessageSenderId,
-                            messageTime = chat.chatLastMessageTime.toString(),
+                            messageTime = chat.chatLastMessageTime,
                             isOnline = user.status
                         )
                         if (!_chatUserList.value.any { it.chatRoomId == chatItem.chatRoomId }) {

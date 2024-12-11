@@ -19,6 +19,7 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkHorizontally
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -42,6 +43,7 @@ import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -90,6 +92,7 @@ fun ChatListScreen(
     var isBottomSheetVisible by remember { mutableStateOf(false) }
     val currentUser by viewModel.currentUser.collectAsStateWithLifecycle()
     val selectedUser by viewModel.selectedUser.collectAsStateWithLifecycle()
+    val eaterEggCounter = remember { mutableIntStateOf(0) }
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
 
@@ -108,6 +111,11 @@ fun ChatListScreen(
 
 
     var groupMembers by remember { mutableStateOf(emptyList<String>()) }
+
+    if (eaterEggCounter.intValue == 10) {
+        Toast.makeText(context, "Whoa! You found an Easter egg! 🐰", Toast.LENGTH_SHORT).show()
+        eaterEggCounter.intValue = 0
+    }
 
 
     val galleryLauncher = rememberLauncherForActivityResult(
@@ -134,7 +142,10 @@ fun ChatListScreen(
                 Text(
                     text = "BluChat",
                     style = MaterialTheme.typography.headlineMedium,
-                    color = MaterialTheme.colorScheme.primary
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.clickable {
+                        eaterEggCounter.value += 1
+                    }
                 )
         }, colors = TopAppBarDefaults.topAppBarColors(
             containerColor = MaterialTheme.colorScheme.background,
@@ -240,7 +251,7 @@ fun ChatListScreen(
                     onDismissRequest = { createGroupChatDialog = false },
                     onCreateGroupChat = { groupChatName ->
                         viewModel.createGroupChatRoom(
-                            groupMembers, groupChatName, uploadedImageUri.toString()
+                            groupMembers, groupChatName, uploadedImageUri
                         )
                         createGroupChatDialog = false
                     },
@@ -257,21 +268,7 @@ fun ChatListScreen(
                         .background(MaterialTheme.colorScheme.background),
                 ) {
 
-                    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
-                    val dayOfWeekFormat = SimpleDateFormat("EEEE", Locale.getDefault())
-                    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
                     items(chatList.sortedByDescending { it.messageTime }) { chat ->
-
-                        val formattedMessageTime = remember(chat.messageTime) {
-                            chat.messageTime?.let { it1 ->
-                                formatMessageTime(
-                                    it1.toLong(),
-                                    timeFormat,
-                                    dayOfWeekFormat,
-                                    dateFormat
-                                )
-                            }
-                        }
 
                         val myChat = Chats(
                             chatRoomId = chat.chatRoomId,
@@ -280,7 +277,7 @@ fun ChatListScreen(
                             surname = chat.surname,
                             lastMessage = chat.lastMessage,
                             lastMessageSenderId = chat.lastMessageSenderId,
-                            messageTime = formattedMessageTime,
+                            messageTime = chat.messageTime,
                             isOnline = chat.isOnline
                         )
 
@@ -302,7 +299,7 @@ fun ChatListScreen(
                             },
                             lastMessageSenderName = lastMessageSenderName,
                             currentUserId = currentUser,
-                            )
+                        )
                     }
                 }
             } else {
@@ -330,7 +327,7 @@ fun ChatListScreen(
         if (uiState is UiState.Error) {
             val errorMessage = (uiState as UiState.Error).message
             if (errorMessage != null)
-            Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
+                Toast.makeText(context, errorMessage, Toast.LENGTH_SHORT).show()
         }
     }
 }

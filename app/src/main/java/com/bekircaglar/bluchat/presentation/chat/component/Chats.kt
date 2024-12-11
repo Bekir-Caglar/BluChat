@@ -23,6 +23,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -34,6 +35,9 @@ import androidx.compose.ui.unit.dp
 import coil.compose.AsyncImagePainter
 import coil.compose.rememberAsyncImagePainter
 import com.bekircaglar.bluchat.domain.model.Chats
+import com.bekircaglar.bluchat.presentation.chat.formatMessageTime
+import java.text.SimpleDateFormat
+import java.util.Locale
 
 @OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
@@ -54,6 +58,21 @@ fun Chats(
     val messageTime = chat.messageTime
     val isOnline = chat.isOnline
     val lastMessageSender = chat.lastMessageSenderId
+
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
+    val dayOfWeekFormat = SimpleDateFormat("EEEE", Locale.getDefault())
+    val dateFormat = SimpleDateFormat("dd MMMM yyyy", Locale.getDefault())
+
+    val formattedMessageTime = remember(chat.messageTime) {
+        chat.messageTime?.let { it1 ->
+            formatMessageTime(
+                it1,
+                timeFormat,
+                dayOfWeekFormat,
+                dateFormat
+            )
+        }
+    }
 
     Row(
         modifier = Modifier
@@ -133,9 +152,9 @@ fun Chats(
             horizontalAlignment = Alignment.End,
             modifier = Modifier.align(Alignment.CenterVertically)
         ) {
-            if (messageTime != null) {
+            if (formattedMessageTime != null) {
                 Text(
-                    text = messageTime,
+                    text = formattedMessageTime,
                     style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f),
                 )

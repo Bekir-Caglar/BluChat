@@ -36,6 +36,8 @@ data class Message(
     val locationName: String? = "",
     val latitude: Double? = 0.0,
     val longitude: Double? = 0.0,
+    val deletedAt : Long? = 0L,
+    val updatedAt : Long? = 0L
 ):Serializable {
     @get:Exclude
     val isRead: Boolean

@@ -66,8 +66,8 @@ fun OpenChatBottomSheet(
                         imageUrl = contact.profileImageUrl,
                         name = contact.name,
                         surname = contact.surname,
-                        lastMessage = "+90 ${contact.phoneNumber}",
-                        messageTime = "",
+                        lastMessage = contact.phoneNumber,
+                        messageTime = 0L,
                         isOnline = contact.status
                     )
                     Chats(
