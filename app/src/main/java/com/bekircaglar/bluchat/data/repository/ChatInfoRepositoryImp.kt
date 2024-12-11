@@ -22,36 +22,34 @@ class ChatInfoRepositoryImp @Inject constructor(
 
 ) : ChatInfoRepository {
     override suspend fun kickUser(userId: String, chatId: String) {
-        val chatRef =
-            databaseRef.database.getReference(CHAT_COLLECTION).child(chatId).child(STORED_USERS)
+        val chatRef = databaseRef.database.getReference(CHAT_COLLECTION).child(chatId)
+        chatRef.child("chatUpdatedAt").setValue(System.currentTimeMillis())
 
-        chatRef.orderByValue().equalTo(userId).addListenerForSingleValueEvent(object :
+        chatRef.child(STORED_USERS).orderByValue().equalTo(userId).addListenerForSingleValueEvent(object :
             ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (userSnapshot in snapshot.children) {
                     userSnapshot.ref.removeValue()
                 }
             }
-
             override fun onCancelled(error: DatabaseError) {
-                Log.e("FirebaseError", "Kullanıcı silinirken hata oluştu: ${error.message}")
+                Log.e("FirebaseError", "Error occurred while deleting user: ${error.message}")
             }
         })
     }
 
     override suspend fun deleteGroup(chatId: String) {
-
         val chatRef = databaseRef.database.getReference(CHAT_COLLECTION).child(chatId)
+        chatRef.child("deletedAt").setValue(System.currentTimeMillis())
         chatRef.removeValue()
         deleteMessages(chatId)
     }
 
     override suspend fun leaveChat(chatId: String, userId: String) {
+        val chatRef = databaseRef.database.getReference(CHAT_COLLECTION).child(chatId)
+        chatRef.child("chatUpdatedAt").setValue(System.currentTimeMillis())
 
-        val chatRef =
-            databaseRef.database.getReference(CHAT_COLLECTION).child(chatId).child(STORED_USERS)
-
-        chatRef.orderByValue().equalTo(userId).addListenerForSingleValueEvent(object :
+        chatRef.child(STORED_USERS).orderByValue().equalTo(userId).addListenerForSingleValueEvent(object :
             ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
                 for (userSnapshot in snapshot.children) {
@@ -60,9 +58,10 @@ class ChatInfoRepositoryImp @Inject constructor(
             }
 
             override fun onCancelled(error: DatabaseError) {
-                Log.e("FirebaseError", "Kullanıcı silinirken hata oluştu: ${error.message}")
+                Log.e("FirebaseError", "Error while leaving chat: ${error.message}")
             }
         })
+
     }
 
     override suspend fun getChatImages(chatId: String): Flow<Response<List<String>>> =
@@ -94,16 +93,16 @@ class ChatInfoRepositoryImp @Inject constructor(
 
 
     override suspend fun addParticipant(chatId: String, userIdList: List<String?>) {
-
-        val chatRef =
-            databaseRef.database.getReference(CHAT_COLLECTION).child(chatId).child(STORED_USERS)
-        chatRef.setValue(userIdList)
+        val chatRef = databaseRef.database.getReference(CHAT_COLLECTION).child(chatId)
+        chatRef.child("chatUpdatedAt").setValue(System.currentTimeMillis())
+        chatRef.child(STORED_USERS).setValue(userIdList)
     }
 
     override suspend fun updateChatInfo(chatId: String, chatName: String, chatImageUrl: String) {
         val chatRef = databaseRef.database.getReference(CHAT_COLLECTION).child(chatId)
         chatRef.child("chatName").setValue(chatName)
         chatRef.child("chatImage").setValue(chatImageUrl)
+        chatRef.child("chatUpdatedAt").setValue(System.currentTimeMillis())
     }
 
     private fun deleteMessages(chatId: String) {

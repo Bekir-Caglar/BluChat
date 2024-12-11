@@ -87,7 +87,6 @@ class MessageRepositoryImp @Inject constructor(
     }
 
     override suspend fun getChatRoom(chatId: String): Flow<Response<ChatRoom>> = flow {
-
         try {
             val chatRoomSnapshot =
                 databaseReference.child(CHAT_COLLECTION).child(chatId).get().await()
@@ -191,6 +190,7 @@ class MessageRepositoryImp @Inject constructor(
                 val dbRef = databaseReference.child(MESSAGE_COLLECTION).child(chatId).child(
                     STORED_MESSAGES
                 ).child(messageId)
+                dbRef.child("deletedAt").setValue(System.currentTimeMillis()).await()
                 dbRef.removeValue()
                 emit(Response.Success("Message Deleted"))
             } catch (e: Exception) {
@@ -210,6 +210,7 @@ class MessageRepositoryImp @Inject constructor(
             ).child(messageId)
             dbRef.child("message").setValue(message).await()
             dbRef.child("edited").setValue(true).await()
+            dbRef.child("updatedAt").setValue(System.currentTimeMillis()).await()
             emit(Response.Success("Message Edited"))
         } catch (e: Exception) {
             emit(Response.Error(e.message.toString()))
@@ -487,10 +488,7 @@ class MessageRepositoryImp @Inject constructor(
             if (message != null) {
                 dbRef.child("read").setValue(true)
             }
-
         }
-
-
     }
 
     override suspend fun uploadVideo(uri: Uri): Flow<Response<String>> = flow {
@@ -533,7 +531,7 @@ class MessageRepositoryImp @Inject constructor(
                     dbRef.child("chatLastMessage").setValue("Location 📍")
                 }
             }
-            dbRef.child("chatLastMessageTime").setValue(message.timestamp.toString())
+            dbRef.child("chatLastMessageTime").setValue(message.timestamp)
             dbRef.child("chatLastMessageSenderId").setValue(message.senderId)
             emit(Response.Success("Last message set successfully"))
         }

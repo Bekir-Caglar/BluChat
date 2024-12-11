@@ -35,7 +35,6 @@ class ChatRepositoryImp @Inject constructor(
     }
 
 
-
     override suspend fun searchContacts(query: String): Flow<Response<List<Users>>> = callbackFlow {
         val database = databaseReference.child(USER_COLLECTION)
         val currentUserRef =
@@ -89,11 +88,12 @@ class ChatRepositoryImp @Inject constructor(
     ): Flow<Response<String>> = callbackFlow {
         val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
         val chatType: String = PRIVATE
+        var chatRoomExists = false
+        var existingChatRoomId = ""
+
 
         val listener = object : ValueEventListener {
             override fun onDataChange(snapshot: DataSnapshot) {
-                var chatRoomExists = false
-                var existingChatRoomId = ""
 
                 for (chatSnapshot in snapshot.children) {
                     val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
@@ -111,7 +111,12 @@ class ChatRepositoryImp @Inject constructor(
                 }
 
                 if (!chatRoomExists) {
-                    val chat = ChatRoom(listOf(user1, user2), chatRoomId, chatType = chatType)
+                    val chat = ChatRoom(
+                        listOf(user1, user2),
+                        chatRoomId,
+                        chatType = chatType,
+                        chatCreatedAt = System.currentTimeMillis()
+                    )
                     databaseRef.child(chatRoomId).setValue(chat).addOnSuccessListener {
                         trySend(Response.Success(chatRoomId)).isSuccess
                         close()
@@ -187,7 +192,9 @@ class ChatRepositoryImp @Inject constructor(
     }
 
     override suspend fun saveSubId(subId: String) {
-        val userSubIdRef = databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString()).child("onesignalId")
+        val userSubIdRef =
+            databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString())
+                .child("onesignalId")
         userSubIdRef.setValue(subId)
     }
 
@@ -201,41 +208,31 @@ class ChatRepositoryImp @Inject constructor(
     ): Flow<Response<String>> = callbackFlow {
         val databaseRef = databaseReference.database.getReference(CHAT_COLLECTION)
 
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val chatType: String = GROUP
-                val newGroupMembers = groupMembers.toMutableList()
-                newGroupMembers.add(currentUser)
-
-                val chat = ChatRoom(
-                    users = newGroupMembers,
-                    chatId = chatId,
-                    chatName = groupName,
-                    chatImage = groupImg,
-                    chatType = chatType,
-                    chatAdminId = currentUser,
-                )
-                databaseRef.child(chatId).setValue(chat).addOnSuccessListener {
-                    trySend(Response.Success(chatId)).isSuccess
-                }.addOnFailureListener { error ->
-                    trySend(Response.Error("Failed to create chat room: ${error.message}")).isSuccess
-                    close()
-                }
-            }
-
-            override fun onCancelled(error: DatabaseError) {
-                trySend(Response.Error("Database error: ${error.message}")).isSuccess
-                close(error.toException())
-            }
+        val chatType: String = GROUP
+        val newGroupMembers = groupMembers.toMutableList()
+        newGroupMembers.add(currentUser)
+        val chat = ChatRoom(
+            users = newGroupMembers,
+            chatId = chatId,
+            chatName = groupName,
+            chatImage = groupImg,
+            chatType = chatType,
+            chatAdminId = currentUser,
+            chatCreatedAt = System.currentTimeMillis()
+        )
+        databaseRef.child(chatId).setValue(chat).addOnSuccessListener {
+            trySend(Response.Success(chatId)).isSuccess
+        }.addOnFailureListener { error ->
+            trySend(Response.Error("Failed to create chat room: ${error.message}")).isSuccess
+            close()
         }
-
-        databaseRef.addValueEventListener(listener)
         awaitClose()
     }
 
 
     private fun setUserOnlineStatus(userId: String) {
         val userStatusRef = databaseReference.child(USER_COLLECTION).child(userId).child("status")
+        val lastSeenRef = databaseReference.child(USER_COLLECTION).child(userId).child("lastSeen")
         val connectedRef = databaseReference.database.getReference(".info/connected")
 
         connectedRef.addValueEventListener(object : ValueEventListener {
@@ -245,6 +242,9 @@ class ChatRepositoryImp @Inject constructor(
                 if (connected) {
                     userStatusRef.setValue(true)
                     userStatusRef.onDisconnect().setValue(false)
+                    lastSeenRef.onDisconnect().setValue(System.currentTimeMillis())
+                } else {
+                    lastSeenRef.setValue(System.currentTimeMillis())
                 }
             }
 
@@ -253,8 +253,4 @@ class ChatRepositoryImp @Inject constructor(
             }
         })
     }
-//    fun setLastSeen(userId: String) {
-//        val lastSeenRef = databaseReference.child(USER_COLLECTION).child(userId).child("lastSeen")
-//        lastSeenRef.onDisconnect().setValue(ServerValue.TIMESTAMP)
-//    }
 }

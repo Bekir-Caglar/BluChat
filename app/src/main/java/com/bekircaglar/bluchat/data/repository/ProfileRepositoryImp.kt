@@ -51,9 +51,8 @@ class ProfileRepositoryImp @Inject constructor(
 
         val userId = auth.currentUser?.uid
         val userRef = databaseReference.database.getReference(USER_COLLECTION).child(userId.toString())
-
         try {
-            userRef.setValue(user).await()
+            userRef.setValue(user.copy(userUpdatedAt = System.currentTimeMillis() )).await()
             return Response.Success("User Updated")
         } catch (e: Exception) {
             return Response.Error(e.message.toString())
@@ -79,7 +78,6 @@ class ProfileRepositoryImp @Inject constructor(
 
     override suspend fun signOut(context:Context): Response<String> {
         auth.signOut()
-
         try {
             if (auth.currentUser == null) {
                 val googleSignInClient = GoogleSignIn.getClient(context, GoogleSignInOptions.DEFAULT_SIGN_IN)

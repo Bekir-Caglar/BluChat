@@ -32,6 +32,7 @@ class ContactsRepositoryImp @Inject constructor(
                 trySend(Response.Error(error.message))
             }
         })
+        dbRef.addValueEventListener(listener)
 
         awaitClose()
     }
@@ -39,7 +40,6 @@ class ContactsRepositoryImp @Inject constructor(
     override suspend fun addContact(phoneNumber: String, userId: String): Flow<Response<Boolean>> =
         callbackFlow {
             val userRef = databaseReference.child(USER_COLLECTION)
-
             try {
                 userRef.get().addOnSuccessListener { snapshot ->
                     var matchedUserId: String? = null
@@ -74,7 +74,7 @@ class ContactsRepositoryImp @Inject constructor(
                             }
                         }
                     } else {
-                        trySend(Response.Error("Telefon numarasına sahip kullanıcı bulunamadı"))
+                        trySend(Response.Error("User not found"))
                     }
                 }.addOnFailureListener { error ->
                     trySend(Response.Error(error.message.toString()))
@@ -87,7 +87,7 @@ class ContactsRepositoryImp @Inject constructor(
 
 
     override suspend fun getAppUserContacts(
-        contacts: List<Users>,
+        contacts: List< Users>,
         userId: String
     ): Flow<Response<List<Users>>> = callbackFlow {
         val dbRef = databaseReference.child(USER_COLLECTION).child(userId).child("contactsIdList")

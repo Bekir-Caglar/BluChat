@@ -7,8 +7,7 @@ data class Chats(
     val imageUrl : String = "",
     val lastMessageSenderId : String? = null,
     val lastMessage: String? = null,
-    val messageTime: String? = null,
+    val messageTime: Long? = 0L,
     val isOnline: Boolean = false,
-
 ) {
 }

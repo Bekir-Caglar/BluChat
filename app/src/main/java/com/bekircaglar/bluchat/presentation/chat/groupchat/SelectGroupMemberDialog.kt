@@ -87,7 +87,7 @@ fun SelectGroupMemberBottomSheet(
                         name = contact.name,
                         surname = contact.surname,
                         lastMessage = "",
-                        messageTime = "",
+                        messageTime = 0L,
                         isOnline = contact.status
                     )
                     Chats(
