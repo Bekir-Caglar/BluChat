@@ -480,7 +480,7 @@ fun MessageScreen(
                     }
                     val lastPinnedMessage = pinnedMessages.lastOrNull()
                     Column {
-                        if (pinnedMessages.lastOrNull() != null) {
+                        if (lastPinnedMessage != null && !lastPinnedMessage.isDeleted) {
                             Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
@@ -825,14 +825,31 @@ fun MessageScreen(
                         onDismiss = { selectedMessageForDeletion = null },
                         onConfirm = {
                             viewModel.deleteMessage(
-                                chatId,
-                                selectedMessageForDeletion!!.messageId!!
+                                chatId = chatId,
+                                messageId = selectedMessageForDeletion!!.messageId!!
                             )
+                            viewModel.unPinMessage(selectedMessageForDeletion!!, chatId)
                             selectedMessageForDeletion = null
                         },
                         context = context
                     )
                 }
+            }
+            else if(
+                screenState is UiState.Error
+            ){
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    Text(
+                        text = "An error occurred",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = MaterialTheme.colorScheme.error
+                    )
+                }
+
             }
         }
     }

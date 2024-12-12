@@ -27,6 +27,7 @@ data class Message(
     val messageType: String? = "",
     val edited: Boolean? = false,
     val pinned: Boolean? = false,
+    val deleted : Boolean? = false,
     val starred: Boolean? = false,
     val replyTo: String? = "",
     val imageUrl: String? = "",
@@ -42,6 +43,10 @@ data class Message(
     @get:Exclude
     val isRead: Boolean
         get() = read == true
+
+    @get:Exclude
+    val isDeleted: Boolean
+        get() = deleted == true
 
     @get:Exclude
     val isEdited: Boolean

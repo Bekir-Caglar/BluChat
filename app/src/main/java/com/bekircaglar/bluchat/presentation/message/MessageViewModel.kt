@@ -582,7 +582,7 @@ class MessageViewModel @Inject constructor(
     }
 
 
-    private fun setLastMessage(message: Message, chatId: String) = viewModelScope.launch {
+    fun setLastMessage(message: Message, chatId: String) = viewModelScope.launch {
         setLastMessageUseCase(chatId, message).collect {
             when (it) {
                 is Response.Success -> {
@@ -673,12 +673,17 @@ class MessageViewModel @Inject constructor(
     }
 
     fun deleteMessage(messageId: String, chatId: String) = viewModelScope.launch {
-        deleteMessageUseCase(messageId, chatId).collect { response ->
+        deleteMessageUseCase(chatId = chatId, messageId = messageId).collect { response ->
             when (response) {
                 is Response.Loading -> {
                 }
 
                 is Response.Success -> {
+
+                    val lastNotDeletedMessage = _messages.value.first { !it.isDeleted }
+
+                    setLastMessage(message = lastNotDeletedMessage, chatId = chatId)
+
                 }
 
                 is Response.Error -> {

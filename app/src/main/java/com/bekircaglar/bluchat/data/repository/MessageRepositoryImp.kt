@@ -191,7 +191,8 @@ class MessageRepositoryImp @Inject constructor(
                     STORED_MESSAGES
                 ).child(messageId)
                 dbRef.child("deletedAt").setValue(System.currentTimeMillis()).await()
-                dbRef.removeValue()
+                dbRef.child("deleted").setValue(true).await()
+//                dbRef.removeValue()
                 emit(Response.Success("Message Deleted"))
             } catch (e: Exception) {
                 emit(Response.Error(e.message.toString()))
