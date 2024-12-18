@@ -10,7 +10,7 @@ BluChat is a user-friendly chat application that enables users to register, mana
 
 ### 🎥 **App Demo Video**  
 Experience BluChat in action by watching the demo video below:  
-[![BluChat Demo](BluchatVideo.mp4)
+[![BluChat Demo](BluChatVideo.mp4)
 *Click the thumbnail to watch the video on YouTube.*
 
 ---
