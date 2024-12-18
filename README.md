@@ -1,1 +1,1 @@
-![Ana Sayfa Ekranı](ProfileW.png)
+![Ana Sayfa Ekranı](ProfileW.jpeg)
