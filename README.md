@@ -7,13 +7,20 @@
 BluChat is a user-friendly chat application that enables users to register, manage their profiles, and customize application settings. Designed with modern architectural principles (Clean Architecture, MVVM), it is developed using Jetpack Compose to provide a seamless and interactive messaging experience.
 
 ---
-
 ### 🎥 **App Demo Video**  
 Experience BluChat in action by watching the demo video below:  
-[![BluChat Demo](BluChatVideo.mp4)
+[![BluChat Demo](bluchat.png)](https://youtube.com/shorts/iZQc0c0ZJo4?feature=share)  
 *Click the thumbnail to watch the video on YouTube.*
-
 ---
+
+<style>
+  img {
+    width: 100%;
+    max-width: 560px;
+    height: auto;
+    aspect-ratio: 16 / 9;
+  }
+</style>
 
 ### 🖥 **Screenshots**  
 
