@@ -1,12 +1,15 @@
 package com.bekircaglar.bluchat.data.repository
 
 import android.util.Log
+import com.bekircaglar.bluchat.data.repository.local.LocalChatRoomRepository
+import com.bekircaglar.bluchat.data.repository.local.LocalUsersRepository
 import com.bekircaglar.bluchat.utils.CHAT_COLLECTION
 import com.bekircaglar.bluchat.utils.GROUP
 import com.bekircaglar.bluchat.utils.PRIVATE
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.STORED_USERS
 import com.bekircaglar.bluchat.utils.USER_COLLECTION
+import com.bekircaglar.bluchat.utils.network.NetworkUtils
 import com.bekircaglar.bluchat.domain.model.ChatRoom
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
@@ -26,7 +29,11 @@ import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class ChatRepositoryImp @Inject constructor(
-    private var auth: FirebaseAuth, private var databaseReference: DatabaseReference
+    private var auth: FirebaseAuth, 
+    private var databaseReference: DatabaseReference,
+    private val localUsersRepository: LocalUsersRepository,
+    private val localChatRoomRepository: LocalChatRoomRepository,
+    private val networkUtils: NetworkUtils
 ) : ChatsRepository {
 
 
@@ -141,51 +148,96 @@ class ChatRepositoryImp @Inject constructor(
     }
 
     override suspend fun getUserData(userId: String): Flow<Response<Users>> = callbackFlow {
-        val database = databaseReference.database.getReference(USER_COLLECTION).child(userId)
-        val listener = object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val user = snapshot.getValue(Users::class.java)
-                if (user != null) {
-                    trySend(Response.Success(user)).isSuccess
-                } else {
-                    trySend(Response.Error("User not found")).isSuccess
+        // First, try to get user from local cache
+        try {
+            val cachedUser = localUsersRepository.getUserById(userId)
+            if (cachedUser != null) {
+                trySend(Response.Success(cachedUser))
+            }
+        } catch (e: Exception) {
+            // Continue with remote fetch if local fails
+        }
+        
+        // If internet is available, fetch from Firebase and update cache
+        if (networkUtils.isInternetAvailable()) {
+            val database = databaseReference.database.getReference(USER_COLLECTION).child(userId)
+            val listener = object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val user = snapshot.getValue(Users::class.java)
+                    if (user != null) {
+                        // Cache the user data
+                        GlobalScope.launch {
+                            try {
+                                localUsersRepository.insertUser(user)
+                            } catch (e: Exception) {
+                                // Handle cache error silently
+                            }
+                        }
+                        trySend(Response.Success(user)).isSuccess
+                    } else {
+                        trySend(Response.Error("User not found")).isSuccess
+                    }
+                }
+
+                override fun onCancelled(error: DatabaseError) {
+                    trySend(Response.Error(error.message)).isSuccess
+                    close(error.toException())
                 }
             }
-
-            override fun onCancelled(error: DatabaseError) {
-                trySend(Response.Error(error.message)).isSuccess
-                close(error.toException())
-            }
+            database.addValueEventListener(listener)
         }
-        database.addValueEventListener(listener)
         awaitClose()
     }
 
     override suspend fun getUsersChatList(): Flow<Response<List<ChatRoom>>> = callbackFlow {
         val currentUser = auth.currentUser?.uid.toString()
-        val databaseReference =
-            databaseReference.database.getReference(CHAT_COLLECTION).orderByChild(
-                STORED_USERS
-            )
+        
+        // First, emit cached data if available
+        try {
+            val cachedChats = localChatRoomRepository.getChatRoomsForUser(currentUser)
+            if (cachedChats.isNotEmpty()) {
+                trySend(Response.Success(cachedChats))
+            }
+        } catch (e: Exception) {
+            // Continue with remote fetch if local fails
+        }
+        
+        // If internet is available, fetch from Firebase and update cache
+        if (networkUtils.isInternetAvailable()) {
+            val databaseReference =
+                databaseReference.database.getReference(CHAT_COLLECTION).orderByChild(
+                    STORED_USERS
+                )
 
-        databaseReference.addValueEventListener(object : ValueEventListener {
-            override fun onDataChange(snapshot: DataSnapshot) {
-                val chatList = mutableListOf<ChatRoom>()
-                for (chatSnapshot in snapshot.children) {
-                    val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
+            databaseReference.addValueEventListener(object : ValueEventListener {
+                override fun onDataChange(snapshot: DataSnapshot) {
+                    val chatList = mutableListOf<ChatRoom>()
+                    for (chatSnapshot in snapshot.children) {
+                        val chatRoom = chatSnapshot.getValue(ChatRoom::class.java)
 
-                    if (chatRoom != null && chatRoom.users!!.contains(currentUser)) {
-                        chatList.add(chatRoom)
+                        if (chatRoom != null && chatRoom.users!!.contains(currentUser)) {
+                            chatList.add(chatRoom)
+                        }
                     }
+                    
+                    // Cache the updated data
+                    GlobalScope.launch {
+                        try {
+                            localChatRoomRepository.insertChatRooms(chatList)
+                        } catch (e: Exception) {
+                            // Handle cache error silently
+                        }
+                    }
+                    
+                    trySend(Response.Success(chatList))
                 }
-                trySend(Response.Success(chatList))
-            }
 
-            override fun onCancelled(error: DatabaseError) {
-                close(error.toException())
-            }
+                override fun onCancelled(error: DatabaseError) {
+                    close(error.toException())
+                }
 
-        })
+            })
+        }
 
         awaitClose()
 

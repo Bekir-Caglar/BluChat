@@ -1,7 +1,9 @@
 package com.bekircaglar.bluchat.data.repository
 
+import com.bekircaglar.bluchat.data.repository.local.LocalUsersRepository
 import com.bekircaglar.bluchat.utils.Response
 import com.bekircaglar.bluchat.utils.USER_COLLECTION
+import com.bekircaglar.bluchat.utils.network.NetworkUtils
 import com.bekircaglar.bluchat.domain.model.Users
 import com.bekircaglar.bluchat.domain.repository.AuthRepository
 import com.google.firebase.auth.FirebaseAuth
@@ -12,12 +14,15 @@ import com.google.firebase.database.ValueEventListener
 import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.tasks.await
 import javax.inject.Inject
 
 class AuthRepositoryImp @Inject constructor(
     private val auth: FirebaseAuth,
-    private var databaseReference: DatabaseReference
+    private var databaseReference: DatabaseReference,
+    private val localUsersRepository: LocalUsersRepository,
+    private val networkUtils: NetworkUtils
 ) : AuthRepository {
 
     override fun isUserAuthenticatedInFirebase(): Response<String> {
@@ -28,6 +33,10 @@ class AuthRepositoryImp @Inject constructor(
         auth.signInWithEmailAndPassword(email, password).await()
         try {
             if (auth.currentUser != null) {
+                // Cache user data locally after successful sign in
+                if (networkUtils.isInternetAvailable()) {
+                    cacheCurrentUserData()
+                }
                 return Response.Success(auth.currentUser.toString())
             } else {
                 return Response.Error("Unknown Error")
@@ -74,11 +83,34 @@ class AuthRepositoryImp @Inject constructor(
                 contactsIdList = emptyList(),
                 userCreatedAt = System.currentTimeMillis(),
             )
-            databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString()).setValue(user)
-                .await()
+            
+            if (networkUtils.isInternetAvailable()) {
+                databaseReference.child(USER_COLLECTION).child(auth.currentUser?.uid.toString()).setValue(user)
+                    .await()
+            }
+            
+            // Cache user data locally
+            localUsersRepository.insertUser(user)
+            
             return Response.Success("User Created")
         } catch (e: Exception) {
             return Response.Error(e.message.toString())
+        }
+    }
+
+    private suspend fun cacheCurrentUserData() {
+        try {
+            val currentUserId = auth.currentUser?.uid
+            if (currentUserId != null) {
+                val userRef = databaseReference.child(USER_COLLECTION).child(currentUserId)
+                val snapshot = userRef.get().await()
+                val user = snapshot.getValue(Users::class.java)
+                if (user != null) {
+                    localUsersRepository.insertUser(user)
+                }
+            }
+        } catch (e: Exception) {
+            // Handle error silently for now
         }
     }
 
