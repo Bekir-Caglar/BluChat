@@ -4,7 +4,10 @@ import android.content.Context
 import com.bekircaglar.bluchat.data.local.database.BluChatDatabase
 import com.bekircaglar.bluchat.data.repository.AuthRepositoryImp
 import com.bekircaglar.bluchat.data.repository.local.LocalUsersRepository
+import com.bekircaglar.bluchat.data.sync.DataSyncService
+import com.bekircaglar.bluchat.data.sync.SyncManager
 import com.bekircaglar.bluchat.domain.repository.AuthRepository
+import com.bekircaglar.bluchat.utils.network.NetworkConnectivityMonitor
 import com.bekircaglar.bluchat.utils.network.NetworkUtils
 import com.google.firebase.Firebase
 import com.google.firebase.auth.FirebaseAuth
@@ -64,5 +67,11 @@ object FirebaseModule {
     @Singleton
     fun provideNetworkUtils(@ApplicationContext context: Context): NetworkUtils {
         return NetworkUtils(context)
+    }
+
+    @Provides
+    @Singleton
+    fun provideNetworkConnectivityMonitor(@ApplicationContext context: Context): NetworkConnectivityMonitor {
+        return NetworkConnectivityMonitor(context)
     }
 }

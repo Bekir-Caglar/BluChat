@@ -38,6 +38,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var chatsRepository: ChatsRepository
 
+    @Inject
+    lateinit var syncManager: SyncManager
+
     private lateinit var callbackManager: CallbackManager
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -57,6 +60,9 @@ class MainActivity : ComponentActivity() {
                 OneSignal.login(user.uid)
             }
         }
+
+        // Initialize sync manager for offline/online data synchronization
+        syncManager.initialize()
 
         installSplashScreen()
         enableEdgeToEdge()
@@ -107,5 +113,11 @@ class MainActivity : ComponentActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         callbackManager.onActivityResult(requestCode, resultCode, data)
+    }
+
+    override fun onDestroy() {
+        super.onDestroy()
+        // Cleanup sync manager
+        syncManager.cleanup()
     }
 }
