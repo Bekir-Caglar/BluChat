@@ -38,7 +38,9 @@ abstract class BluChatDatabase : RoomDatabase() {
                     context.applicationContext,
                     BluChatDatabase::class.java,
                     "bluchat_database"
-                ).build()
+                )
+                .createFromAsset("bluchat_database.db")
+                .build()
                 INSTANCE = instance
                 instance
             }
