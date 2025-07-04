@@ -12,6 +12,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.compose.rememberNavController
+import com.bekircaglar.bluchat.data.sync.SyncManager
 import com.bekircaglar.bluchat.domain.repository.ChatsRepository
 import com.bekircaglar.bluchat.navigation.ChatAppNavigation
 import com.bekircaglar.bluchat.ui.theme.AppTheme

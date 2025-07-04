@@ -1,6 +1,5 @@
 package com.bekircaglar.bluchat.data.sync
 
-import android.content.Context
 import android.util.Log
 import com.bekircaglar.bluchat.data.repository.local.LocalChatRoomRepository
 import com.bekircaglar.bluchat.data.repository.local.LocalUsersRepository
@@ -24,7 +23,6 @@ import javax.inject.Singleton
 
 @Singleton
 class DataSyncService @Inject constructor(
-    private val context: Context,
     private val databaseReference: DatabaseReference,
     private val auth: FirebaseAuth,
     private val localUsersRepository: LocalUsersRepository,

@@ -1,6 +1,5 @@
 package com.bekircaglar.bluchat.data.sync
 
-import android.content.Context
 import android.util.Log
 import com.bekircaglar.bluchat.utils.network.NetworkConnectivityMonitor
 import kotlinx.coroutines.CoroutineScope
@@ -13,7 +12,6 @@ import javax.inject.Singleton
 
 @Singleton
 class SyncManager @Inject constructor(
-    private val context: Context,
     private val dataSyncService: DataSyncService,
     private val networkConnectivityMonitor: NetworkConnectivityMonitor
 ) {
