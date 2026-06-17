@@ -104,6 +104,7 @@ dependencies {
     ksp(libs.hilt.kapt)
 
     implementation (libs.glide)
+    implementation(libs.gson)
 
 
     implementation(platform(libs.firebase.bom))
@@ -139,6 +140,11 @@ dependencies {
     implementation(libs.androidx.core.splashscreen)
     implementation(libs.kotlinx.coroutines.android)
     implementation(libs.coil.compose)
+
+    // Room dependencies
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
 
 
